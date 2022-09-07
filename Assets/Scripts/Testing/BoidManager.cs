@@ -5,15 +5,17 @@ using UnityEngine.InputSystem;
 
 public class BoidManager : MonoBehaviour
 {
+    public static BoidManager main;
+
     //Objects & Components:
     [SerializeField, Tooltip("Prefab object for spawned rats")]             private GameObject ratPrefab;
     [SerializeField, Tooltip("Object which spawned rats will seek toward")] private Transform targetRat;
 
     //Settings:
     [Header("General Settings:")]
-    [SerializeField, Tooltip("Height at which new rats will be spawned")]                           private float spawnHeight;
+    [Tooltip("Height at which new rats will be spawned")]                                           public float spawnHeight;
     [SerializeField, Tooltip("Random distance range by which newly-spawned rats will be offset")]   private float spawnPositionRandomness;
-    [SerializeField, Min(0), Tooltip("Maximum speed at which rats can travel")]                     private float maxSpeed;
+    [Min(0), Tooltip("Maximum speed at which rats can travel")]                                     public float maxSpeed;
     [SerializeField, Min(0), Tooltip("Separation distance under which rats can affect each other")] private float neighborRadius;
     [SerializeField, Min(0), Tooltip("Target separation distance between rats")]                    private float separation;
     [Header("Target Settings:")]
@@ -30,6 +32,12 @@ public class BoidManager : MonoBehaviour
     [SerializeField, Tooltip("Influence conformance rule has on rat behavior")]        private float conformWeight = 1;
     [SerializeField, Tooltip("Influence target rule has on rat behavior")]             private float targetWeight = 1;
     [SerializeField, Tooltip("Influence target drag rule has on rat behavior")]        private float targetDragWeight = 1;
+    [Header("Visual Settings:")]
+    [SerializeField, Tooltip("Alternative color which rats may spawn with")] private Color altColor;
+
+    /* NOTES:
+     *  -For future trail: only take one point from however many updates ago, and then find the closest point on that line (also give this type of target-seeking its own weight)
+    */
 
     //Runtime vars:
     private List<Transform> rats = new List<Transform>();    //List of all spawned ratboids in scene
@@ -38,6 +46,10 @@ public class BoidManager : MonoBehaviour
     private float targetRatHeight;                           //Set height of targetRat
 
     //RUNTIME METHODS:
+    private void Awake()
+    {
+        if (main == null) main = this; else Destroy(this);
+    }
     private void Start()
     {
         //Get initial variables:
@@ -113,9 +125,10 @@ public class BoidManager : MonoBehaviour
         foreach (Transform rat in rats) //Iterate through list of ratboids
         {
             //Initialize:
-            List<Transform> others = new List<Transform>(rats); others.Remove(rat); //Get list of all rats excluding this one
-            Vector2 pos = new Vector2(rat.position.x, rat.position.z);              //Get position of current rat
-            Vector2 newVel = rat.GetComponent<TestBoidController>().velocity;       //Get velocity from rat
+            TestBoidController ratController = rat.GetComponent<TestBoidController>(); //Get controller script from rat
+            List<Transform> others = new List<Transform>(rats); others.Remove(rat);    //Get list of all rats excluding this one
+            Vector2 pos = new Vector2(rat.position.x, rat.position.z);                 //Get position of current rat
+            Vector2 newVel = ratController.velocity;                                   //Get velocity from rat
 
             //Find neighbors:
             List<Transform> separators = new List<Transform>(); //Initialize list to store rats which are within separation distance from this rat
@@ -124,7 +137,7 @@ public class BoidManager : MonoBehaviour
             {
                 Vector2 otherPos = new Vector2(otherRat.position.x, otherRat.position.z); //Get position of other rat in 2D space
                 float distance = Vector2.Distance(pos, otherPos);                         //Get position difference between rats
-                if (distance < separation) separators.Add(otherRat);                      //Add rat to separators list if it is close enough to be a separator
+                if (distance < separation * rat.localScale.x) separators.Add(otherRat);   //Add rat to separators list if it is close enough to be a separator (factoring in rat scale)
                 if (distance < neighborRadius) neighbors.Add(otherRat);                   //Add rat to neighbors list if it is close enough to be a neighbor
             }
 
@@ -149,7 +162,7 @@ public class BoidManager : MonoBehaviour
                     conformVel += otherRat.GetComponent<TestBoidController>().velocity;
                 }
                 conformVel /= neighbors.Count;
-                conformVel -= rat.GetComponent<TestBoidController>().velocity;
+                conformVel -= ratController.velocity;
                 conformVel /= 8;
             }
 
@@ -186,11 +199,19 @@ public class BoidManager : MonoBehaviour
             }
             newVel += targetDragVel * targetDragWeight;
 
+            //Flip rat:
+            if (ratController.timeUntilFlip == 0 && Mathf.Sign(newVel.x) != Mathf.Sign(ratController.velocity.x)) //Rat has changed directions (and is able to flip)
+            {
+                ratController.timeUntilFlip = 0.4f;
+                if (newVel.x < 0) ratController.r.flipX = false;
+                else if (newVel.x > 0) ratController.r.flipX = true;
+            }
+
             //Apply velocity:
             if (newVel.magnitude > currentMaxSpeed) newVel = newVel.normalized * currentMaxSpeed; //Clamp velocity
-            rat.GetComponent<TestBoidController>().velocity = newVel;
+            ratController.velocity = newVel;
             newVel *= deltaTime; //Temporarily apply deltaTime to velocity
-            rat.position = new Vector3(rat.position.x + newVel.x, spawnHeight, rat.position.z + newVel.y);
+            rat.position = new Vector3(rat.position.x + newVel.x, rat.position.y, rat.position.z + newVel.y);
         }
     }
 
@@ -231,15 +252,24 @@ public class BoidManager : MonoBehaviour
     /// </summary>
     public void SpawnRat()
     {
-        //Rat spawn protocol:
-        Transform newRat = Instantiate(ratPrefab).transform;                         //Instantiate a version of rat prefab and get its transform
-        Vector2 centerMass = GetCenterMass(rats.ToArray());                          //Get center mass of all rats in scene
-        centerMass.x += Random.Range(-spawnPositionRandomness, spawnPositionRandomness);
-        centerMass.y += Random.Range(-spawnPositionRandomness, spawnPositionRandomness);
-        newRat.position = new Vector3(centerMass.x, spawnHeight, centerMass.y);      //Move rat to center of rat swarm at set spawn height
-        newRat.eulerAngles = new Vector3(0, GetAverageAlignment(rats.ToArray()), 0); //Rotate rat to match rotation of other rats
-        newRat.name = 0.ToString();                                                  //Set name (used to track velocity) to zero
-        rats.Add(newRat);                                                            //Add new rat to running list
+        //Initializations:
+        Transform newRat = Instantiate(ratPrefab).transform;                          //Instantiate a version of rat prefab and get its transform
+        TestBoidController ratController = newRat.GetComponent<TestBoidController>(); //Get controller script from rat
+
+        //Position rat:
+        Vector2 centerMass = GetCenterMass(rats.ToArray());                              //Get center mass of all rats in scene
+        centerMass.x += Random.Range(-spawnPositionRandomness, spawnPositionRandomness); //Randomize spawn position
+        centerMass.y += Random.Range(-spawnPositionRandomness, spawnPositionRandomness); //Randomize spawn position
+        newRat.position = new Vector3(centerMass.x, spawnHeight, centerMass.y);          //Move rat to center of rat swarm at set spawn height
+        newRat.eulerAngles = new Vector3(0, GetAverageAlignment(rats.ToArray()), 0);     //Rotate rat to match rotation of other rats
+
+        //Set rat color:
+        Color newColor = Color.Lerp(newRat.GetComponentInChildren<SpriteRenderer>().color, altColor, Random.value); //Get random rat color based on presets
+        newRat.GetComponentInChildren<SpriteRenderer>().color = newColor;                                           //Apply new color
+
+        //Cleanup:
+        newRat.name = 0.ToString(); //Set name (used to track velocity) to zero
+        rats.Add(newRat);           //Add new rat to running list
     }
     /// <summary>
     /// Despawns the rat at given index.
