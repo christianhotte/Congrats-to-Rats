@@ -1,0 +1,86 @@
+{
+    "name": "BoidTestActions",
+    "maps": [
+        {
+            "name": "Main",
+            "id": "14cb24de-f75d-4fa9-8b21-e8bac6569481",
+            "actions": [
+                {
+                    "name": "SpawnRat",
+                    "type": "Button",
+                    "id": "a5e5f5ff-2993-41d9-bd1c-a0b72d693a9c",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "RemoveRat",
+                    "type": "Button",
+                    "id": "b79471de-3f58-4bb5-88f2-66013f1f25de",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "AltRemoveRat",
+                    "type": "Button",
+                    "id": "01d6538c-c697-4bb1-8391-719db39e0173",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "6dff5039-f49b-441e-b9e4-80836f1bae27",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "SpawnRat",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5457df32-9b5e-49f9-84d3-678768446c0f",
+                    "path": "<Keyboard>/backspace",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "RemoveRat",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ca5faf25-c257-4bae-a731-202234f6766c",
+                    "path": "<Keyboard>/delete",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "AltRemoveRat",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": [
+        {
+            "name": "Keyboard",
+            "bindingGroup": "Keyboard",
+            "devices": [
+                {
+                    "devicePath": "<Keyboard>",
+                    "isOptional": false,
+                    "isOR": false
+                }
+            ]
+        }
+    ]
+}
