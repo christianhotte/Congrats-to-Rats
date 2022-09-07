@@ -6,8 +6,8 @@ using UnityEngine.InputSystem;
 public class BoidManager : MonoBehaviour
 {
     //Objects & Components:
-    [SerializeField, Tooltip("Prefab object for spawned rats")] private GameObject ratPrefab;
-    [SerializeField] private Transform targetRat;
+    [SerializeField, Tooltip("Prefab object for spawned rats")]             private GameObject ratPrefab;
+    [SerializeField, Tooltip("Object which spawned rats will seek toward")] private Transform targetRat;
 
     //Settings:
     [Header("Settings:")]
@@ -16,14 +16,16 @@ public class BoidManager : MonoBehaviour
     [SerializeField, Min(0), Tooltip("Maximum speed at which rats can travel")]                     private float maxSpeed;
     [SerializeField, Min(0), Tooltip("Separation distance under which rats can affect each other")] private float neighborRadius;
     [SerializeField, Min(0), Tooltip("Target separation distance between rats")]                    private float separation;
+    [Space()]
+    [SerializeField, Min(0), Tooltip("Range at which adjacency to target will begin to slow rats down")] private float targetDragRange;
+    [SerializeField, Tooltip("Curve describing drag depending on how close rats are to target")]         private AnimationCurve targetDragCurve;
     [Header("Rule Weights:")]
-    [SerializeField, Tooltip("Influence clumping rule has on rat behavior")]    private float clumpWeight = 1;
-    [SerializeField, Tooltip("Influence separation rule has on rat behavior")]  private float separationWeight = 1;
-    [SerializeField, Tooltip("Influence conformance rule has on rat behavior")] private float conformWeight = 1;
-    [SerializeField, Tooltip("Influence target rule has on rat behavior")]      private float targetWeight = 1;
-    [Header("Experimental Settings:")]
-    public float maxTargetLeadDistance;
-    public AnimationCurve targetCurve;
+    [SerializeField, Tooltip("Influence clumping rule has on rat behavior")]           private float clumpWeight = 1;
+    [SerializeField, Tooltip("Influence separation rule has on rat behavior")]         private float separationWeight = 1;
+    [SerializeField, Tooltip("Influence conformance rule has on rat behavior")]        private float conformWeight = 1;
+    [SerializeField, Tooltip("Influence target rule has on rat behavior")]             private float targetWeight = 1;
+    [SerializeField, Tooltip("Influence target drag rule has on rat behavior")]        private float targetDragWeight = 1;
+    [SerializeField, Tooltip("Influence camera confinement rule has on rat behavior")] private float cameraConfineWeight = 1;
 
     //Runtime vars:
     private List<Transform> rats = new List<Transform>(); //List of all spawned ratboids in scene
@@ -81,19 +83,38 @@ public class BoidManager : MonoBehaviour
 
             //Do target rule:
             Vector3 ratPosDiff = targetRat.transform.position - rat.transform.position;
-            Vector2 targetVel = new Vector2(ratPosDiff.x, ratPosDiff.z);
+            Vector2 targetVel = new Vector2(ratPosDiff.x, ratPosDiff.z); //Get direction of velocity moving rats toward target
+
+            //Do camera confinement rule:
+
 
             //Apply rules:
             newVel += clumpingVel * clumpWeight;
             newVel += separationVel * separationWeight;
             newVel += conformVel * conformWeight;
             newVel += targetVel * targetWeight;
+
+            //Do target drag rule (late):
+            float targetDistance = ratPosDiff.magnitude; //Get distance between target and rat
+            Vector2 targetDragVel = Vector2.zero;
+            if (targetDistance <= targetDragRange) //Rat is close enough to target to induce drag
+            {
+                float dragInterpolant = Mathf.InverseLerp(targetDragRange, 0, targetDistance);
+                targetDragVel = -newVel; //Initialize drag as reverse velocity of rat
+                targetDragVel *= targetDragCurve.Evaluate(dragInterpolant); //Apply distance-sensitive intensity curve to drag force
+            }
+            newVel += targetDragVel * targetDragWeight;
+
+            //Apply velocity:
             if (newVel.magnitude > maxSpeed) newVel = newVel.normalized * maxSpeed; //Clamp velocity
             rat.GetComponent<TestBoidController>().velocity = newVel;
             newVel *= deltaTime; //Temporarily apply deltaTime to velocity
             rat.position = new Vector3(rat.position.x + newVel.x, spawnHeight, rat.position.z + newVel.y);
         }
     }
+
+    //RAT RULES:
+
 
     //INPUT METHODS:
     public void OnSpawnRat(InputAction.CallbackContext context)
@@ -107,6 +128,25 @@ public class BoidManager : MonoBehaviour
     public void OnAltRemoveRat(InputAction.CallbackContext context)
     {
         if (context.started) DespawnRat(0); //Remove first rat in list on button press
+    }
+    public void OnMoveTarget(InputAction.CallbackContext context)
+    {
+        Vector2 value = context.ReadValue<Vector2>();       //Get value from context
+        Ray mouseRay = Camera.main.ScreenPointToRay(value); //Get ray from camera based on pointer position
+        if (Physics.Raycast(mouseRay, out RaycastHit hit)) //See if ray is hitting floor plane
+        {
+            Vector3 targetPoint = hit.point;                      //Get point on plane to move target to
+            targetPoint.y = spawnHeight * targetRat.localScale.x; //Use rat scale and spawn height to find static ground offset for target
+            targetRat.position = targetPoint;                     //Move target to computed point
+        }
+    }
+    public void OnScrollSpawn(InputAction.CallbackContext context)
+    {
+        if (context.started) //Scroll wheel has just been moved one tick
+        {
+            if (context.ReadValue<float>() > 0) SpawnRat(); //Spawn rats when wheel is scrolled up
+            else DespawnRat(rats.Count - 1);                //Despawn rats when wheel is scrolled down
+        }
     }
 
     //FUNCTIONALITY METHODS:
