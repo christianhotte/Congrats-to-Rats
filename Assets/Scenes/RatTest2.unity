@@ -445,11 +445,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9fc58e81a09d8fd4889f12d274ef0759, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ratSettings: {fileID: 11400000, guid: 05459abdf753c3d4d9822d0a9ff599ed, type: 2}
+  settings: {fileID: 11400000, guid: 05459abdf753c3d4d9822d0a9ff599ed, type: 2}
   swarmSettings: {fileID: 11400000, guid: 6a49a230e4d3a92438fd97809167b3b9, type: 2}
-  speed: 10
-  accel: 70
-  decel: 60
 --- !u!114 &4307553910474697567
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -10,4 +10,8 @@ public class BigRatSettings : ScriptableObject
     [Min(0), Tooltip("How fast the rat can move")]             public float speed;
     [Min(0), Tooltip("How quickly the rat reaches max speed")] public float accel;
     [Min(0), Tooltip("How quickly the rat comes to a stop")]   public float decel;
+    [Header("Trail:")]
+    [Min(0), Tooltip("Amount of length which is added to trail for each rat follower")]                               public float trailLengthPerRat;
+    [Min(0), Tooltip("Minimum distance between two trail points (higher values will make trail simpler)")]            public float minTrailPointSeparation;
+    [Min(2), Tooltip("Absolute maximum number of points in trail (lower numbers may mess with large trail pathing)")] public int maxTrailPoints = 2;
 }

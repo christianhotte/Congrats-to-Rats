@@ -15,3 +15,6 @@ MonoBehaviour:
   speed: 10
   accel: 70
   decel: 60
+  trailLengthPerRat: 0.1
+  minTrailPointSeparation: 0
+  maxTrailPoints: 30
