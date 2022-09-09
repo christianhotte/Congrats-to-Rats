@@ -35,10 +35,6 @@ public class BoidManager : MonoBehaviour
     [Header("Visual Settings:")]
     [SerializeField, Tooltip("Alternative color which rats may spawn with")] private Color altColor;
 
-    /* NOTES:
-     *  -For future trail: only take one point from however many updates ago, and then find the closest point on that line (also give this type of target-seeking its own weight)
-    */
-
     //Runtime vars:
     private List<Transform> rats = new List<Transform>();    //List of all spawned ratboids in scene
     private List<Vector2> targetTrail = new List<Vector2>(); //List of previous positions of target stored in memory
