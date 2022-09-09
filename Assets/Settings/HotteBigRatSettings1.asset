@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45049b6970deb164791773e26b94746a, type: 3}
   m_Name: HotteBigRatSettings1
   m_EditorClassIdentifier: 
-  speed: 10
-  accel: 70
-  decel: 60
-  trailLengthPerRat: 0.1
-  minTrailPointSeparation: 0
-  maxTrailPoints: 30
+  speed: 1
+  accel: 7
+  decel: 6
+  trailLengthPerRat: 0.025
+  minTrailSegLength: 0.1
+  velTrailLengthMultiplier: 1.2
