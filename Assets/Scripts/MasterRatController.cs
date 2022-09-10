@@ -46,7 +46,8 @@ public class MasterRatController : MonoBehaviour
     }
     private void Update()
     {
-        MoveRat(Time.deltaTime); //Apply velocity to rat position
+        MoveRat(Time.deltaTime);      //Move the big rat
+        MoveRatBoids(Time.deltaTime); //Move all the little rats
 
         //Visualize trail:
         if (trail.Count > 1)
@@ -111,10 +112,9 @@ public class MasterRatController : MonoBehaviour
             }
 
             //Limit trail length:
-            //float targetTrailLength = followerRats.Count * settings.trailLengthPerRat; //Get target trail length based off of follower count and settings
-            float targetTrailLength = 20 * settings.trailLengthPerRat; //Get target trail length based off of follower count and settings
+            float targetTrailLength = (followerRats.Count * settings.trailLengthPerRat) + 0.01f;                  //Get target trail length based off of follower count and settings
             targetTrailLength *= Mathf.Lerp(1, settings.velTrailLengthMultiplier, currentSpeed / settings.speed); //Apply velocity-based length multiplier to target trail length
-            while (totalTrailLength > targetTrailLength) //Current trail is longer than target length
+            while (totalTrailLength > targetTrailLength) //Current trail is longer than target length (and is non-zero)
             {
                 float extraLength = totalTrailLength - targetTrailLength;     //Get amount of extra length left in trail
                 float lastSegLength = Vector2.Distance(trail[^1], trail[^2]); //Get distance between last two segments in trail
@@ -131,8 +131,16 @@ public class MasterRatController : MonoBehaviour
             }
 
             //Check for crossed lines:
-
+            
         }
+    }
+    /// <summary>
+    /// Moves all RatBoids currently following this rat.
+    /// </summary>
+    /// <param name="deltaTime"></param>
+    private void MoveRatBoids(float deltaTime)
+    {
+
     }
 
     //INPUT METHODS:
@@ -140,28 +148,76 @@ public class MasterRatController : MonoBehaviour
     {
         moveInput = context.ReadValue<Vector2>(); //Store input value
     }
+    public void OnScrollSpawn(InputAction.CallbackContext context)
+    {
+        if (context.started) //Scroll wheel has just been moved one tick
+        {
+            if (context.ReadValue<float>() > 0) AddRat(settings.basicRatPrefab); //Spawn rats when wheel is scrolled up
+            else if (followerRats.Count > 0) RemoveRat(followerRats[^1]);        //Despawn rats when wheel is scrolled down
+        }
+    }
 
     //FUNCTIONALITY METHODS:
-    /*/// <summary>
-    /// Returns the point on trail which is closest to given reference point.
+    /// <summary>
+    /// Returns the point on trail which is closest to given reference point (NOTE: very expensive).
     /// </summary>
-    public Vector2 GetClosestPointOnTrail(Vector2 reference)
+    public Vector2 GetClosestPointOnTrail(Vector2 origin)
     {
+        //Validity checks:
+        if (trail.Count == 1) return trail[0]; //Simply return only point in trail if applicable
 
-    }*/
+        //Find two closest adjacent points on trail:
+        Vector2 pointA = trail[1]; //Initialize first point at second item in trail
+        Vector2 pointB = trail[0]; //Initialize second point at first item in trail
+        if (trail.Count > 2) //Only search harder if there are more than two points to check
+        {
+            //Get closest point:
+            float closestDistance = Vector2.Distance(origin, pointA); //Initialize closest point tracker at distance between origin and point A
+            int closestIndex = 1;                                     //Initialize container to store index of closest point
+            for (int i = 2; i < trail.Count - 1; i++) //Iterate through points in trail which have two neighbors (and are not already point A)
+            {
+                float distance = Vector2.Distance(origin, trail[i]); //Check distance between origin and point
+                if (distance < closestDistance) //Current point is closer than previous closest point
+                {
+                    closestDistance = distance; //Store closest distance
+                    closestIndex = i;           //Store closest index
+                    pointA = trail[i];          //Update point A
+                }
+            }
+
+            //Get closest adjacent point:
+            if (Vector2.Distance(origin, trail[closestIndex - 1]) <= Vector2.Distance(origin, trail[closestIndex + 1])) pointB = trail[closestIndex - 1]; //Left adjacent point is closer
+            else { pointB = trail[closestIndex + 1]; } //Right adjacent point is closer
+        }
+
+        //Get closest point between points:
+        Vector2 dir = pointB - pointA;                 //Get direction of line between two points
+        float lineLength = dir.magnitude;              //Get distance between points
+        dir.Normalize();                               //Normalize directional vector
+        Vector2 lhs = origin - pointA;                 //Get the left hand side vector
+        float product = Vector2.Dot(lhs, dir);         //Get dot product of direction and side
+        product = Mathf.Clamp(product, 0, lineLength); //Clamp length to make sure projection is on line
+        return pointA + (dir * product);               //Return point on line which is closest to given origin
+    }
     /// <summary>
     /// Spawns a new rat and adds it to the swarm.
     /// </summary>
-    public void AddRat()
+    public void AddRat(GameObject prefab)
     {
-
+        //Spawn rat:
+        Vector2 spawnPoint = RatSpawner.GetPointWithinRadius(PosAsVector2(), settings.spawnRadius); //Get spawnpoint
+        Transform newRat = Instantiate(prefab).transform;                                           //Spawn new rat
+        newRat.position = new Vector3(spawnPoint.x, swarmSettings.height, spawnPoint.y);            //Move rat to spawn position
+        followerRats.Add(newRat.GetComponent<RatBoid>());                                           //Add rat to followers
     }
     /// <summary>
     /// Removes a specific rat from the swarm.
     /// </summary>
-    public void RemoveRat()
+    public void RemoveRat(RatBoid target)
     {
-
+        //Despawn rat:
+        followerRats.Remove(target); //Remove rat from followers
+        Destroy(target.gameObject);  //Destroy rat
     }
 
     //UTILITY METHODS:

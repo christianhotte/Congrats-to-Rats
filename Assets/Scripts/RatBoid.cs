@@ -7,5 +7,7 @@ using UnityEngine;
 /// </summary>
 public class RatBoid : MonoBehaviour
 {
-    
+    //Stored Realtime Data:
+    //NOTE: This data is used by nearby rats to help each other skip computations when possible
+
 }

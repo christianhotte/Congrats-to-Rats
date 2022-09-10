@@ -14,4 +14,7 @@ public class BigRatSettings : ScriptableObject
     [Min(0), Tooltip("Amount of length which is added to trail for each rat follower")]                    public float trailLengthPerRat;
     [Min(0), Tooltip("Minimum distance between two trail points (higher values will make trail simpler)")] public float minTrailSegLength;
     [Min(1), Tooltip("Determines how much trail stretches when big rat is moving")]                        public float velTrailLengthMultiplier = 1;
+    [Header("Spawning:")]
+    [Tooltip("Prefab object for default rats in the swarm")]   public GameObject basicRatPrefab;
+    [Min(0), Tooltip("How far away followers can be spawned")] public float spawnRadius;
 }
