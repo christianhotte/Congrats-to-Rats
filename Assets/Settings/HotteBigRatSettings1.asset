@@ -15,8 +15,8 @@ MonoBehaviour:
   speed: 1
   accel: 7
   decel: 6
-  trailLengthPerRat: 0.025
+  trailDensity: 50
   minTrailSegLength: 0.07
-  velTrailLengthMultiplier: 1.2
+  velTrailLengthMultiplier: 1
   basicRatPrefab: {fileID: 4272964666275407885, guid: 16e94108f81788e4c9ded77f0823772f, type: 3}
-  spawnRadius: 1
+  spawnRadius: 1.5

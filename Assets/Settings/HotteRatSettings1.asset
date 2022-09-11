@@ -12,7 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8e58a829cf81d4478cc242c07f00b84, type: 3}
   m_Name: HotteRatSettings1
   m_EditorClassIdentifier: 
-  height: 0.03
+  baseRatHeight: 0.04
+  maxSpeed: 1.2
+  separationRadius: 0.1
+  neighborRadius: 1.5
   cohesionWeight: 1
-  separationWeight: 1
-  conformityWeight: 1
+  separationWeight: 0.6
+  conformityWeight: 0
+  targetWeight: 1
+  followWeight: 3
