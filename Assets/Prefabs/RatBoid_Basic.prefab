@@ -25,9 +25,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4272964666275407885}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.04, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 8896903363751541910}
   m_Father: {fileID: 0}
@@ -45,6 +45,63 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f1dcefaacad46f4fbd469dd841d9b6e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  scaleRandomness: 0.25
+  bobCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.0015170804
+      outSlope: 0.0015170804
+      tangentMode: 0
+      weightedMode: 2
+      inWeight: 0
+      outWeight: 0.39616886
+    - serializedVersion: 3
+      time: 0.3
+      value: 0
+      inSlope: -0
+      outSlope: -0.003120507
+      tangentMode: 5
+      weightedMode: 3
+      inWeight: 0.27463445
+      outWeight: 0.60920376
+    - serializedVersion: 3
+      time: 0.5
+      value: 1
+      inSlope: -0.0000005148188
+      outSlope: -0.0000005148188
+      tangentMode: 0
+      weightedMode: 3
+      inWeight: 0.20170179
+      outWeight: 0.47060555
+    - serializedVersion: 3
+      time: 0.746019
+      value: 0
+      inSlope: 0.0030881076
+      outSlope: 0
+      tangentMode: 65
+      weightedMode: 3
+      inWeight: 0.61559534
+      outWeight: 0.29693732
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -0.0013591335
+      outSlope: -0.0013591335
+      tangentMode: 0
+      weightedMode: 1
+      inWeight: 0.37126005
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  baseHeight: 0.04
+  maxBobHeight: 0.08
+  bobTime: 1
+  altColor: {r: 0.5, g: 0.36292955, b: 0.28144652, a: 1}
+  timeBetweenFlips: 0.4
 --- !u!1 &7187241238139597378
 GameObject:
   m_ObjectHideFlags: 0

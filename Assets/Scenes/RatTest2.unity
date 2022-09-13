@@ -700,7 +700,7 @@ MonoBehaviour:
   settings: {fileID: 11400000, guid: 05459abdf753c3d4d9822d0a9ff599ed, type: 2}
   swarmSettings:
   - {fileID: 11400000, guid: 16bf19914b8540a41a8fab6ec653430e, type: 2}
-  - {fileID: 11400000, guid: 8dcefa0530ac59940b2c957e3d500fdd, type: 2}
+  - {fileID: 11400000, guid: 72812ea4b8be10545bc0b43555238642, type: 2}
 --- !u!114 &4307553910474697567
 MonoBehaviour:
   m_ObjectHideFlags: 0

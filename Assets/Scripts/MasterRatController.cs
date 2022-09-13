@@ -63,6 +63,7 @@ public class MasterRatController : MonoBehaviour
     private float totalTrailLength = 0;                        //Current length of trail
 
     internal Vector2 velocity; //Current speed and direction of movement
+    internal Vector2 forward;  //Normalized vector representing which direction big rat was most recently moving
     private Vector2 moveInput; //Current input direction for movement
 
     //RUNTIME METHODS:
@@ -85,7 +86,7 @@ public class MasterRatController : MonoBehaviour
         RatBoid.UpdateRats(Time.deltaTime, currentSwarmSettings); //Move all the little rats
 
         //Visualize trail:
-        if (trail.Count > 1)
+        /*if (trail.Count > 1)
         {
             for (int i = 1; i < trail.Count; i++)
             {
@@ -93,7 +94,7 @@ public class MasterRatController : MonoBehaviour
                 Vector3 p2 = new Vector3(trail[i - 1].x, 0.1f, trail[i - 1].y);
                 Debug.DrawLine(p1, p2, Color.blue);
             }
-        }
+        }*/
     }
     
     //UPDATE METHODS:
@@ -124,10 +125,15 @@ public class MasterRatController : MonoBehaviour
         }
 
         //Get new position:
-        Vector3 newPos = transform.position; //Get current position of rat
-        newPos.x += velocity.x * deltaTime;  //Add X velocity over time to position
-        newPos.z += velocity.y * deltaTime;  //Add Y velocity over time to position
-        transform.position = newPos;         //Apply new position
+        if (velocity != Vector2.zero) //Only update position if player has velocity
+        {
+            forward = velocity.normalized;       //Update forward direction tracker
+
+            Vector3 newPos = transform.position; //Get current position of rat
+            newPos.x += velocity.x * deltaTime;  //Add X velocity over time to position
+            newPos.z += velocity.y * deltaTime;  //Add Y velocity over time to position
+            transform.position = newPos;         //Apply new position
+        }
 
         //Update trail characteristics:
         trail.Insert(0, PosAsVector2());                        //Add new trailPoint for current position
@@ -206,8 +212,8 @@ public class MasterRatController : MonoBehaviour
         RatBoid ratController = newRat.GetComponent<RatBoid>();                                     //Get controller from spawned rat
         
         //Set position:
-        newRat.position = new Vector3(spawnPoint.x, currentSwarmSettings.baseRatHeight, spawnPoint.y); //Move rat to spawn position
-        ratController.flatPos = spawnPoint;                                                     //Update flat position tracker of spawned rat
+        newRat.position = new Vector3(spawnPoint.x, 0, spawnPoint.y); //Move rat to spawn position
+        ratController.flatPos = spawnPoint;                           //Update flat position tracker of spawned rat
 
         //Set as follower:
         ratController.follower = true;   //Indicate that new rat is currently following big rat
@@ -292,7 +298,7 @@ public class MasterRatController : MonoBehaviour
     /// <summary>
     /// Returns current position of rat as 2D vector (relative to world down).
     /// </summary>
-    private Vector2 PosAsVector2()
+    public Vector2 PosAsVector2()
     {
         return new Vector2(transform.position.x, transform.position.z);
     }

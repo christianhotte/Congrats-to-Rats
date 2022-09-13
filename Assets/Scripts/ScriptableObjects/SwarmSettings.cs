@@ -11,9 +11,7 @@ public class SwarmSettings : ScriptableObject
     //Data:
     [Header("General:")]
     [Min(1), Tooltip("The quantity of rats these settings work best for")]                                                            public int targetRatNumber;
-    [Min(0), Tooltip("How high off of the ground rats hover")]                                                                        public float baseRatHeight;
     [Min(0), Tooltip("Maximum speed rats may travel at")]                                                                             public float maxSpeed;
-    [Min(0), Tooltip("Maximum rate at which rats may change speed")]                                                                  public float maxAccel;
     [Min(0), Tooltip("Distance with rats will try to keep between themselves and other rats")]                                        public float separationRadius;
     [Min(0), Tooltip("Distance at which rats will influence each other and clump together (should be larger than separationRadius)")] public float neighborRadius;
     [Min(0), Tooltip("Rough radius around target path which rat swarm tries to congregate in")]                                       public float targetRadius;
@@ -24,12 +22,14 @@ public class SwarmSettings : ScriptableObject
     [Min(0), Tooltip("Minimum distance between two trail points (higher values will make trail simpler)")] public float minTrailSegLength;
     [Min(1), Tooltip("Determines how much trail stretches when big rat is moving")]                        public float velTrailLengthMultiplier = 1;
     [Header("Rule Weights:")]
-    [Min(0), Tooltip("Tendency for rats to move toward other nearby rats")]              public float cohesionWeight = 1;
-    [Min(0), Tooltip("Tendency for rats to maintain a small distance from nearby rats")] public float separationWeight = 1;
-    [Min(0), Tooltip("Tendency for rats to match speed with other nearby rats")]         public float conformityWeight = 1;
-    [Min(0), Tooltip("Tendency for rats to move toward desired position")]               public float targetWeight = 1;
-    [Min(0), Tooltip("Tendency for rats to move along path when leader is moving")]      public float followWeight = 1;
-    [Min(0), Tooltip("Tendency for rats to stay still when near target")]                public float stickWeight = 1;
+    [Min(0), Tooltip("Tendency for rats to move toward other nearby rats")]              public float cohesionWeight;
+    [Min(0), Tooltip("Tendency for rats to maintain a small distance from nearby rats")] public float separationWeight;
+    [Min(0), Tooltip("Tendency for rats to match speed with other nearby rats")]         public float conformityWeight;
+    [Min(0), Tooltip("Tendency for rats to move toward desired position")]               public float targetWeight;
+    [Min(0), Tooltip("Tendency for rats to move along path toward leader")]              public float followWeight;
+    [Min(0), Tooltip("Tendency for rats to match leader velocity while on path")]        public float leadWeight;
+    [Min(0), Tooltip("Tendency for rats to stay behind the leader")]                     public float stayBackWeight;
+    [Min(0), Tooltip("Tendency for rats in back of the line to catch up")]               public float stragglerWeight;
 
     //Interpolation Metadata:
     private float currentInterpolant = -1;              //Interpolant last used to change this object's data (negative if data is not interpolated)
@@ -48,9 +48,7 @@ public class SwarmSettings : ScriptableObject
         lerpSettingsB = settingsB;                                                                                              //Save interpolant settings
 
         //Interpolate float settings (NOTE: kinda gross):
-        baseRatHeight = Mathf.Lerp(settingsA.baseRatHeight, settingsB.baseRatHeight, currentInterpolant);
         maxSpeed = Mathf.Lerp(settingsA.maxSpeed, settingsB.maxSpeed, currentInterpolant);
-        maxAccel = Mathf.Lerp(settingsA.maxAccel, settingsB.maxAccel, currentInterpolant);
         separationRadius = Mathf.Lerp(settingsA.separationRadius, settingsB.separationRadius, currentInterpolant);
         neighborRadius = Mathf.Lerp(settingsA.neighborRadius, settingsB.neighborRadius, currentInterpolant);
         targetRadius = Mathf.Lerp(settingsA.targetRadius, settingsB.targetRadius, currentInterpolant);
@@ -64,7 +62,9 @@ public class SwarmSettings : ScriptableObject
         conformityWeight = Mathf.Lerp(settingsA.conformityWeight, settingsB.conformityWeight, currentInterpolant);
         targetWeight = Mathf.Lerp(settingsA.targetWeight, settingsB.targetWeight, currentInterpolant);
         followWeight = Mathf.Lerp(settingsA.followWeight, settingsB.followWeight, currentInterpolant);
-        stickWeight = Mathf.Lerp(settingsA.stickWeight, settingsB.stickWeight, currentInterpolant);
+        leadWeight = Mathf.Lerp(settingsA.leadWeight, settingsB.leadWeight, currentInterpolant);
+        stayBackWeight = Mathf.Lerp(settingsA.stayBackWeight, settingsB.stayBackWeight, currentInterpolant);
+        stragglerWeight = Mathf.Lerp(settingsA.stragglerWeight, settingsB.stragglerWeight, currentInterpolant);
     }
     public float EvaluateFollowStrength(float time)
     {
