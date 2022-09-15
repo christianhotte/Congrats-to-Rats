@@ -133,7 +133,6 @@ public class RatBoid : MonoBehaviour
         }
 
         //RAT RULES:
-        float leaderSpeed = MasterRatController.main.velocity.magnitude; //Pre-emptively get velocity of leader
         foreach (RatBoid rat in spawnedRats) //Iterate through every rat in list
         {
             if (rat.currentNeighbors.Count != 0) //Rat must have neighbors for these rules to apply
@@ -155,16 +154,23 @@ public class RatBoid : MonoBehaviour
                 rat.velocity += Vector2.ClampMagnitude(conformVel, settings.maxSpeed); //Apply clamped velocity to rat
             }
 
+            //RULE - Velocity Clamping: (rats cannot go faster than their max speed)
+            rat.velocity = Vector2.ClampMagnitude(rat.velocity, settings.maxSpeed); //Clamp rat velocity to maximum speed
+
             //RULE - Separation: (rats maintain a small distance from each other)
             if (rat.currentSeparators.Count != 0) //Only do separation if rat has separators
             {
                 Vector2 separationVel = Vector2.zero; //Initialize container to store gross separation-induced velocity
                 foreach (RatBoid otherRat in rat.currentSeparators) //Iterate through list of rats which are currently too close to this rat
                 {
-                    separationVel += rat.flatPos - otherRat.flatPos; //Add velocity which moves these rats away from each other
+                    //NOTE: Make rats record separation distance along with current separators
+                    //NOTE: Do this for path tension weight as well
+                    Vector2 sepDir = rat.flatPos - otherRat.flatPos;
+                    float sepPower = 1 - (sepDir.magnitude / settings.separationRadius);
+                    separationVel += sepDir.normalized * sepPower;
                 }
-                separationVel *= settings.separationWeight;                               //Apply weight setting to separation rule
-                rat.velocity += Vector2.ClampMagnitude(separationVel, settings.maxSpeed); //Apply clamped velocity to rat
+                separationVel *= settings.separationWeight; //Apply weight setting to separation rule
+                rat.velocity += separationVel;              //Apply unclamped velocity to rat
             }
 
             if (rat.follower) //Rat must be a follower for these rules to apply
@@ -172,7 +178,8 @@ public class RatBoid : MonoBehaviour
                 MasterRatController.TrailPointData data = MasterRatController.main.GetClosestPointOnTrail(rat.flatPos); //Get data for point closest to rat position
                 Vector2 target = data.point;                                                                            //Get position of target from data
                 float targetDistance = Vector2.Distance(rat.flatPos, target);                                           //Get separation between rat and target
-                if (targetDistance > settings.targetRadius) //Rat must be outside target distance for these rules to apply
+                float targetRadius = settings.EvaluateTargetSize(data.linePosition) * settings.targetRadius;            //Get target size depending on position in line and base target radius
+                if (targetDistance > targetRadius) //Rat must be outside target distance for these rules to apply
                 {
                     //RULE - Targeting: (rats tend to move toward target)
                     Vector2 targetVel = (target - rat.flatPos).normalized;                //Get direction toward target
@@ -182,35 +189,46 @@ public class RatBoid : MonoBehaviour
                 else //Rat must be within target distance for these rules to apply
                 {
                     //RULE - Following: (rats on a trail will move along it toward the leader)
-                    Vector2 followVel = data.forward;                                     //Get follow velocity from forward direction of trail
-                    followVel = (followVel / 100) * settings.followWeight;                //Apply weight and balancing values to follow velocity
-                    followVel *= settings.EvaluateFollowStrength(data.linePosition);      //Modify follow strength depending on where target is along line
-                    rat.velocity += Vector2.ClampMagnitude(followVel, settings.maxSpeed); //Apply clamped velocity to rat
+                    Vector2 followVel = data.forward;                                          //Get follow velocity from forward direction of trail
+                    float followStrength = settings.EvaluateFollowStrength(data.linePosition); //Get follow strength depending on position of rat in line
+                    followVel *= 0.1f * settings.followWeight;                                 //Apply weight and balancing values to follow velocity
+                    rat.velocity += followVel;                                                 //Apply unclamped velocity to rat
                     
-                    //RULE - Leading: (rats on a trail will speed up when leader is moving)
-                    Vector2 leadVel = data.forward * leaderSpeed;                       //Get lead velocity from forward direction of trail and speed of leader
-                    leadVel *= settings.leadWeight;                                     //Apply weight value to lead velocity
-                    rat.velocity += Vector2.ClampMagnitude(leadVel, settings.maxSpeed); //Apply clamped velocity to rat
+                    //RULE - Leading: (rats on a trail will move along it when leader is moving)
+                    Vector2 leadVel = data.forward * MasterRatController.main.currentSpeed; //Get lead velocity from forward direction of trail and speed of leader
+                    leadVel *= 0.1f * followStrength * settings.leadWeight;                 //Apply weight value and balancing values to lead velocity
+                    rat.velocity += leadVel;                                                //Apply unclamped velocity to rat
                 }
+
+                if (rat.currentSeparators.Count != 0)
+                {
+                    //RULE - Path Separation: (adjacent rats moving along path will push each other apart along path)
+                    Vector2 pathSeparationVel = Vector2.zero;
+                    foreach (RatBoid otherRat in rat.currentSeparators) //Iterate through list of rats which are currently too close to this rat
+                    {
+                        Vector2 sepVel = data.point - otherRat.flatPos;
+                        if (Vector2.Angle(sepVel, data.forward) >= 90) pathSeparationVel += sepVel;
+                    }
+                    pathSeparationVel *= settings.pathTensionWeight;
+                    rat.velocity += pathSeparationVel;
+                }
+
 
                 if (data.linePosition <= 0) //Rat must be ahead of line for these rules to apply
                 {
                     //RULE - Staying Behind: (rats in front of leader tend to want to get behind it)
-                    Vector2 stayBackVel = -MasterRatController.main.forward;                //Make stay back velocity directly oppose facing direction of leader
-                    stayBackVel *= settings.stayBackWeight;                                 //Apply weight value to stay back velocity
-                    rat.velocity += Vector2.ClampMagnitude(stayBackVel, settings.maxSpeed); //Apply clamped velocity to rat
+                    Vector2 stayBackVel = -MasterRatController.main.forward; //Make stay back velocity directly oppose facing direction of leader
+                    stayBackVel *= 0.1f * settings.stayBackWeight;           //Apply weight and balancing values to stay back velocity
+                    rat.velocity += stayBackVel;                             //Apply unclamped velocity to rat
                 }
-                else if (data.linePosition >= 1) //Rat must be behind line for these rules to apply
+                else if (data.linePosition >= 0.9f) //Rat must be behind line for these rules to apply
                 {
                     //RULE - Straggler Prevention: (rats behind the line will speed up)
                     Vector2 stragglerVel = data.forward;
                     stragglerVel *= settings.stragglerWeight;
-                    rat.velocity += Vector2.ClampMagnitude(stragglerVel, settings.maxSpeed);;
+                    rat.velocity += stragglerVel;
                 }
             }
-
-            //RULE - Velocity Clamping: (rats cannot go faster than their max speed)
-            rat.velocity = Vector2.ClampMagnitude(rat.velocity, settings.maxSpeed); //Clamp rat velocity to maximum speed
         }
     }
 

@@ -62,9 +62,10 @@ public class MasterRatController : MonoBehaviour
     private List<float> segLengths = new List<float>();        //List of lengths corresponding to segments in trail
     private float totalTrailLength = 0;                        //Current length of trail
 
-    internal Vector2 velocity; //Current speed and direction of movement
-    internal Vector2 forward;  //Normalized vector representing which direction big rat was most recently moving
-    private Vector2 moveInput; //Current input direction for movement
+    internal Vector2 velocity;   //Current speed and direction of movement
+    internal Vector2 forward;    //Normalized vector representing which direction big rat was most recently moving
+    internal float currentSpeed; //Current speed at which rat is moving
+    private Vector2 moveInput;   //Current input direction for movement
 
     //RUNTIME METHODS:
     private void Awake()
@@ -85,8 +86,10 @@ public class MasterRatController : MonoBehaviour
         MoveRat(Time.deltaTime);                                  //Move the big rat
         RatBoid.UpdateRats(Time.deltaTime, currentSwarmSettings); //Move all the little rats
 
+        UpdateSwarmSettings(); //TEMP: Keep swarm settings up-to-date for debugging purposes
+
         //Visualize trail:
-        /*if (trail.Count > 1)
+        if (trail.Count > 1)
         {
             for (int i = 1; i < trail.Count; i++)
             {
@@ -94,7 +97,7 @@ public class MasterRatController : MonoBehaviour
                 Vector3 p2 = new Vector3(trail[i - 1].x, 0.1f, trail[i - 1].y);
                 Debug.DrawLine(p1, p2, Color.blue);
             }
-        }*/
+        }
     }
     
     //UPDATE METHODS:
@@ -117,7 +120,7 @@ public class MasterRatController : MonoBehaviour
         {
             velocity = Vector2.MoveTowards(velocity, Vector2.zero, settings.decel * deltaTime); //Slow rat down based on deceleration over time
         }
-        float currentSpeed = velocity.magnitude; //Get current speed of main rat
+        currentSpeed = velocity.magnitude; //Get current speed of main rat
         if (currentSpeed > settings.speed) //Check if current speed is faster than target speed
         {
             velocity = Vector2.ClampMagnitude(velocity, settings.speed); //Clamp velocity to target speed

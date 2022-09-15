@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetRatNumber: 50
   maxSpeed: 1
-  separationRadius: 0.06
+  separationRadius: 0.07
   neighborRadius: 0.3
   targetRadius: 0.1
   followStrengthCurve:
@@ -23,32 +23,57 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 0
       value: 0.5
-      inSlope: 0.024439787
-      outSlope: 0.024439787
+      inSlope: 0.021545826
+      outSlope: 0.021545826
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.038897004
+      outWeight: 0.031775016
     - serializedVersion: 3
       time: 1
       value: 1
-      inSlope: 0.7675652
-      outSlope: 0.7675652
+      inSlope: 0.01938304
+      outSlope: 0.01938304
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.02154857
+      inWeight: 0.10882753
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  trailDensity: 100
+  targetSizeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: -0.7
+      outSlope: -0.7
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0.3
+      inSlope: -0.7
+      outSlope: -0.7
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  trailDensity: 40
   minTrailSegLength: 0.07
   velTrailLengthMultiplier: 1
   cohesionWeight: 0.4
-  separationWeight: 0.6
+  separationWeight: 0.5
   conformityWeight: 0
   targetWeight: 4
-  followWeight: 0.6
-  leadWeight: 2
-  stayBackWeight: 0.1
-  stragglerWeight: 1
+  followWeight: 0.03
+  leadWeight: 6
+  pathTensionWeight: 0.07
+  stayBackWeight: 0.7
+  stragglerWeight: 0.2

@@ -17,6 +17,7 @@ public class SwarmSettings : ScriptableObject
     [Min(0), Tooltip("Rough radius around target path which rat swarm tries to congregate in")]                                       public float targetRadius;
     [Space()]
     [SerializeField, Tooltip("Use this to tweak followWeight according to where rats are along the trail")] private AnimationCurve followStrengthCurve;
+    [SerializeField, Tooltip("Use modify target radius along length of path")]                              private AnimationCurve targetSizeCurve;
     [Header("Trail:")]
     [Min(0), Tooltip("Number of rats per unit of trail")]                                                  public float trailDensity;
     [Min(0), Tooltip("Minimum distance between two trail points (higher values will make trail simpler)")] public float minTrailSegLength;
@@ -28,6 +29,7 @@ public class SwarmSettings : ScriptableObject
     [Min(0), Tooltip("Tendency for rats to move toward desired position")]               public float targetWeight;
     [Min(0), Tooltip("Tendency for rats to move along path toward leader")]              public float followWeight;
     [Min(0), Tooltip("Tendency for rats to match leader velocity while on path")]        public float leadWeight;
+    [Min(0), Tooltip("Tendency for rats to spring back to fill path")]                   public float pathTensionWeight;
     [Min(0), Tooltip("Tendency for rats to stay behind the leader")]                     public float stayBackWeight;
     [Min(0), Tooltip("Tendency for rats in back of the line to catch up")]               public float stragglerWeight;
 
@@ -63,6 +65,7 @@ public class SwarmSettings : ScriptableObject
         targetWeight = Mathf.Lerp(settingsA.targetWeight, settingsB.targetWeight, currentInterpolant);
         followWeight = Mathf.Lerp(settingsA.followWeight, settingsB.followWeight, currentInterpolant);
         leadWeight = Mathf.Lerp(settingsA.leadWeight, settingsB.leadWeight, currentInterpolant);
+        pathTensionWeight = Mathf.Lerp(settingsA.pathTensionWeight, settingsB.pathTensionWeight, currentInterpolant);
         stayBackWeight = Mathf.Lerp(settingsA.stayBackWeight, settingsB.stayBackWeight, currentInterpolant);
         stragglerWeight = Mathf.Lerp(settingsA.stragglerWeight, settingsB.stragglerWeight, currentInterpolant);
     }
@@ -70,6 +73,11 @@ public class SwarmSettings : ScriptableObject
     {
         if (currentInterpolant == -1 || lerpSettingsA == null || lerpSettingsB == null) { return followStrengthCurve.Evaluate(time); } //Evaluate standard curve if settings are not interpolated
         else { return LerpCurves(lerpSettingsA.followStrengthCurve, lerpSettingsB.followStrengthCurve, time); }                        //Get interpolation between curve evaluations for interpolated settings
+    }
+    public float EvaluateTargetSize(float time)
+    {
+        if (currentInterpolant == -1 || lerpSettingsA == null || lerpSettingsB == null) { return targetSizeCurve.Evaluate(time); } //Evaluate standard curve if settings are not interpolated
+        else { return LerpCurves(lerpSettingsA.targetSizeCurve, lerpSettingsB.targetSizeCurve, time); }                            //Get interpolation between curve evaluations for interpolated settings
     }
 
     //UTILITY METHODS:
