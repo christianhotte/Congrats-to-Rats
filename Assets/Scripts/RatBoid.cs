@@ -39,10 +39,9 @@ public class RatBoid : MonoBehaviour
     internal List<RatBoid> currentNeighbors = new List<RatBoid>();  //Other rats which are currently close to this rat
     internal List<RatBoid> currentSeparators = new List<RatBoid>(); //Other rats which are currently too close to this rat
     internal bool follower;                                         //If true, indicates that this rat is following the big main rat
-    
+
     private float timeUntilFlip;  //Time before this rat is able to flip its sprite orientation (prevents jiggling)
-    private float currentBobTime; //Current position of rat in bob cycle
-    
+
     //RUNTIME METHODS:
     private void Awake()
     {
@@ -56,7 +55,6 @@ public class RatBoid : MonoBehaviour
         float newScale = 1 + Random.Range(-scaleRandomness, scaleRandomness); //Get value of new scale
         transform.localScale = Vector3.one * newScale;                        //Set new scale
         r.color = Color.Lerp(r.color, altColor, Random.value);                //Randomize color
-        currentBobTime = Random.Range(0, bobTime);                            //Randomize point in bob cycle
     }
     private void OnDestroy()
     {
@@ -82,11 +80,6 @@ public class RatBoid : MonoBehaviour
             r.flipX = !r.flipX;
             timeUntilFlip = timeBetweenFlips;
         }
-
-        //Adjust bob height (TEMP):
-        currentBobTime += Time.deltaTime;
-        if (currentBobTime > bobTime) currentBobTime -= bobTime;
-        DoBob();
     }
 
     //STATIC METHODS:
@@ -96,12 +89,38 @@ public class RatBoid : MonoBehaviour
     /// <param name="deltaTime"></param>
     public static void UpdateRats(float deltaTime, SwarmSettings settings)
     {
-        //Update rat status & data:
+        //Update rat position & data:
+        float floorCheckHeight = MasterRatController.main.settings.baseFollowerHeight + MasterRatController.main.settings.fallHeight; //Construct height used to check for floor from main rat settings
         foreach (RatBoid rat in spawnedRats) //Iterate through every rat in list
         {
             //Update rat position:
-            rat.flatPos += rat.velocity * deltaTime;                                                      //Apply velocity to rat position tracker
-            rat.transform.position = new Vector3(rat.flatPos.x, rat.transform.position.y, rat.flatPos.y); //Move rat to match new position
+            Vector3 newPos = rat.transform.position; //Get current position of rat
+            newPos.x += rat.velocity.x * deltaTime;  //Add velocity
+            newPos.z += rat.velocity.y * deltaTime;  //Add velocity
+            if (Physics.Linecast(rat.transform.position, newPos, out RaycastHit hit, MasterRatController.main.settings.blockingLayers)) //Check for obstruction
+            {
+                Vector3 idealPos = newPos;                                       //Get position rat would move to if not obstructed
+                newPos = hit.point + (0.001f * hit.normal);                      //Move rat to hit location (and scooch away slightly so that it is able to re-collide)
+                newPos += Vector3.ProjectOnPlane(idealPos - newPos, hit.normal); //Add remainder of velocity by projecting change in position onto plane defined by hit normal
+            }
+            Vector3 fallPoint = newPos + (Vector3.down * floorCheckHeight); //Get point used to check whether or not rat is falling
+            if (Physics.Linecast(newPos, fallPoint, out hit, MasterRatController.main.settings.blockingLayers)) //Floor under rat can be found
+            {
+                newPos = Vector3.MoveTowards(newPos, hit.point + (Vector3.up * MasterRatController.main.settings.baseFollowerHeight), MasterRatController.main.settings.maxHeightChangeSpeed * deltaTime); //Move target position upward according to height of floor
+            }
+            else //No floor found, prevent falling
+            {
+                if (Physics.Raycast(fallPoint, -UnFlattenVector(rat.velocity), out hit, rat.velocity.magnitude, MasterRatController.main.settings.blockingLayers)) //Normal of cliff face can be identified
+                {
+                    newPos = hit.point + (-hit.normal * rat.velocity.magnitude * deltaTime) + (Vector3.up * floorCheckHeight); //Trace back up over the edge and place rat there
+                }
+                else //Fall cannot be avoided for some reason
+                {
+                    
+                }
+            }
+            rat.flatPos.x = newPos.x; rat.flatPos.y = newPos.z; //Update flat position tracker
+            rat.transform.position = newPos;                    //Move rat to match new position
 
             //Reset relationship lists:
             rat.currentNeighbors = new List<RatBoid>();  //Clear neighbors list
@@ -218,6 +237,14 @@ public class RatBoid : MonoBehaviour
 
     //UTILITY METHODS:
     /// <summary>
+    /// Converts given Vector3 to Vector2 (destroying Y value of original vector).
+    /// </summary>
+    public static Vector2 FlattenVector(Vector3 vector) { return new Vector2(vector.x, vector.z); }
+    /// <summary>
+    /// Converts given Vector2 to Vector3, assuming Y is zero.
+    /// </summary>
+    public static Vector3 UnFlattenVector(Vector2 vector) { return new Vector3(vector.x, 0, vector.y); }
+    /// <summary>
     /// Returns center of given group of rats.
     /// </summary>
     private static Vector2 GetCenterMass(RatBoid[] ratGroup)
@@ -229,14 +256,5 @@ public class RatBoid : MonoBehaviour
         Vector2 totalPos = Vector2.zero;                           //Initialize container to store total position of all group members
         foreach (RatBoid rat in ratGroup) totalPos += rat.flatPos; //Get total planar position of all rats in group
         return totalPos / ratGroup.Length;                         //Return average position of all given rats
-    }
-    private void DoBob()
-    {
-        float t = bobCurve.Evaluate(currentBobTime / bobTime);
-        float scaleMultiplier = (1 - transform.localScale.x) + 1;
-        float currentMaxHeight = maxBobHeight * scaleMultiplier;
-        float height = Mathf.Lerp(baseHeight, currentMaxHeight, t);
-        Vector3 newPos = transform.position; newPos.y = height;
-        transform.position = newPos;
     }
 }

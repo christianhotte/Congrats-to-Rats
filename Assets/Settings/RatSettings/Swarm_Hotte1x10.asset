@@ -17,6 +17,7 @@ MonoBehaviour:
   separationRadius: 0.07
   neighborRadius: 0.3
   targetRadius: 0.1
+  cliffRepelForce: 10
   followStrengthCurve:
     serializedVersion: 2
     m_Curve:
@@ -73,6 +74,6 @@ MonoBehaviour:
   conformityWeight: 0
   targetWeight: 4
   followWeight: 0.03
-  leadWeight: 6
+  leadWeight: 7
   stayBackWeight: 0.7
   stragglerWeight: 0.2

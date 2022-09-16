@@ -22,7 +22,7 @@ public class SwarmSettings : ScriptableObject
     [Min(0), Tooltip("Number of rats per unit of trail")]                                                  public float trailDensity;
     [Min(0), Tooltip("Minimum distance between two trail points (higher values will make trail simpler)")] public float minTrailSegLength;
     [Min(1), Tooltip("Determines how much trail stretches when big rat is moving")]                        public float velTrailLengthMultiplier = 1;
-    [Header("Rule Weights:")]
+    [Header("Rules:")]
     [Min(0), Tooltip("Tendency for rats to move toward other nearby rats")]              public float cohesionWeight;
     [Min(0), Tooltip("Tendency for rats to maintain a small distance from nearby rats")] public float separationWeight;
     [Min(0), Tooltip("Tendency for rats to match speed with other nearby rats")]         public float conformityWeight;

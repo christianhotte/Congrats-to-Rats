@@ -52,7 +52,7 @@ public class MasterRatController : MonoBehaviour
     private SpriteRenderer sprite; //Sprite renderer component for big rat
 
     [Header("Settings:")]
-    [SerializeField, Tooltip("Interchangeable data object describing movement settings of main rat")]                               private BigRatSettings settings;
+    [Tooltip("Interchangeable data object describing settings of the main rat")]                                                    public BigRatSettings settings;
     [SerializeField, Tooltip("Place any number of swarm settings objects here (make sure they have different Target Rat Numbers)")] private List<SwarmSettings> swarmSettings = new List<SwarmSettings>();
 
     //Runtime Vars:
@@ -66,6 +66,7 @@ public class MasterRatController : MonoBehaviour
     internal Vector2 forward;    //Normalized vector representing which direction big rat was most recently moving
     internal float currentSpeed; //Current speed at which rat is moving
     private Vector2 moveInput;   //Current input direction for movement
+    internal bool falling;       //Whether or not rat is currently falling
 
     //RUNTIME METHODS:
     private void Awake()
@@ -130,15 +131,57 @@ public class MasterRatController : MonoBehaviour
         //Get new position:
         if (velocity != Vector2.zero) //Only update position if player has velocity
         {
-            //Get new position:
-            Vector3 newPos = transform.position; //Get current position of rat
-            newPos.x += velocity.x * deltaTime;  //Add X velocity over time to position
-            newPos.z += velocity.y * deltaTime;  //Add Y velocity over time to position
-            if (Physics.SphereCast(transform.position, settings.collisionRadius, new Vector3(velocity.x, 0, velocity.y), out RaycastHit hit, currentSpeed * Time.deltaTime, settings.blockingLayers)) //Check for collision
+            //Initialize:
+            Vector3 newPos = transform.position; //Initialize new position as current position of rat
+            newPos.x += velocity.x * deltaTime;  //Add X velocity over time to position target
+            newPos.z += velocity.y * deltaTime;  //Add Y velocity over time to position target
+
+            //Solve obstructions:
+            Vector3 castDir = RatBoid.UnFlattenVector(velocity); //Create container to store direction of spherecasts, initialized based on velocity
+            float castDist = currentSpeed * Time.deltaTime;      //Create container to store distance of spherecasts, initialized based on speed
+            bool touchingFloor = false;                          //Initialize bool to confirm whether or not floor has been found
+            for (int i = 0; i < settings.maxObstacleCollisions; i++) //Iterate collision check for, at most, maximum allowed number of obstacle collisions
             {
-                Vector3 idealPos = newPos;                                               //Get position rat would be at if not obstructed
-                newPos = hit.point + ((settings.collisionRadius + 0.001f) * hit.normal); //Get position at center of sphere colliding with obstruction
-                newPos += Vector3.ProjectOnPlane(idealPos - newPos, hit.normal);
+                if (Physics.SphereCast(transform.position, settings.collisionRadius, castDir, out RaycastHit hit, castDist, settings.blockingLayers)) //Rat is currently moving into an obstacle
+                {
+                    //Get obstructed position:
+                    Vector3 idealPos = newPos;                                               //Get position rat would be at if not obstructed
+                    newPos = hit.point + ((settings.collisionRadius + 0.001f) * hit.normal); //Get position at center of sphere colliding with obstruction
+                    newPos += Vector3.ProjectOnPlane(idealPos - newPos, hit.normal);         //Add remainder of velocity by projecting change in position onto plane defined by hit normal
+                    
+                    //Check for floor:
+                    if (Vector3.Angle(Vector3.up, hit.normal) <= settings.maxWalkAngle) //Obstruction is recognized as a FLOOR
+                    {
+                        touchingFloor = true; //Indicate that floor has been found prematurely
+                    }
+                    else //Obstruction is recognized as a WALL
+                    {
+                        newPos.y = idealPos.y; //Prevent walls from lifting the player (by carrying over Y value from floors or original transform position)
+                    }
+
+                    //Prep for next cast:
+                    castDir = newPos - transform.position; //Update direction of cast
+                    castDist = castDir.magnitude;          //Update distance of cast
+                }
+                else break; //End collision checking once rat is no longer obstructed
+            }
+            if (Physics.CheckSphere(newPos, settings.collisionRadius, settings.blockingLayers)) //Rat is still colliding with something (collision avoidance has failed)
+            {
+                newPos = transform.position; //Cancel entire movement
+            }
+
+            //Stick to floor:
+            if (!touchingFloor) //Floor was not registered as an obstruction
+            {
+                if (Physics.SphereCast(newPos, settings.collisionRadius, Vector3.down, out RaycastHit hit, settings.fallHeight, settings.blockingLayers)) //Rat has a floor under it
+                {
+                    newPos = hit.point + ((settings.collisionRadius + 0.001f) * hit.normal); //Modify position to stick to found floor
+                }
+                else //Rat is hovering above empty space
+                {
+                    
+                }
+                //if (Physics.Linecast(transform.position, ))
             }
 
             //Cleanup:
@@ -223,8 +266,8 @@ public class MasterRatController : MonoBehaviour
         RatBoid ratController = newRat.GetComponent<RatBoid>();                                     //Get controller from spawned rat
         
         //Set position:
-        newRat.position = new Vector3(spawnPoint.x, 0, spawnPoint.y); //Move rat to spawn position
-        ratController.flatPos = spawnPoint;                           //Update flat position tracker of spawned rat
+        newRat.position = new Vector3(spawnPoint.x, settings.baseFollowerHeight * newRat.localScale.x, spawnPoint.y); //Move rat to spawn position (calculate spawn height based off of randomized scale)
+        ratController.flatPos = spawnPoint;                                                                           //Update flat position tracker of spawned rat
 
         //Set as follower:
         ratController.follower = true;   //Indicate that new rat is currently following big rat
