@@ -74,6 +74,5 @@ MonoBehaviour:
   targetWeight: 4
   followWeight: 0.03
   leadWeight: 6
-  pathTensionWeight: 0.07
   stayBackWeight: 0.7
   stragglerWeight: 0.2

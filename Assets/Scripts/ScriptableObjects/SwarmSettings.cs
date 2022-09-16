@@ -29,7 +29,6 @@ public class SwarmSettings : ScriptableObject
     [Min(0), Tooltip("Tendency for rats to move toward desired position")]               public float targetWeight;
     [Min(0), Tooltip("Tendency for rats to move along path toward leader")]              public float followWeight;
     [Min(0), Tooltip("Tendency for rats to match leader velocity while on path")]        public float leadWeight;
-    [Min(0), Tooltip("Tendency for rats to spring back to fill path")]                   public float pathTensionWeight;
     [Min(0), Tooltip("Tendency for rats to stay behind the leader")]                     public float stayBackWeight;
     [Min(0), Tooltip("Tendency for rats in back of the line to catch up")]               public float stragglerWeight;
 
@@ -65,7 +64,6 @@ public class SwarmSettings : ScriptableObject
         targetWeight = Mathf.Lerp(settingsA.targetWeight, settingsB.targetWeight, currentInterpolant);
         followWeight = Mathf.Lerp(settingsA.followWeight, settingsB.followWeight, currentInterpolant);
         leadWeight = Mathf.Lerp(settingsA.leadWeight, settingsB.leadWeight, currentInterpolant);
-        pathTensionWeight = Mathf.Lerp(settingsA.pathTensionWeight, settingsB.pathTensionWeight, currentInterpolant);
         stayBackWeight = Mathf.Lerp(settingsA.stayBackWeight, settingsB.stayBackWeight, currentInterpolant);
         stragglerWeight = Mathf.Lerp(settingsA.stragglerWeight, settingsB.stragglerWeight, currentInterpolant);
     }

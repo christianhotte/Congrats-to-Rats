@@ -130,12 +130,20 @@ public class MasterRatController : MonoBehaviour
         //Get new position:
         if (velocity != Vector2.zero) //Only update position if player has velocity
         {
-            forward = velocity.normalized;       //Update forward direction tracker
-
+            //Get new position:
             Vector3 newPos = transform.position; //Get current position of rat
             newPos.x += velocity.x * deltaTime;  //Add X velocity over time to position
             newPos.z += velocity.y * deltaTime;  //Add Y velocity over time to position
-            transform.position = newPos;         //Apply new position
+            if (Physics.SphereCast(transform.position, settings.collisionRadius, new Vector3(velocity.x, 0, velocity.y), out RaycastHit hit, currentSpeed * Time.deltaTime, settings.blockingLayers)) //Check for collision
+            {
+                Vector3 idealPos = newPos;                                               //Get position rat would be at if not obstructed
+                newPos = hit.point + ((settings.collisionRadius + 0.001f) * hit.normal); //Get position at center of sphere colliding with obstruction
+                newPos += Vector3.ProjectOnPlane(idealPos - newPos, hit.normal);
+            }
+
+            //Cleanup:
+            transform.position = newPos;   //Apply new position
+            forward = velocity.normalized; //Update forward direction tracker
         }
 
         //Update trail characteristics:

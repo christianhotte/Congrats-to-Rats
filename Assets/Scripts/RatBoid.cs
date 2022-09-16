@@ -124,8 +124,8 @@ public class RatBoid : MonoBehaviour
                         otherRat.currentNeighbors.Add(rat); //Add this rat to other rat's neighbors list
                         if (dist <= settings.separationRadius) //Rats are close enough to be separators
                         {
-                            rat.currentSeparators.Add(otherRat); //Add other rat to separators list
-                            otherRat.currentSeparators.Add(rat); //Add this rat to other rat's separators list
+                            rat.currentSeparators.Add(otherRat);    //Add other rat to separators list
+                            otherRat.currentSeparators.Add(rat);    //Add this rat to other rat's separators list
                         }
                     }
                 }
@@ -163,11 +163,9 @@ public class RatBoid : MonoBehaviour
                 Vector2 separationVel = Vector2.zero; //Initialize container to store gross separation-induced velocity
                 foreach (RatBoid otherRat in rat.currentSeparators) //Iterate through list of rats which are currently too close to this rat
                 {
-                    //NOTE: Make rats record separation distance along with current separators
-                    //NOTE: Do this for path tension weight as well
-                    Vector2 sepDir = rat.flatPos - otherRat.flatPos;
-                    float sepPower = 1 - (sepDir.magnitude / settings.separationRadius);
-                    separationVel += sepDir.normalized * sepPower;
+                    Vector2 sepDir = rat.flatPos - otherRat.flatPos;                     //Get direction that will separate this rat from the one near it
+                    float sepPower = 1 - (sepDir.magnitude / settings.separationRadius); //Get power such that the closer the rats are, the stronger the impulse
+                    separationVel += sepDir.normalized * sepPower;                       //Add power and corresponding direction to separation velocity
                 }
                 separationVel *= settings.separationWeight; //Apply weight setting to separation rule
                 rat.velocity += separationVel;              //Apply unclamped velocity to rat
@@ -189,30 +187,16 @@ public class RatBoid : MonoBehaviour
                 else //Rat must be within target distance for these rules to apply
                 {
                     //RULE - Following: (rats on a trail will move along it toward the leader)
-                    Vector2 followVel = data.forward;                                          //Get follow velocity from forward direction of trail
-                    float followStrength = settings.EvaluateFollowStrength(data.linePosition); //Get follow strength depending on position of rat in line
-                    followVel *= 0.1f * settings.followWeight;                                 //Apply weight and balancing values to follow velocity
-                    rat.velocity += followVel;                                                 //Apply unclamped velocity to rat
+                    Vector2 followVel = data.forward;          //Get follow velocity from forward direction of trail
+                    followVel *= 0.1f * settings.followWeight; //Apply weight and balancing values to follow velocity
+                    rat.velocity += followVel;                 //Apply unclamped velocity to rat
                     
                     //RULE - Leading: (rats on a trail will move along it when leader is moving)
-                    Vector2 leadVel = data.forward * MasterRatController.main.currentSpeed; //Get lead velocity from forward direction of trail and speed of leader
-                    leadVel *= 0.1f * followStrength * settings.leadWeight;                 //Apply weight value and balancing values to lead velocity
-                    rat.velocity += leadVel;                                                //Apply unclamped velocity to rat
+                    Vector2 leadVel = data.forward * MasterRatController.main.currentSpeed;    //Get lead velocity from forward direction of trail and speed of leader
+                    float followStrength = settings.EvaluateFollowStrength(data.linePosition); //Get follow strength depending on position of rat in line
+                    leadVel *= 0.1f * followStrength * settings.leadWeight;                    //Apply weight value and balancing values to lead velocity
+                    rat.velocity += leadVel;                                                   //Apply unclamped velocity to rat
                 }
-
-                if (rat.currentSeparators.Count != 0)
-                {
-                    //RULE - Path Separation: (adjacent rats moving along path will push each other apart along path)
-                    Vector2 pathSeparationVel = Vector2.zero;
-                    foreach (RatBoid otherRat in rat.currentSeparators) //Iterate through list of rats which are currently too close to this rat
-                    {
-                        Vector2 sepVel = data.point - otherRat.flatPos;
-                        if (Vector2.Angle(sepVel, data.forward) >= 90) pathSeparationVel += sepVel;
-                    }
-                    pathSeparationVel *= settings.pathTensionWeight;
-                    rat.velocity += pathSeparationVel;
-                }
-
 
                 if (data.linePosition <= 0) //Rat must be ahead of line for these rules to apply
                 {
