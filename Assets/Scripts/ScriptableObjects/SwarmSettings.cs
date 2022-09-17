@@ -1,6 +1,4 @@
 using UnityEngine;
-using System.Collections.Generic;
-using System.Reflection;
 
 /// <summary>
 /// Object containing preset data regarding follower rat behavior. NOTE: when evaluating curves, use designated evaluation method.

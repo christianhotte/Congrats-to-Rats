@@ -87,7 +87,7 @@ public class MasterRatController : MonoBehaviour
         MoveRat(Time.deltaTime);                                  //Move the big rat
         RatBoid.UpdateRats(Time.deltaTime, currentSwarmSettings); //Move all the little rats
 
-        UpdateSwarmSettings(); //TEMP: Keep swarm settings up-to-date for debugging purposes
+        UpdateSwarmSettings(); //TEMP: Keep swarm settings regularly up-to-date for debugging purposes
 
         //Visualize trail:
         if (trail.Count > 1)
@@ -100,7 +100,11 @@ public class MasterRatController : MonoBehaviour
             }
         }
     }
-    
+    private void FixedUpdate()
+    {
+        
+    }
+
     //UPDATE METHODS:
     /// <summary>
     /// Moves the big rat according to current velocity.
@@ -179,9 +183,8 @@ public class MasterRatController : MonoBehaviour
                 }
                 else //Rat is hovering above empty space
                 {
-                    
+                    //INITIATE FALL
                 }
-                //if (Physics.Linecast(transform.position, ))
             }
 
             //Cleanup:
@@ -266,8 +269,9 @@ public class MasterRatController : MonoBehaviour
         RatBoid ratController = newRat.GetComponent<RatBoid>();                                     //Get controller from spawned rat
         
         //Set position:
-        newRat.position = new Vector3(spawnPoint.x, settings.baseFollowerHeight * newRat.localScale.x, spawnPoint.y); //Move rat to spawn position (calculate spawn height based off of randomized scale)
-        ratController.flatPos = spawnPoint;                                                                           //Update flat position tracker of spawned rat
+        Vector3 ratPos = new Vector3(spawnPoint.x, ratController.settings.baseHeight * newRat.localScale.x, spawnPoint.y); //Set spawn position (calculate spawn height based off of randomized scale)
+        newRat.position = ratPos;                                                                                          //Apply position
+        ratController.flatPos = spawnPoint;                                                                                //Update flat position tracker of spawned rat
 
         //Set as follower:
         ratController.follower = true;   //Indicate that new rat is currently following big rat
@@ -345,7 +349,6 @@ public class MasterRatController : MonoBehaviour
         //Return point data:
         if (closestPoint == trail[0]) return new TrailPointData(closestPoint); //If the closest point is the very beginning of the trail, give it no direction
         return new TrailPointData(closestPoint, -dir.normalized, trailValue);  //Otherwise, return closest point with known direction
-        
     }
 
     //UTILITY METHODS:

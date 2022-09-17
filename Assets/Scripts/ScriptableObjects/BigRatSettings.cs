@@ -14,7 +14,7 @@ public class BigRatSettings : ScriptableObject
     [Tooltip("Layers which will obstruct rat movement")]                                      public LayerMask blockingLayers;
     [Min(0), Tooltip("Physical thickness of rat when bumping into walls and touching floor")] public float collisionRadius;
     [Tooltip("Maximum steepness of terrain rat can move normally on")]                        public float maxWalkAngle;
-    [Min(0), Tooltip("Step height at which rats will fall instead of climbing down")]         public float fallHeight;
+    [Min(0), Tooltip("Step height at which rat will fall instead of climbing down")]          public float fallHeight;
     [Min(1), Tooltip("The maximum number of obstacles rat can collide with at once")]         public int maxObstacleCollisions;
     [Header("Spawning:")]
     [Tooltip("Prefab object for default rats in the swarm")]                                       public GameObject basicRatPrefab;

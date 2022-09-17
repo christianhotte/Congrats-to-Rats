@@ -12,17 +12,15 @@ public class RatBoid : MonoBehaviour
     /// List of all rats currently spawned in scene.
     /// </summary>
     public static List<RatBoid> spawnedRats = new List<RatBoid>();
+    public static readonly float timeBalancer = 100; //Value applied to all acceleration applications (so that settings aren't messed up by adding deltaTime)
 
     //Objects & Components:
-    private SpriteRenderer r; //Render component for this rat's sprite
+    private SpriteRenderer r;    //Render component for this rat's sprite
+    public RatSettings settings; //Settings object determining this rat's properties
 
     //Settings: NOTE: Put these in a scriptableObject
     [Header("Settings:")]
     [Min(0), Tooltip("Maximum allowed variance in scale (can go up or down)")]     public float scaleRandomness;
-    [Tooltip("Curve describing motion of bob movement")]                           public AnimationCurve bobCurve;
-    [Tooltip("Default height at which rat hovers")]                                public float baseHeight;
-    [Tooltip("Maximum height mouse can naturally bob to")]                         public float maxBobHeight;
-    [Tooltip("Speed of bob cycle")]                                                public float bobTime;
     [Tooltip("Alternate color rats can spawn with")]                               public Color altColor;
     [Tooltip("Increase this to prevent rat from flipping back and forth rapidly")] public float timeBetweenFlips;
 
@@ -40,7 +38,8 @@ public class RatBoid : MonoBehaviour
     internal List<RatBoid> currentSeparators = new List<RatBoid>(); //Other rats which are currently too close to this rat
     internal bool follower;                                         //If true, indicates that this rat is following the big main rat
 
-    private float timeUntilFlip;  //Time before this rat is able to flip its sprite orientation (prevents jiggling)
+    private float timeUntilFlip; //Time before this rat is able to flip its sprite orientation (prevents jiggling)
+
 
     //RUNTIME METHODS:
     private void Awake()
@@ -51,10 +50,10 @@ public class RatBoid : MonoBehaviour
         //Initialization:
         spawnedRats.Add(this); //Add this rat to master list of spawned rats
 
-        //Randomize appearance:
-        float newScale = 1 + Random.Range(-scaleRandomness, scaleRandomness); //Get value of new scale
-        transform.localScale = Vector3.one * newScale;                        //Set new scale
-        r.color = Color.Lerp(r.color, altColor, Random.value);                //Randomize color
+        //Randomize properties:
+        float newScale = 1 + Random.Range(-settings.sizeVariance, settings.sizeVariance); //Get value of new scale
+        transform.localScale = Vector3.one * newScale;                                    //Set new scale
+        r.color = Color.Lerp(r.color, settings.altColor, Random.value);                   //Randomize color
     }
     private void OnDestroy()
     {
@@ -72,13 +71,13 @@ public class RatBoid : MonoBehaviour
                 bool prevFlip = r.flipX;
                 if (velocity.x < 0) r.flipX = false;
                 else if (velocity.x > 0) r.flipX = true;
-                if (prevFlip != r.flipX) timeUntilFlip = timeBetweenFlips;
+                if (prevFlip != r.flipX) timeUntilFlip = settings.timeBetweenFlips;
             }
         }
-        else if (velocity.x < 0 && r.flipX || velocity.x > 0 && r.flipX)
+        else if (velocity.x < 0 && r.flipX || velocity.x > 0 && !r.flipX)
         {
             r.flipX = !r.flipX;
-            timeUntilFlip = timeBetweenFlips;
+            timeUntilFlip = settings.timeBetweenFlips;
         }
     }
 
@@ -90,41 +89,45 @@ public class RatBoid : MonoBehaviour
     public static void UpdateRats(float deltaTime, SwarmSettings settings)
     {
         //Update rat position & data:
-        float floorCheckHeight = MasterRatController.main.settings.baseFollowerHeight + MasterRatController.main.settings.fallHeight; //Construct height used to check for floor from main rat settings
         foreach (RatBoid rat in spawnedRats) //Iterate through every rat in list
         {
-            //Update rat position:
-            Vector3 newPos = rat.transform.position; //Get current position of rat
-            newPos.x += rat.velocity.x * deltaTime;  //Add velocity
-            newPos.z += rat.velocity.y * deltaTime;  //Add velocity
-            if (Physics.Linecast(rat.transform.position, newPos, out RaycastHit hit, MasterRatController.main.settings.blockingLayers)) //Check for obstruction
+            //Initialize:
+            Vector3 newPos = rat.transform.position;                                     //Get current position of rat
+            newPos.x += rat.velocity.x * deltaTime;                                      //Add X velocity
+            newPos.z += rat.velocity.y * deltaTime;                                      //Add Y velocity
+            float adjustedHeight = rat.settings.baseHeight * rat.transform.localScale.x; //Get effective height of rat based on scale
+            float floorCheckHeight = adjustedHeight + rat.settings.fallHeight;           //Get height value used in floor checks
+
+            //Check obstacles & floor:
+            if (Physics.Linecast(rat.transform.position, newPos, out RaycastHit hit, rat.settings.obstructionLayers)) //Rat is obstructed
             {
                 Vector3 idealPos = newPos;                                       //Get position rat would move to if not obstructed
                 newPos = hit.point + (0.001f * hit.normal);                      //Move rat to hit location (and scooch away slightly so that it is able to re-collide)
                 newPos += Vector3.ProjectOnPlane(idealPos - newPos, hit.normal); //Add remainder of velocity by projecting change in position onto plane defined by hit normal
             }
             Vector3 fallPoint = newPos + (Vector3.down * floorCheckHeight); //Get point used to check whether or not rat is falling
-            if (Physics.Linecast(newPos, fallPoint, out hit, MasterRatController.main.settings.blockingLayers)) //Floor under rat can be found
+            if (Physics.Linecast(newPos, fallPoint, out hit, rat.settings.obstructionLayers)) //Floor under rat can be found
             {
-                newPos = Vector3.MoveTowards(newPos, hit.point + (Vector3.up * MasterRatController.main.settings.baseFollowerHeight), MasterRatController.main.settings.maxHeightChangeSpeed * deltaTime); //Move target position upward according to height of floor
+                newPos = Vector3.MoveTowards(newPos, hit.point + (Vector3.up * adjustedHeight), rat.settings.heightChangeRate * deltaTime);                                   //Move target position upward according to height of floor
+                rat.GetComponentInChildren<Billboarder>().targetZRot = Vector3.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(hit.normal, Vector3.forward), Vector3.forward); //Twist billboard so rat is flat on surface
             }
-            else //No floor found, prevent falling
+            else //No floor found
             {
-                if (Physics.Raycast(fallPoint, -UnFlattenVector(rat.velocity), out hit, rat.velocity.magnitude, MasterRatController.main.settings.blockingLayers)) //Normal of cliff face can be identified
+                if (Physics.Raycast(fallPoint, -UnFlattenVector(rat.velocity), out hit, rat.velocity.magnitude, rat.settings.obstructionLayers)) //Fall can be prevented
                 {
-                    newPos = hit.point + (-hit.normal * rat.velocity.magnitude * deltaTime) + (Vector3.up * floorCheckHeight); //Trace back up over the edge and place rat there
+                    newPos = hit.point + (rat.velocity.magnitude * deltaTime * -hit.normal) + (Vector3.up * floorCheckHeight); //Trace back up over the edge and place rat there
                 }
-                else //Fall cannot be avoided for some reason
+                else //Fall cannot be avoided for some reason (very rare)
                 {
                     
                 }
             }
+
+            //Cleanup:
             rat.flatPos.x = newPos.x; rat.flatPos.y = newPos.z; //Update flat position tracker
             rat.transform.position = newPos;                    //Move rat to match new position
-
-            //Reset relationship lists:
-            rat.currentNeighbors = new List<RatBoid>();  //Clear neighbors list
-            rat.currentSeparators = new List<RatBoid>(); //Clear separators list
+            rat.currentNeighbors = new List<RatBoid>();         //Clear neighbors list
+            rat.currentSeparators = new List<RatBoid>();        //Clear separators list
         }
 
         //Establish proximity relationships:
@@ -152,15 +155,16 @@ public class RatBoid : MonoBehaviour
         }
 
         //RAT RULES:
+        float adjustedDT = deltaTime * timeBalancer; //Get adjusted deltaTime to uncouple acceleration changes from framerate
         foreach (RatBoid rat in spawnedRats) //Iterate through every rat in list
         {
             if (rat.currentNeighbors.Count != 0) //Rat must have neighbors for these rules to apply
             {
                 //RULE - Cohesion: (nearby rats stick together)
-                Vector2 localCenterMass = GetCenterMass(rat.currentNeighbors.ToArray()); //Find center mass of this rat's current neighborhood
-                Vector2 cohesionVel = localCenterMass - rat.flatPos;                     //Get velocity vector representing direction and magnitude of rat separation from center mass
-                cohesionVel = (cohesionVel / 100) * settings.cohesionWeight;             //Apply weight and balancing values to cohesion velocity
-                rat.velocity += Vector2.ClampMagnitude(cohesionVel, settings.maxSpeed);  //Apply clamped velocity to rat
+                Vector2 localCenterMass = GetCenterMass(rat.currentNeighbors.ToArray());             //Find center mass of this rat's current neighborhood
+                Vector2 cohesionVel = localCenterMass - rat.flatPos;                                 //Get velocity vector representing direction and magnitude of rat separation from center mass
+                cohesionVel = (cohesionVel / 100) * settings.cohesionWeight;                         //Apply weight and balancing values to cohesion velocity
+                rat.velocity += Vector2.ClampMagnitude(cohesionVel, settings.maxSpeed) * adjustedDT; //Apply clamped velocity to rat
 
                 //RULE - Conformity: (rats tend to match the velocity of nearby rats)
                 Vector2 conformVel = Vector2.zero; //Initialize container to store gross conformance-induced velocity
@@ -168,9 +172,9 @@ public class RatBoid : MonoBehaviour
                 {
                     conformVel += otherRat.velocity; //Add velocity of rat to local velocity total
                 }
-                conformVel /= rat.currentNeighbors.Count;                  //Get average velocity of neighbor rats
-                conformVel = (conformVel / 8) * settings.conformityWeight; //Apply weight and balancing values to conformance velocity
-                rat.velocity += Vector2.ClampMagnitude(conformVel, settings.maxSpeed); //Apply clamped velocity to rat
+                conformVel /= rat.currentNeighbors.Count;                                           //Get average velocity of neighbor rats
+                conformVel = (conformVel / 8) * settings.conformityWeight;                          //Apply weight and balancing values to conformance velocity
+                rat.velocity += Vector2.ClampMagnitude(conformVel, settings.maxSpeed) * adjustedDT; //Apply clamped velocity to rat
             }
 
             //RULE - Velocity Clamping: (rats cannot go faster than their max speed)
@@ -187,7 +191,7 @@ public class RatBoid : MonoBehaviour
                     separationVel += sepDir.normalized * sepPower;                       //Add power and corresponding direction to separation velocity
                 }
                 separationVel *= settings.separationWeight; //Apply weight setting to separation rule
-                rat.velocity += separationVel;              //Apply unclamped velocity to rat
+                rat.velocity += separationVel * adjustedDT; //Apply unclamped velocity to rat
             }
 
             if (rat.follower) //Rat must be a follower for these rules to apply
@@ -199,22 +203,22 @@ public class RatBoid : MonoBehaviour
                 if (targetDistance > targetRadius) //Rat must be outside target distance for these rules to apply
                 {
                     //RULE - Targeting: (rats tend to move toward target)
-                    Vector2 targetVel = (target - rat.flatPos).normalized;                //Get direction toward target
-                    targetVel *= 0.01f * settings.targetWeight;                           //Apply weight and balancing values to target velocity
-                    rat.velocity += Vector2.ClampMagnitude(targetVel, settings.maxSpeed); //Apply clamped velocity to rat
+                    Vector2 targetVel = (target - rat.flatPos).normalized;                             //Get direction toward target
+                    targetVel *= 0.01f * settings.targetWeight;                                        //Apply weight and balancing values to target velocity
+                    rat.velocity += Vector2.ClampMagnitude(targetVel, settings.maxSpeed) * adjustedDT; //Apply clamped velocity to rat
                 }
                 else //Rat must be within target distance for these rules to apply
                 {
                     //RULE - Following: (rats on a trail will move along it toward the leader)
                     Vector2 followVel = data.forward;          //Get follow velocity from forward direction of trail
                     followVel *= 0.1f * settings.followWeight; //Apply weight and balancing values to follow velocity
-                    rat.velocity += followVel;                 //Apply unclamped velocity to rat
+                    rat.velocity += followVel * adjustedDT;    //Apply unclamped velocity to rat
                     
                     //RULE - Leading: (rats on a trail will move along it when leader is moving)
                     Vector2 leadVel = data.forward * MasterRatController.main.currentSpeed;    //Get lead velocity from forward direction of trail and speed of leader
                     float followStrength = settings.EvaluateFollowStrength(data.linePosition); //Get follow strength depending on position of rat in line
                     leadVel *= 0.1f * followStrength * settings.leadWeight;                    //Apply weight value and balancing values to lead velocity
-                    rat.velocity += leadVel;                                                   //Apply unclamped velocity to rat
+                    rat.velocity += leadVel * adjustedDT;                                      //Apply unclamped velocity to rat
                 }
 
                 if (data.linePosition <= 0) //Rat must be ahead of line for these rules to apply
@@ -222,14 +226,40 @@ public class RatBoid : MonoBehaviour
                     //RULE - Staying Behind: (rats in front of leader tend to want to get behind it)
                     Vector2 stayBackVel = -MasterRatController.main.forward; //Make stay back velocity directly oppose facing direction of leader
                     stayBackVel *= 0.1f * settings.stayBackWeight;           //Apply weight and balancing values to stay back velocity
-                    rat.velocity += stayBackVel;                             //Apply unclamped velocity to rat
+                    rat.velocity += stayBackVel * adjustedDT;                //Apply unclamped velocity to rat
                 }
                 else if (data.linePosition >= 0.9f) //Rat must be behind line for these rules to apply
                 {
                     //RULE - Straggler Prevention: (rats behind the line will speed up)
-                    Vector2 stragglerVel = data.forward;
-                    stragglerVel *= settings.stragglerWeight;
-                    rat.velocity += stragglerVel;
+                    Vector2 stragglerVel = data.forward;       //Make velocity move rats toward end of trail
+                    stragglerVel *= settings.stragglerWeight;  //Apply weight and balancing values to velocity
+                    rat.velocity += stragglerVel * adjustedDT; //Apply unclamped velocity to rat
+                }
+            }
+
+            Vector3 checkPoint = rat.transform.position + (UnFlattenVector(rat.velocity).normalized * rat.settings.obstacleSeparation); //Get point (projected using velocity) which will be used to check for incoming obstacles
+            if (Physics.Linecast(rat.transform.position, checkPoint, out RaycastHit hit, rat.settings.obstructionLayers)) //Rat is heading toward an obstacle it is too close to
+            {
+                //RULE - Wall Avoidance: (rats will tend to avoid getting too close to walls)
+                float distanceValue = 1 - (Vector2.Distance(FlattenVector(hit.point), rat.flatPos) / rat.settings.obstacleSeparation); //Get value between 0 and 1 which is inversely proportional to distance between rat and wall
+                Vector2 avoidanceVel = FlattenVector(hit.normal) * distanceValue;                                                      //Get velocity which pushes rat away from wall
+                avoidanceVel *= rat.settings.obstacleAvoidanceWeight;                                                                  //Apply weight value to added velocity
+                rat.velocity += avoidanceVel * adjustedDT;                                                                             //Apply unclamped velocity to rat
+            }
+            else //Rat has no obstacles directly in front of it
+            {
+                //RULE - Ledge Avoidance: (rats will tend to avoid getting too close to steep ledges)
+                float heightCheckDepth = rat.settings.fallHeight + (rat.settings.baseHeight * rat.transform.localScale.x); //Get value used to check for ledges
+                if (!Physics.Raycast(checkPoint, Vector3.down, heightCheckDepth, rat.settings.obstructionLayers)) //Rat is moving toward an edge
+                {
+                    Vector3 depthPoint = checkPoint + (Vector3.down * heightCheckDepth); //Get point at end of line used to check height depth
+                    if (Physics.Raycast(depthPoint, -UnFlattenVector(rat.velocity), out hit, rat.settings.obstacleSeparation, rat.settings.obstructionLayers)) //Outside of ledge can be found
+                    {
+                        float distanceValue = 1 - (Vector2.Distance(FlattenVector(hit.point), rat.flatPos) / rat.settings.obstacleSeparation); //Get value between 0 and 1 which is inversely proportional to distance between rat and ledge
+                        Vector2 avoidanceVel = -FlattenVector(hit.normal) * distanceValue;                                                     //Get velocity which pushes rat away from ledge
+                        avoidanceVel *= rat.settings.obstacleAvoidanceWeight;                                                                  //Apply weight value to added velocity
+                        rat.velocity += avoidanceVel * adjustedDT;                                                                             //Apply unclamped velocity to rat
+                    }
                 }
             }
         }
