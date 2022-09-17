@@ -61,6 +61,7 @@ public class MasterRatController : MonoBehaviour
     private List<Vector2> trail = new List<Vector2>();         //List of points in current trail (used to assemble ratswarm behind main rat)
     private List<float> segLengths = new List<float>();        //List of lengths corresponding to segments in trail
     private float totalTrailLength = 0;                        //Current length of trail
+    private float slitherValue = 0.5f;                         //Value between 0 and 1 representing current horizontal offset of trail creation position
 
     internal Vector2 velocity;   //Current speed and direction of movement
     internal Vector2 forward;    //Normalized vector representing which direction big rat was most recently moving
@@ -99,10 +100,6 @@ public class MasterRatController : MonoBehaviour
                 Debug.DrawLine(p1, p2, Color.blue);
             }
         }
-    }
-    private void FixedUpdate()
-    {
-        
     }
 
     //UPDATE METHODS:
@@ -238,8 +235,16 @@ public class MasterRatController : MonoBehaviour
                 }
             }
 
-            //Check for kink in line:
-            //NOTE: Check angle between adjacent points and delete points until angles are good (this probably only has to be done for first few points)
+            //Check for kinks in line:
+            while (trail.Count > 2 && Vector2.Angle(trail[1] - trail[0], trail[1] - trail[2]) < 180 - currentSwarmSettings.maxSegAngle) //Trail is kinked (and contains more than one segment)
+            {
+                //Fuse first two segments:
+                trail.RemoveAt(1);                                    //Remove second point from trail (combining first and second segments)
+                totalTrailLength -= segLengths[0] + segLengths[1];    //Remove deleted segment lengths from total trail length
+                segLengths.RemoveAt(0);                               //Remove segment from lengths list
+                segLengths[0] = Vector2.Distance(trail[0], trail[1]); //Update new length of first segment
+                totalTrailLength += segLengths[0];                    //Add new segment length to total
+            }
         }
     }
 
@@ -296,7 +301,7 @@ public class MasterRatController : MonoBehaviour
         //Validity checks:
         if (trail.Count == 1) return new TrailPointData(trail[0]); //Simply return only point in trail if applicable
 
-        //Find two closest adjacent points on trail:
+        //Find closest point:
         Vector2 pointA = trail[0]; //Initialize container for first point (will be closest point to start of trail)
         Vector2 pointB = trail[1]; //Initialize second point at second item in trail
         int closestIndex = 1;      //Initialize container to store index of closest point (later switches use to index of earliest point in trail)
@@ -327,15 +332,7 @@ public class MasterRatController : MonoBehaviour
                 pointB = trail[closestIndex + 1]; //Make point B the latter point
             }
         }
-
-        //Get closest point between points:
-        Vector2 dir = pointB - pointA;                   //Get direction of line between two points
-        float lineLength = dir.magnitude;                //Get distance between points
-        dir.Normalize();                                 //Normalize directional vector
-        Vector2 lhs = origin - pointA;                   //Get the left hand side vector
-        float product = Vector2.Dot(lhs, dir);           //Get dot product of direction and side
-        product = Mathf.Clamp(product, 0, lineLength);   //Clamp length to make sure projection is on line
-        Vector2 closestPoint = pointA + (dir * product); //Do projection to get actual closest point on trail
+        Vector2 closestPoint = GetClosestPointOnLine(pointA, pointB, origin); //Get closest point to target between two found points in trail
 
         //Get position of point in line:
         float trailValue = 0; //Initialize container to store total line distance
@@ -347,11 +344,67 @@ public class MasterRatController : MonoBehaviour
         trailValue = trailValue / totalTrailLength;           //Get value as percentage of total length of trail
 
         //Return point data:
-        if (closestPoint == trail[0]) return new TrailPointData(closestPoint); //If the closest point is the very beginning of the trail, give it no direction
-        return new TrailPointData(closestPoint, -dir.normalized, trailValue);  //Otherwise, return closest point with known direction
+        if (closestPoint == trail[0]) return new TrailPointData(closestPoint, (trail[0] - trail[1]).normalized, 0); //If the closest point is the very beginning of the trail, give it a direction which points toward the leader
+        return new TrailPointData(closestPoint, -(pointB - pointA).normalized, trailValue);                         //Otherwise, return closest point with known direction
+    }
+    /// <summary>
+    /// Returns distance (in units) between points at given values on trail.
+    /// </summary>
+    /// <param name="pointValueA">Value between 0 and 1 representing first point in trail.</param>
+    /// <param name="pointValueB">Value between 0 and 1 representing second point in trail.</param>
+    public float GetDistanceBetweenTrailPoints(float pointValueA, float pointValueB)
+    {
+        if (pointValueA == pointValueB) return 0; //Return zero if points are the same
+        if (pointValueB > pointValueA) //First value is smaller than second value
+        {
+            float p = pointValueB;     //Store point value B
+            pointValueB = pointValueA; //Switch values with A
+            pointValueA = p;           //Set value of A
+        }
+        return (totalTrailLength * pointValueB) - (totalTrailLength * pointValueA); //Use total trail length to determine exact distance between two points
+    }
+    /// <summary>
+    /// Returns point in trail which corresponds to given value.
+    /// </summary>
+    /// <param name="trailValue">Number between 0 and 1 representing position on trail (0 is the leader, 1 is the end).</param>
+    public TrailPointData GetTrailPointFromValue(float trailValue)
+    {
+        //Edge cases:
+        if (trail.Count < 2) return new TrailPointData(PosAsVector2());                                                                              //Return position of leader if trail has no segments
+        if (trail.Count == 2) return new TrailPointData(Vector2.Lerp(trail[0], trail[1], trailValue), (trail[0] - trail[1]).normalized, trailValue); //Simply interpolate between only two points if possible
+
+        //Find point:
+        float distanceRemaining = trailValue * totalTrailLength; //Get amount of distance to scrub through
+        for (int i = 0; i < segLengths.Count; i++) //Iterate through each segment in trail
+        {
+            if (segLengths[i] >= distanceRemaining) //Point is inside this segment
+            {
+                Vector2 point = Vector2.Lerp(trail[i], trail[i + 1], distanceRemaining / segLengths[i]); //Lerp to find point according to distance remaining within segment
+                Vector2 direction = (trail[i + 1] - trail[i]).normalized;                                //Get direction of trail at this point
+                return new TrailPointData(point, direction, trailValue);                                 //Return point data
+            }
+            else distanceRemaining -= segLengths[i]; //Otherwise, subtract segment length and move further down trail
+        }
+
+        //Point could not be found:
+        Debug.LogError("GetTrailPointFromValue failed"); //Post error
+        return new TrailPointData();                     //Return empty data container
     }
 
     //UTILITY METHODS:
+    /// <summary>
+    /// Returns point between pointA and pointB which is closest to target.
+    /// </summary>
+    private Vector2 GetClosestPointOnLine(Vector2 pointA, Vector2 pointB, Vector2 target)
+    {
+        Vector2 dir = pointB - pointA;                 //Get direction of line between two points
+        float lineLength = dir.magnitude;              //Get distance between points
+        dir.Normalize();                               //Normalize directional vector
+        Vector2 lhs = target - pointA;                 //Get the left hand side vector
+        float product = Vector2.Dot(lhs, dir);         //Get dot product of direction and side
+        product = Mathf.Clamp(product, 0, lineLength); //Clamp length to make sure projection is on line
+        return pointA + (dir * product);               //Do projection to get actual closest point on trail
+    }
     /// <summary>
     /// Returns current position of rat as 2D vector (relative to world down).
     /// </summary>

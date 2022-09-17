@@ -17,7 +17,6 @@ MonoBehaviour:
   separationRadius: 0.07
   neighborRadius: 0.3
   targetRadius: 0.1
-  cliffRepelForce: 10
   followStrengthCurve:
     serializedVersion: 2
     m_Curve:
@@ -67,13 +66,19 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   trailDensity: 40
+  trailBuffer: 0.02
   minTrailSegLength: 0.07
   velTrailLengthMultiplier: 1
+  maxSegAngle: 100
+  backtrackBuffer: 0.1
+  maxTrailSkip: 0.3
+  slitherWidth: 0.3
+  slitherFreq: 1
   cohesionWeight: 0.4
   separationWeight: 0.5
   conformityWeight: 0
   targetWeight: 4
   followWeight: 0.03
-  leadWeight: 6
+  leadWeight: 8
   stayBackWeight: 0.7
   stragglerWeight: 0.2

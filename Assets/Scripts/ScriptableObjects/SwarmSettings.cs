@@ -17,9 +17,15 @@ public class SwarmSettings : ScriptableObject
     [SerializeField, Tooltip("Use this to tweak followWeight according to where rats are along the trail")] private AnimationCurve followStrengthCurve;
     [SerializeField, Tooltip("Use modify target radius along length of path")]                              private AnimationCurve targetSizeCurve;
     [Header("Trail:")]
-    [Min(0), Tooltip("Number of rats per unit of trail")]                                                  public float trailDensity;
-    [Min(0), Tooltip("Minimum distance between two trail points (higher values will make trail simpler)")] public float minTrailSegLength;
-    [Min(1), Tooltip("Determines how much trail stretches when big rat is moving")]                        public float velTrailLengthMultiplier = 1;
+    [Min(0), Tooltip("Number of rats per unit of trail")]                                                                         public float trailDensity;
+    [Range(0, 0.5f), Tooltip("Distance rats will try to keep from each end of trail")]                                            public float trailBuffer;
+    [Min(0), Tooltip("Minimum distance between two trail points (higher values will make trail simpler)")]                        public float minTrailSegLength;
+    [Min(1), Tooltip("Determines how much trail stretches when big rat is moving")]                                               public float velTrailLengthMultiplier = 1;
+    [Min(0), Tooltip("Minimum allowed angle between segments (prevents kinks/sharp turns)")]                                      public float maxSegAngle;
+    [Range(0, 1), Tooltip("Length of buffer segment (proportional to overall size of trail) when backing up")]                    public float backtrackBuffer;
+    [Min(0), Tooltip("Maximum percentage of trail rat target is able to move by per second (improves trail crossover behavior)")] public float maxTrailSkip;
+    [Min(0), Tooltip("Intensity of trail slither effect")]                                                                        public float slitherWidth;
+    [Min(0), Tooltip("Speed of trail slither effect")]                                                                            public float slitherFreq;
     [Header("Rules:")]
     [Min(0), Tooltip("Tendency for rats to move toward other nearby rats")]              public float cohesionWeight;
     [Min(0), Tooltip("Tendency for rats to maintain a small distance from nearby rats")] public float separationWeight;
@@ -53,8 +59,13 @@ public class SwarmSettings : ScriptableObject
         targetRadius = Mathf.Lerp(settingsA.targetRadius, settingsB.targetRadius, currentInterpolant);
 
         trailDensity = Mathf.Lerp(settingsA.trailDensity, settingsB.trailDensity, currentInterpolant);
+        trailBuffer = Mathf.Lerp(settingsA.trailBuffer, settingsB.trailBuffer, currentInterpolant);
         minTrailSegLength = Mathf.Lerp(settingsA.minTrailSegLength, settingsB.minTrailSegLength, currentInterpolant);
         velTrailLengthMultiplier = Mathf.Lerp(settingsA.velTrailLengthMultiplier, settingsB.velTrailLengthMultiplier, currentInterpolant);
+        maxSegAngle = Mathf.Lerp(settingsA.maxSegAngle, settingsB.maxSegAngle, currentInterpolant);
+        maxTrailSkip = Mathf.Lerp(settingsA.maxTrailSkip, settingsB.maxTrailSkip, currentInterpolant);
+        slitherWidth = Mathf.Lerp(settingsA.slitherWidth, settingsB.slitherWidth, currentInterpolant);
+        slitherFreq = Mathf.Lerp(settingsA.slitherFreq, settingsB.slitherFreq, currentInterpolant);
 
         cohesionWeight = Mathf.Lerp(settingsA.cohesionWeight, settingsB.cohesionWeight, currentInterpolant);
         separationWeight = Mathf.Lerp(settingsA.separationWeight, settingsB.separationWeight, currentInterpolant);
