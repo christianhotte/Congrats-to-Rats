@@ -37,9 +37,9 @@ public class RatBoid : MonoBehaviour
     internal List<RatBoid> currentNeighbors = new List<RatBoid>();  //Other rats which are currently close to this rat
     internal List<RatBoid> currentSeparators = new List<RatBoid>(); //Other rats which are currently too close to this rat
     internal bool follower;                                         //If true, indicates that this rat is following the big main rat
+    internal float lastTrailValue = -1;                             //Latest value of target on trail (should be reset whenever rat loses target
 
     private float timeUntilFlip; //Time before this rat is able to flip its sprite orientation (prevents jiggling)
-
 
     //RUNTIME METHODS:
     private void Awake()
@@ -196,7 +196,14 @@ public class RatBoid : MonoBehaviour
 
             if (rat.follower) //Rat must be a follower for these rules to apply
             {
-                MasterRatController.TrailPointData data = MasterRatController.main.GetClosestPointOnTrail(rat.flatPos); //Get data for point closest to rat position
+                //Get current target:
+                MasterRatController.TrailPointData data = MasterRatController.main.GetClosestPointOnTrail(rat.flatPos);      //Get data for point closest to rat position
+                if (rat.lastTrailValue != -1 && data.linePosition - rat.lastTrailValue > settings.maxTrailSkip * adjustedDT) //Rat is skipping too far in trail (potential loopback detected)
+                {
+                    data = MasterRatController.main.GetTrailPointFromValue(rat.lastTrailValue); //Ignore new target and use last trail value to get new value
+                }
+                rat.lastTrailValue = data.linePosition; //Remember line position
+
                 Vector2 target = data.point;                                                                            //Get position of target from data
                 float targetDistance = Vector2.Distance(rat.flatPos, target);                                           //Get separation between rat and target
                 float targetRadius = settings.EvaluateTargetSize(data.linePosition) * settings.targetRadius;            //Get target size depending on position in line and base target radius
@@ -207,7 +214,9 @@ public class RatBoid : MonoBehaviour
                     targetVel *= 0.01f * settings.targetWeight;                                        //Apply weight and balancing values to target velocity
                     rat.velocity += Vector2.ClampMagnitude(targetVel, settings.maxSpeed) * adjustedDT; //Apply clamped velocity to rat
                 }
-                else //Rat must be within target distance for these rules to apply
+                else if (data.linePosition > settings.trailBuffer                                                      //Rat is within target distance and not too far ahead in line
+                         && Vector2.Angle(MasterRatController.main.forward, data.forward) < 180 - settings.maxSegAngle //Prevent rats from being lead when main rat is backtracking
+                         || data.linePosition > settings.backtrackBuffer)                                              //Lead all rats which are at least partially down the trail
                 {
                     //RULE - Following: (rats on a trail will move along it toward the leader)
                     Vector2 followVel = data.forward;          //Get follow velocity from forward direction of trail
@@ -221,14 +230,14 @@ public class RatBoid : MonoBehaviour
                     rat.velocity += leadVel * adjustedDT;                                      //Apply unclamped velocity to rat
                 }
 
-                if (data.linePosition <= 0) //Rat must be ahead of line for these rules to apply
+                if (data.linePosition <= settings.trailBuffer) //Rat must be ahead of line for these rules to apply
                 {
                     //RULE - Staying Behind: (rats in front of leader tend to want to get behind it)
-                    Vector2 stayBackVel = -MasterRatController.main.forward; //Make stay back velocity directly oppose facing direction of leader
-                    stayBackVel *= 0.1f * settings.stayBackWeight;           //Apply weight and balancing values to stay back velocity
-                    rat.velocity += stayBackVel * adjustedDT;                //Apply unclamped velocity to rat
+                    Vector2 stayBackVel = -data.forward;           //Make stay back velocity keep rat on trail
+                    stayBackVel *= 0.1f * settings.stayBackWeight; //Apply weight and balancing values to stay back velocity
+                    rat.velocity += stayBackVel * adjustedDT;      //Apply unclamped velocity to rat
                 }
-                else if (data.linePosition >= 0.9f) //Rat must be behind line for these rules to apply
+                else if (data.linePosition >= 1 - settings.trailBuffer) //Rat must be behind line for these rules to apply
                 {
                     //RULE - Straggler Prevention: (rats behind the line will speed up)
                     Vector2 stragglerVel = data.forward;       //Make velocity move rats toward end of trail
@@ -241,10 +250,13 @@ public class RatBoid : MonoBehaviour
             if (Physics.Linecast(rat.transform.position, checkPoint, out RaycastHit hit, rat.settings.obstructionLayers)) //Rat is heading toward an obstacle it is too close to
             {
                 //RULE - Wall Avoidance: (rats will tend to avoid getting too close to walls)
-                float distanceValue = 1 - (Vector2.Distance(FlattenVector(hit.point), rat.flatPos) / rat.settings.obstacleSeparation); //Get value between 0 and 1 which is inversely proportional to distance between rat and wall
-                Vector2 avoidanceVel = FlattenVector(hit.normal) * distanceValue;                                                      //Get velocity which pushes rat away from wall
-                avoidanceVel *= rat.settings.obstacleAvoidanceWeight;                                                                  //Apply weight value to added velocity
-                rat.velocity += avoidanceVel * adjustedDT;                                                                             //Apply unclamped velocity to rat
+                if (Vector3.Angle(Vector3.up, hit.normal) > MasterRatController.main.settings.maxWalkAngle) //Only avoid true walls (steep floors are fine)
+                {
+                    float distanceValue = 1 - (Vector2.Distance(FlattenVector(hit.point), rat.flatPos) / rat.settings.obstacleSeparation); //Get value between 0 and 1 which is inversely proportional to distance between rat and wall
+                    Vector2 avoidanceVel = FlattenVector(hit.normal) * distanceValue;                                                      //Get velocity which pushes rat away from wall
+                    avoidanceVel *= rat.settings.obstacleAvoidanceWeight;                                                                  //Apply weight value to added velocity
+                    rat.velocity += avoidanceVel * adjustedDT;                                                                             //Apply unclamped velocity to rat
+                }
             }
             else //Rat has no obstacles directly in front of it
             {
