@@ -13,6 +13,7 @@ public class SwarmSettings : ScriptableObject
     [Min(0), Tooltip("Distance with rats will try to keep between themselves and other rats")]                                        public float separationRadius;
     [Min(0), Tooltip("Distance at which rats will influence each other and clump together (should be larger than separationRadius)")] public float neighborRadius;
     [Min(0), Tooltip("Rough radius around target path which rat swarm tries to congregate in")]                                       public float targetRadius;
+    [Min(0), Tooltip("Radius around target path within which rats will be subject to leader-based velocity influences")]              public float influenceRadius;
     [Space()]
     [SerializeField, Tooltip("Use this to tweak followWeight according to where rats are along the trail")] private AnimationCurve followStrengthCurve;
     [SerializeField, Tooltip("Use modify target radius along length of path")]                              private AnimationCurve targetSizeCurve;
@@ -57,6 +58,7 @@ public class SwarmSettings : ScriptableObject
         separationRadius = Mathf.Lerp(settingsA.separationRadius, settingsB.separationRadius, currentInterpolant);
         neighborRadius = Mathf.Lerp(settingsA.neighborRadius, settingsB.neighborRadius, currentInterpolant);
         targetRadius = Mathf.Lerp(settingsA.targetRadius, settingsB.targetRadius, currentInterpolant);
+        influenceRadius = Mathf.Lerp(settingsA.influenceRadius, settingsB.influenceRadius, currentInterpolant);
 
         trailDensity = Mathf.Lerp(settingsA.trailDensity, settingsB.trailDensity, currentInterpolant);
         trailBuffer = Mathf.Lerp(settingsA.trailBuffer, settingsB.trailBuffer, currentInterpolant);

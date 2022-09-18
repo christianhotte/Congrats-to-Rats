@@ -197,16 +197,20 @@ public class RatBoid : MonoBehaviour
             if (rat.follower) //Rat must be a follower for these rules to apply
             {
                 //Get current target:
-                MasterRatController.TrailPointData data = MasterRatController.main.GetClosestPointOnTrail(rat.flatPos);      //Get data for point closest to rat position
-                if (rat.lastTrailValue != -1 && data.linePosition - rat.lastTrailValue > settings.maxTrailSkip * adjustedDT) //Rat is skipping too far in trail (potential loopback detected)
+                //MasterRatController.TrailPointData data = MasterRatController.main.GetClosestPointOnTrail(rat.flatPos);     //Get data for point closest to rat position
+                MasterRatController.TrailPointData data = MasterRatController.main.GetClosestPointOnTrail(rat.flatPos, rat.lastTrailValue, settings.maxTrailSkip * deltaTime); //Get data for closest point to rat position
+                rat.lastTrailValue = data.linePosition;                                                                                                                        //Remember line position
+                /*
+                if (rat.lastTrailValue != -1 && data.linePosition - rat.lastTrailValue > settings.maxTrailSkip * deltaTime) //Rat is skipping too far in trail (potential loopback detected)
                 {
                     data = MasterRatController.main.GetTrailPointFromValue(rat.lastTrailValue); //Ignore new target and use last trail value to get new value
                 }
-                rat.lastTrailValue = data.linePosition; //Remember line position
+                
+                */
 
-                Vector2 target = data.point;                                                                            //Get position of target from data
-                float targetDistance = Vector2.Distance(rat.flatPos, target);                                           //Get separation between rat and target
-                float targetRadius = settings.EvaluateTargetSize(data.linePosition) * settings.targetRadius;            //Get target size depending on position in line and base target radius
+                Vector2 target = data.point;                                                                 //Get position of target from data
+                float targetDistance = Vector2.Distance(rat.flatPos, target);                                //Get separation between rat and target
+                float targetRadius = settings.EvaluateTargetSize(data.linePosition) * settings.targetRadius; //Get target size depending on position in line and base target radius
                 if (targetDistance > targetRadius) //Rat must be outside target distance for these rules to apply
                 {
                     //RULE - Targeting: (rats tend to move toward target)
@@ -215,8 +219,8 @@ public class RatBoid : MonoBehaviour
                     rat.velocity += Vector2.ClampMagnitude(targetVel, settings.maxSpeed) * adjustedDT; //Apply clamped velocity to rat
                 }
                 else if (data.linePosition > settings.trailBuffer                                                      //Rat is within target distance and not too far ahead in line
-                         && Vector2.Angle(MasterRatController.main.forward, data.forward) < 180 - settings.maxSegAngle //Prevent rats from being lead when main rat is backtracking
-                         || data.linePosition > settings.backtrackBuffer)                                              //Lead all rats which are at least partially down the trail
+                            && Vector2.Angle(MasterRatController.main.forward, data.forward) < 180 - settings.maxSegAngle //Prevent rats from being lead when main rat is backtracking
+                            || data.linePosition > settings.backtrackBuffer)                                              //Lead all rats which are at least partially down the trail
                 {
                     //RULE - Following: (rats on a trail will move along it toward the leader)
                     Vector2 followVel = data.forward;          //Get follow velocity from forward direction of trail

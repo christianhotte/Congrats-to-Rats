@@ -348,6 +348,76 @@ public class MasterRatController : MonoBehaviour
         return new TrailPointData(closestPoint, -(pointB - pointA).normalized, trailValue);                         //Otherwise, return closest point with known direction
     }
     /// <summary>
+    /// Returns the point on trail which is closest to given reference point, but within given distance behind given trail value.
+    /// </summary>
+    public TrailPointData GetClosestPointOnTrail(Vector2 origin, float prevValue, float maxBackup)
+    {
+        //Trim down trail:
+        if (trail.Count == 1) return new TrailPointData(trail[0]); //Simply return only point in trail if applicable
+        List<Vector2> tempTrail = new List<Vector2>(trail);        //Create a temporary clone of trail
+        if (prevValue >= 0) //Only trim trail if a valid trail value is supplied
+        {
+            float valueRemaining = (prevValue * totalTrailLength) + maxBackup; //Get distance value of cut point in trail
+            valueRemaining = Mathf.Clamp(valueRemaining, 0, totalTrailLength); //Clamp value to range of totalTrailLength
+            for (int i = 0; i < segLengths.Count; i++) //Iterate through segment lengths list
+            {
+                if (segLengths[i] > valueRemaining) //PrevValue is within this segment
+                {
+                    tempTrail[i + 1] = Vector2.Lerp(tempTrail[i], tempTrail[i + 1], valueRemaining / segLengths[i]); //Shorten final segment in trail based on remaining value
+                    while (tempTrail.Count > i + 2) tempTrail.RemoveAt(i + 2);                                       //Remove all points in temp trail which are outside given range
+                    break;                                                                                           //Break for loop
+                }
+                else valueRemaining -= segLengths[i]; //Otherwise, subtract length of segment from remaining value and pass to next segment
+            }
+        }
+
+        //Find closest point:
+        Vector2 pointA = tempTrail[0]; //Initialize container for first point (will be closest point to start of trail)
+        Vector2 pointB = tempTrail[1]; //Initialize second point at second item in trail
+        int closestIndex = 1;          //Initialize container to store index of closest point (later switches use to index of earliest point in trail)
+        if (tempTrail.Count > 2) //Only search harder if there are more than two points to check
+        {
+            //Get closest point:
+            float closestDistance = Vector2.Distance(origin, pointB); //Initialize closest point tracker at distance between origin and second item in trail
+            for (int i = 2; i < tempTrail.Count - 1; i++) //Iterate through points in trail which have two neighbors (and are not already point A)
+            {
+                float distance = Vector2.Distance(origin, tempTrail[i]); //Check distance between origin and point
+                if (distance < closestDistance) //Current point is closer than previous closest point
+                {
+                    closestDistance = distance; //Store closest distance
+                    closestIndex = i;           //Store closest index
+                    pointA = tempTrail[i];      //Update point A
+                }
+            }
+
+            //Get closest adjacent point:
+            if (Vector2.Distance(origin, tempTrail[closestIndex - 1]) <= Vector2.Distance(origin, tempTrail[closestIndex + 1])) //Former point is closer to origin
+            {
+                pointB = pointA;                      //Make point B the latter point
+                pointA = tempTrail[closestIndex - 1]; //Make point A the former point
+                closestIndex -= 1;                    //Make closestIndex the index of point A
+            }
+            else //Latter point is closer to origin
+            {
+                pointB = tempTrail[closestIndex + 1]; //Make point B the latter point
+            }
+        }
+        Vector2 closestPoint = GetClosestPointOnLine(pointA, pointB, origin); //Get closest point to target between two found points in trail
+
+        //Get position of point in line:
+        float trailValue = 0; //Initialize container to store total line distance
+        for (int i = 0; i < closestIndex; i++) //Iterate through each segment before segment containing target
+        {
+            trailValue += segLengths[i]; //Add up segment lengths
+        }
+        trailValue += Vector2.Distance(closestPoint, pointB); //Add partial distance of current segment to total distance
+        trailValue = trailValue / totalTrailLength;           //Get value as percentage of total length of trail
+
+        //Return point data:
+        if (closestPoint == tempTrail[0]) return new TrailPointData(closestPoint, (tempTrail[0] - tempTrail[1]).normalized, 0); //If the closest point is the very beginning of the trail, give it a direction which points toward the leader
+        return new TrailPointData(closestPoint, -(pointB - pointA).normalized, trailValue);                                     //Otherwise, return closest point with known direction
+    }
+    /// <summary>
     /// Returns distance (in units) between points at given values on trail.
     /// </summary>
     /// <param name="pointValueA">Value between 0 and 1 representing first point in trail.</param>
