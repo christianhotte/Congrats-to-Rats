@@ -50,6 +50,7 @@ public class MasterRatController : MonoBehaviour
 
     //Objects & Components:
     private SpriteRenderer sprite; //Sprite renderer component for big rat
+    private Animator anim;         //Animator controller for big rat
 
     [Header("Settings:")]
     [Tooltip("Interchangeable data object describing settings of the main rat")]                                                    public BigRatSettings settings;
@@ -67,6 +68,7 @@ public class MasterRatController : MonoBehaviour
     internal float currentSpeed; //Current speed at which rat is moving
     private Vector2 moveInput;   //Current input direction for movement
     internal bool falling;       //Whether or not rat is currently falling
+    [SerializeField] internal bool commanding;    //Whether or not rat is currently deploying rats to a location
 
     //RUNTIME METHODS:
     private void Awake()
@@ -81,6 +83,7 @@ public class MasterRatController : MonoBehaviour
     {
         //Get objects & components:
         sprite = GetComponentInChildren<SpriteRenderer>(); //Get spriteRenderer component
+        anim = GetComponentInChildren<Animator>();         //Get animator controller component
     }
     private void Update()
     {
@@ -127,6 +130,7 @@ public class MasterRatController : MonoBehaviour
             velocity = Vector2.ClampMagnitude(velocity, settings.speed); //Clamp velocity to target speed
             currentSpeed = settings.speed;                               //Update current speed value
         }
+        anim.SetFloat("Speed", currentSpeed / settings.speed); //Send speed value to animator
 
         //Get new position:
         if (velocity != Vector2.zero) //Only update position if player has velocity
@@ -152,7 +156,8 @@ public class MasterRatController : MonoBehaviour
                     //Check for floor:
                     if (Vector3.Angle(Vector3.up, hit.normal) <= settings.maxWalkAngle) //Obstruction is recognized as a FLOOR
                     {
-                        touchingFloor = true; //Indicate that floor has been found prematurely
+                        GetComponentInChildren<Billboarder>().targetZRot = Vector3.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(hit.normal, Vector3.forward), Vector3.forward); //Twist billboard so rat is flat on surface
+                        touchingFloor = true;                                                                                                                                     //Indicate that floor has been found prematurely
                     }
                     else //Obstruction is recognized as a WALL
                     {
@@ -175,7 +180,9 @@ public class MasterRatController : MonoBehaviour
             {
                 if (Physics.SphereCast(newPos, settings.collisionRadius, Vector3.down, out RaycastHit hit, settings.fallHeight, settings.blockingLayers)) //Rat has a floor under it
                 {
-                    newPos = hit.point + ((settings.collisionRadius + 0.001f) * hit.normal); //Modify position to stick to found floor
+                    newPos = hit.point + ((settings.collisionRadius + 0.001f) * hit.normal);                                                                                  //Modify position to stick to found floor
+                    GetComponentInChildren<Billboarder>().targetZRot = Vector3.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(hit.normal, Vector3.forward), Vector3.forward); //Twist billboard so rat is flat on surface
+                    touchingFloor = true;                                                                                                                                     //Indicate that rat is now touching floor
                 }
                 else //Rat is hovering above empty space
                 {
@@ -271,6 +278,20 @@ public class MasterRatController : MonoBehaviour
             else if (followerRats.Count > 0) RemoveRat(followerRats[^1]);        //Despawn rats when wheel is scrolled down
         }
     }
+    public void OnCommandInput(InputAction.CallbackContext context)
+    {
+        if (context.performed) //Command button has been pressed
+        {
+            commanding = true;              //Indicate that rat is now in command mode
+            anim.SetBool("Pointing", true); //Execute pointing animation
+        }
+        else //Command button has been released
+        {
+            commanding = false;              //Indicate that rat is no longer commanding
+            anim.SetBool("Pointing", false); //End pointing animation
+        }
+            
+    }
 
     //FUNCTIONALITY METHODS:
     /// <summary>
@@ -279,7 +300,8 @@ public class MasterRatController : MonoBehaviour
     public void AddRat(GameObject prefab)
     {
         //Initialize:
-        Vector2 spawnPoint = RatSpawner.GetPointWithinRadius(PosAsVector2(), settings.spawnRadius); //Get spawnpoint
+        //Vector2 spawnPoint = RatSpawner.GetPointWithinRadius(PosAsVector2(), settings.spawnRadius); //Get spawnpoint
+        Vector2 spawnPoint = PosAsVector2(); spawnPoint.x += Random.Range(-0.1f, 0.1f); spawnPoint.y += Random.Range(-0.1f, 0.1f); //TEMP randomly spawn from leader
         Transform newRat = Instantiate(prefab).transform;                                           //Spawn new rat
         RatBoid ratController = newRat.GetComponent<RatBoid>();                                     //Get controller from spawned rat
         
