@@ -69,12 +69,12 @@ public class RatBoid : MonoBehaviour
             if (timeUntilFlip == 0)
             {
                 bool prevFlip = r.flipX;
-                if (velocity.x < 0) r.flipX = false;
-                else if (velocity.x > 0) r.flipX = true;
+                if (velocity.x < 0) r.flipX = MasterRatController.main.settings.flipAll;
+                else if (velocity.x > 0) r.flipX = !MasterRatController.main.settings.flipAll;
                 if (prevFlip != r.flipX) timeUntilFlip = settings.timeBetweenFlips;
             }
         }
-        else if (velocity.x < 0 && r.flipX || velocity.x > 0 && !r.flipX)
+        else if (velocity.x < 0 && r.flipX != MasterRatController.main.settings.flipAll || velocity.x > 0 && r.flipX == MasterRatController.main.settings.flipAll)
         {
             r.flipX = !r.flipX;
             timeUntilFlip = settings.timeBetweenFlips;
@@ -197,16 +197,8 @@ public class RatBoid : MonoBehaviour
             if (rat.follower) //Rat must be a follower for these rules to apply
             {
                 //Get current target:
-                //MasterRatController.TrailPointData data = MasterRatController.main.GetClosestPointOnTrail(rat.flatPos);     //Get data for point closest to rat position
                 MasterRatController.TrailPointData data = MasterRatController.main.GetClosestPointOnTrail(rat.flatPos, rat.lastTrailValue, settings.maxTrailSkip * deltaTime); //Get data for closest point to rat position
                 rat.lastTrailValue = data.linePosition;                                                                                                                        //Remember line position
-                /*
-                if (rat.lastTrailValue != -1 && data.linePosition - rat.lastTrailValue > settings.maxTrailSkip * deltaTime) //Rat is skipping too far in trail (potential loopback detected)
-                {
-                    data = MasterRatController.main.GetTrailPointFromValue(rat.lastTrailValue); //Ignore new target and use last trail value to get new value
-                }
-                
-                */
 
                 Vector2 target = data.point;                                                                 //Get position of target from data
                 float targetDistance = Vector2.Distance(rat.flatPos, target);                                //Get separation between rat and target
@@ -234,19 +226,22 @@ public class RatBoid : MonoBehaviour
                     rat.velocity += leadVel * adjustedDT;                                      //Apply unclamped velocity to rat
                 }
 
-                if (data.linePosition <= settings.trailBuffer) //Rat must be ahead of line for these rules to apply
+                if (MasterRatController.main.totalTrailLength >= settings.minTrailLength) //Trail must be long enough for these rules to apply
                 {
-                    //RULE - Staying Behind: (rats in front of leader tend to want to get behind it)
-                    Vector2 stayBackVel = -data.forward;           //Make stay back velocity keep rat on trail
-                    stayBackVel *= 0.1f * settings.stayBackWeight; //Apply weight and balancing values to stay back velocity
-                    rat.velocity += stayBackVel * adjustedDT;      //Apply unclamped velocity to rat
-                }
-                else if (data.linePosition >= 1 - settings.trailBuffer) //Rat must be behind line for these rules to apply
-                {
-                    //RULE - Straggler Prevention: (rats behind the line will speed up)
-                    Vector2 stragglerVel = data.forward;       //Make velocity move rats toward end of trail
-                    stragglerVel *= settings.stragglerWeight;  //Apply weight and balancing values to velocity
-                    rat.velocity += stragglerVel * adjustedDT; //Apply unclamped velocity to rat
+                    if (data.linePosition <= settings.trailBuffer) //Rat must be ahead of line for these rules to apply
+                    {
+                        //RULE - Staying Behind: (rats in front of leader tend to want to get behind it)
+                        Vector2 stayBackVel = -data.forward;           //Make stay back velocity keep rat on trail
+                        stayBackVel *= 0.1f * settings.stayBackWeight; //Apply weight and balancing values to stay back velocity
+                        rat.velocity += stayBackVel * adjustedDT;      //Apply unclamped velocity to rat
+                    }
+                    else if (data.linePosition >= 1 - settings.trailBuffer) //Rat must be behind line for these rules to apply
+                    {
+                        //RULE - Straggler Prevention: (rats behind the line will speed up)
+                        Vector2 stragglerVel = data.forward;       //Make velocity move rats toward end of trail
+                        stragglerVel *= settings.stragglerWeight;  //Apply weight and balancing values to velocity
+                        rat.velocity += stragglerVel * adjustedDT; //Apply unclamped velocity to rat
+                    }
                 }
             }
 

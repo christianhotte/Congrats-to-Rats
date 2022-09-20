@@ -47,7 +47,7 @@ public class MasterRatController : MonoBehaviour
     /// Singleton instance of Big Rat in scene.
     /// </summary>
     public static MasterRatController main;
-    
+
     //Objects & Components:
     private SpriteRenderer sprite; //Sprite renderer component for big rat
 
@@ -60,8 +60,7 @@ public class MasterRatController : MonoBehaviour
     internal List<RatBoid> followerRats = new List<RatBoid>(); //List of all rats currently following this controller
     private List<Vector2> trail = new List<Vector2>();         //List of points in current trail (used to assemble ratswarm behind main rat)
     private List<float> segLengths = new List<float>();        //List of lengths corresponding to segments in trail
-    private float totalTrailLength = 0;                        //Current length of trail
-    private float slitherValue = 0.5f;                         //Value between 0 and 1 representing current horizontal offset of trail creation position
+    internal float totalTrailLength = 0;                       //Current length of trail
 
     internal Vector2 velocity;   //Current speed and direction of movement
     internal Vector2 forward;    //Normalized vector representing which direction big rat was most recently moving
@@ -116,7 +115,7 @@ public class MasterRatController : MonoBehaviour
             velocity += addVel * deltaTime;              //Add velocity as acceleration over time
 
             //Flip sprite:
-            if (moveInput.x != 0) sprite.flipX = moveInput.x > 0; //Flip sprite to direction of horizontal move input
+            if (moveInput.x != 0) sprite.flipX = settings.flipAll ? moveInput.x < 0 : moveInput.x > 0; //Flip sprite to direction of horizontal move input
         }
         else if (velocity != Vector2.zero) //No input is given but rat is still moving
         {
@@ -245,6 +244,17 @@ public class MasterRatController : MonoBehaviour
                 segLengths[0] = Vector2.Distance(trail[0], trail[1]); //Update new length of first segment
                 totalTrailLength += segLengths[0];                    //Add new segment length to total
             }
+
+            //Do slither:
+            /*if (trail.Count > 1) //Only try to do slither if there are at least two points in trail
+            {
+                float slitherFactor = (currentSpeed / settings.speed) * currentSwarmSettings.slitherFreq * deltaTime;                    //Get speed of slither this frame
+                slitherValue += slitherFactor; while (slitherValue > 1) { slitherValue -= 1; }                                           //Increase slither value and wrap around if necessary
+                slitherValue = settings.slitherCurve.Evaluate(slitherValue);                                                             //Use curve to make value oscillate
+                slitherValue = Mathf.Lerp(-currentSwarmSettings.slitherWidth / 2, -currentSwarmSettings.slitherWidth / 2, slitherValue); //Lerp to get actual X offset induced by slither effect
+                Vector2 slitherVector = RatBoid.FlattenVector(rightAngleRotator * RatBoid.UnFlattenVector(forward));                     //Get vector orthogonal to current forward direction of rat
+                trail[1] += slitherVector * slitherValue;                                                                                //Apply slither effect to second point in trail
+            }*/
         }
     }
 

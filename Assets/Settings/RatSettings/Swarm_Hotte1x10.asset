@@ -72,9 +72,10 @@ MonoBehaviour:
   velTrailLengthMultiplier: 1.1
   maxSegAngle: 100
   backtrackBuffer: 0.1
-  maxTrailSkip: 5
+  maxTrailSkip: 8
+  minTrailLength: 0.5
   slitherWidth: 0.3
-  slitherFreq: 1
+  slitherFreq: 0.5
   cohesionWeight: 0.4
   separationWeight: 0.5
   conformityWeight: 0
