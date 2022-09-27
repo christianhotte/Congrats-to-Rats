@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Unity.Collections;
+using CustomEnums;
 
 /// <summary>
 /// Controls the big rat and governs behavior of all the little rats.
@@ -59,6 +60,7 @@ public class MasterRatController : MonoBehaviour
     //Runtime Vars:
     private SwarmSettings currentSwarmSettings;                //Instance of swarmSettings object used to interpolate between rat behaviors
     internal List<RatBoid> followerRats = new List<RatBoid>(); //List of all rats currently following this controller
+    internal List<RatBoid> deployedRats = new List<RatBoid>(); //List of all rats currently deployed by player
     private List<Vector2> trail = new List<Vector2>();         //List of points in current trail (used to assemble ratswarm behind main rat)
     private List<float> segLengths = new List<float>();        //List of lengths corresponding to segments in trail
     internal float totalTrailLength = 0;                       //Current length of trail
@@ -68,16 +70,23 @@ public class MasterRatController : MonoBehaviour
     internal float currentSpeed; //Current speed at which rat is moving
     private Vector2 moveInput;   //Current input direction for movement
     internal bool falling;       //Whether or not rat is currently falling
-    [SerializeField] internal bool commanding;    //Whether or not rat is currently deploying rats to a location
+    internal bool commanding;    //Whether or not rat is currently deploying rats to a location
 
     //RUNTIME METHODS:
     private void Awake()
     {
-        //Initialization:
-        if (settings == null) { Debug.LogError("Big Rat is missing ratSettings object"); Destroy(this); } //Make sure big rat has ratSettings
-        if (main == null) main = this; else Destroy(this);                                                //Singleton-ize this script instance
-        trail.Insert(0, PosAsVector2());                                                                  //Add starting position as first point in trail
-        UpdateSwarmSettings();                                                                            //Set up swarm settings and do initial update
+        //Validity checks:
+        if (settings == null) { Debug.LogError("Big Rat is missing ratSettings object"); Destroy(this); }                   //Make sure big rat has ratSettings
+        if (swarmSettings.Count == 0) { Debug.LogError("Big rat needs at least one swarmSettings object"); Destroy(this); } //Make sure rat swarm has settings
+        if (main == null) main = this; else Destroy(this);                                                                  //Singleton-ize this script instance
+
+        //Globabl initialization:
+        Application.targetFrameRate = 60; //Set target framerate
+
+        //Local initialization:
+        trail.Insert(0, PosAsVector2()); //Add starting position as first point in trail
+        UpdateSwarmSettings();           //Set up swarm settings and do initial update
+        MoveRat(0);                      //Snap rat to floor
     }
     private void Start()
     {
@@ -130,7 +139,7 @@ public class MasterRatController : MonoBehaviour
             velocity = Vector2.ClampMagnitude(velocity, settings.speed); //Clamp velocity to target speed
             currentSpeed = settings.speed;                               //Update current speed value
         }
-        anim.SetFloat("Speed", currentSpeed / settings.speed); //Send speed value to animator
+        if (anim != null) anim.SetFloat("Speed", currentSpeed / settings.speed); //Send speed value to animator
 
         //Get new position:
         if (velocity != Vector2.zero) //Only update position if player has velocity
@@ -274,8 +283,8 @@ public class MasterRatController : MonoBehaviour
     {
         if (context.started) //Scroll wheel has just been moved one tick
         {
-            if (context.ReadValue<float>() > 0) AddRat(settings.basicRatPrefab); //Spawn rats when wheel is scrolled up
-            else if (followerRats.Count > 0) RemoveRat(followerRats[^1]);        //Despawn rats when wheel is scrolled down
+            if (context.ReadValue<float>() > 0) SpawnRat(settings.basicRatPrefab); //Spawn rats when wheel is scrolled up
+            else if (followerRats.Count > 0) Destroy(followerRats[^1].gameObject); //Despawn rats when wheel is scrolled down
         }
     }
     public void OnCommandInput(InputAction.CallbackContext context)
@@ -297,33 +306,23 @@ public class MasterRatController : MonoBehaviour
     /// <summary>
     /// Spawns a new rat and adds it to the swarm.
     /// </summary>
-    public void AddRat(GameObject prefab)
+    public void SpawnRat(GameObject prefab)
     {
         //Initialize:
-        //Vector2 spawnPoint = RatSpawner.GetPointWithinRadius(PosAsVector2(), settings.spawnRadius); //Get spawnpoint
-        Vector2 spawnPoint = PosAsVector2(); spawnPoint.x += Random.Range(-0.1f, 0.1f); spawnPoint.y += Random.Range(-0.1f, 0.1f); //TEMP randomly spawn from leader
-        Transform newRat = Instantiate(prefab).transform;                                           //Spawn new rat
-        RatBoid ratController = newRat.GetComponent<RatBoid>();                                     //Get controller from spawned rat
-        
-        //Set position:
-        Vector3 ratPos = new Vector3(spawnPoint.x, ratController.settings.baseHeight * newRat.localScale.x, spawnPoint.y); //Set spawn position (calculate spawn height based off of randomized scale)
-        newRat.position = ratPos;                                                                                          //Apply position
-        ratController.flatPos = spawnPoint;                                                                                //Update flat position tracker of spawned rat
+        Transform newRat = Instantiate(prefab).transform;       //Spawn new rat
+        RatBoid ratController = newRat.GetComponent<RatBoid>(); //Get controller from spawned rat
 
-        //Set as follower:
-        ratController.follower = true;   //Indicate that new rat is currently following big rat
-        followerRats.Add(ratController); //Add rat to followers
-        UpdateSwarmSettings();           //Update settings
-    }
-    /// <summary>
-    /// Removes a specific rat from the swarm.
-    /// </summary>
-    public void RemoveRat(RatBoid target)
-    {
-        //Despawn rat:
-        followerRats.Remove(target); //Remove rat from followers
-        UpdateSwarmSettings();       //Update settings
-        Destroy(target.gameObject);  //Destroy rat
+        //Get spawn position:
+        Vector3 spawnPoint = transform.position;                                      //Use position of mama rat as basis for spawnpoint
+        spawnPoint.x += Random.Range(-settings.spawnRadius, settings.spawnRadius);    //Randomize X position of spawnpoint within given range
+        spawnPoint.z += Random.Range(-settings.spawnRadius, settings.spawnRadius);    //Randomize Y position of spawnpoint within given range
+        spawnPoint.y += ratController.settings.baseHeight * ratController.sizeFactor; //Add modified base spawn height of rat based on settings and scaled to rat size
+        spawnPoint.y -= settings.collisionRadius;                                     //Subtract approximate standing height from leader rat
+
+        //Cleanup:
+        newRat.position = spawnPoint;                              //Set rat position to spawnpoint
+        ratController.flatPos = RatBoid.FlattenVector(spawnPoint); //Update flat position tracker of spawned rat
+        ratController.MakeFollower();                              //Immediately make rat a follower
     }
     /// <summary>
     /// Returns the point on trail which is closest to given reference point (NOTE: very expensive).
@@ -517,7 +516,7 @@ public class MasterRatController : MonoBehaviour
     /// <summary>
     /// Updates currentSwarmSettings according to given settings list and current number of rats. Should be done every time follower count changes, and at beginning of runtime.
     /// </summary>
-    private void UpdateSwarmSettings()
+    public void UpdateSwarmSettings()
     {
         //Setup:
         if (currentSwarmSettings == null) //Swarm settings have not been set up yet

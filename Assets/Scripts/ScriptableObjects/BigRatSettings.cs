@@ -18,6 +18,6 @@ public class BigRatSettings : ScriptableObject
     [Min(0), Tooltip("Step height at which rat will fall instead of climbing down")]          public float fallHeight;
     [Min(1), Tooltip("The maximum number of obstacles rat can collide with at once")]         public int maxObstacleCollisions;
     [Header("Spawning:")]
-    [Tooltip("Prefab object for default rats in the swarm")]   public GameObject basicRatPrefab;
-    [Min(0), Tooltip("How far away followers can be spawned")] public float spawnRadius;
+    [Tooltip("Prefab object for default rats in the swarm")]                                 public GameObject basicRatPrefab;
+    [Min(0), Tooltip("Radius of circle around big rat within which babies will be spawned")] public float spawnRadius;
 }

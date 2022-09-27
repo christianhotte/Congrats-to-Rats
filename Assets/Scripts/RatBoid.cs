@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using CustomEnums;
 
 /// <summary>
 /// Controller for an individual rat follower.
@@ -12,6 +13,10 @@ public class RatBoid : MonoBehaviour
     /// List of all rats currently spawned in scene.
     /// </summary>
     public static List<RatBoid> spawnedRats = new List<RatBoid>();
+    /// <summary>
+    /// List of rats not currently targeting any particular object (such as leader).
+    /// </summary>
+    public static List<RatBoid> freeRats = new List<RatBoid>();
     public static readonly float timeBalancer = 100; //Value applied to all acceleration applications (so that settings aren't messed up by adding deltaTime)
 
     //Objects & Components:
@@ -33,11 +38,15 @@ public class RatBoid : MonoBehaviour
     /// Current position of this rat as a vector2.
     /// </summary>
     internal Vector2 flatPos;
+    /// <summary>
+    /// Current targeting behavior of this rat.
+    /// </summary>
+    internal TargetStatus targetStatus = TargetStatus.Free;
 
     internal List<RatBoid> currentNeighbors = new List<RatBoid>();  //Other rats which are currently close to this rat
     internal List<RatBoid> currentSeparators = new List<RatBoid>(); //Other rats which are currently too close to this rat
-    internal bool follower;                                         //If true, indicates that this rat is following the big main rat
-    internal float lastTrailValue = -1;                             //Latest value of target on trail (should be reset whenever rat loses target
+    internal float lastTrailValue = -1;                             //Latest value of target on trail (should be reset whenever rat loses target)
+    internal float sizeFactor = 1;                                  //Factor used to change certain properties of rat based on scale variance
 
     private float timeUntilFlip; //Time before this rat is able to flip its sprite orientation (prevents jiggling)
 
@@ -49,15 +58,19 @@ public class RatBoid : MonoBehaviour
 
         //Initialization:
         spawnedRats.Add(this); //Add this rat to master list of spawned rats
+        freeRats.Add(this);    //Every rat initializes as freeroaming
 
         //Randomize properties:
         float newScale = 1 + Random.Range(-settings.sizeVariance, settings.sizeVariance); //Get value of new scale
         transform.localScale = Vector3.one * newScale;                                    //Set new scale
+        sizeFactor = newScale;                                                            //Record size factor
         r.color = Color.Lerp(r.color, settings.altColor, Random.value);                   //Randomize color
     }
     private void OnDestroy()
     {
-        //Final cleanup:
+        //List cleanup:
+        ReleaseTarget();          //Release rat from any lists it may be in
+        freeRats.Remove(this);    //Remove rat from freerange list it has just been placed in
         spawnedRats.Remove(this); //Remove this rat from master list of spawned rats
     }
     private void Update()
@@ -92,11 +105,15 @@ public class RatBoid : MonoBehaviour
         foreach (RatBoid rat in spawnedRats) //Iterate through every rat in list
         {
             //Initialize:
-            Vector3 newPos = rat.transform.position;                                     //Get current position of rat
-            newPos.x += rat.velocity.x * deltaTime;                                      //Add X velocity
-            newPos.z += rat.velocity.y * deltaTime;                                      //Add Y velocity
-            float adjustedHeight = rat.settings.baseHeight * rat.transform.localScale.x; //Get effective height of rat based on scale
-            float floorCheckHeight = adjustedHeight + rat.settings.fallHeight;           //Get height value used in floor checks
+            Vector3 newPos = rat.transform.position;                           //Get current position of rat
+            newPos.x += rat.velocity.x * deltaTime;                            //Add X velocity
+            newPos.z += rat.velocity.y * deltaTime;                            //Add Y velocity
+            float adjustedHeight = rat.settings.baseHeight * rat.sizeFactor;   //Get effective height of rat based on scale
+
+            //Get floor check value:
+            float floorCheckHeight = adjustedHeight;                                                                       //Initialize height value used in floor checks
+            if (rat.targetStatus == TargetStatus.Leader) floorCheckHeight += MasterRatController.main.settings.fallHeight; //Use leader's fall height if applicable
+            else floorCheckHeight += rat.settings.fallHeight;                                                              //Otherwise, use rat's natural fall height
 
             //Check obstacles & floor:
             if (Physics.Linecast(rat.transform.position, newPos, out RaycastHit hit, rat.settings.obstructionLayers)) //Rat is obstructed
@@ -158,6 +175,7 @@ public class RatBoid : MonoBehaviour
         float adjustedDT = deltaTime * timeBalancer; //Get adjusted deltaTime to uncouple acceleration changes from framerate
         foreach (RatBoid rat in spawnedRats) //Iterate through every rat in list
         {
+            //GENERIC RULES:
             if (rat.currentNeighbors.Count != 0) //Rat must have neighbors for these rules to apply
             {
                 //RULE - Cohesion: (nearby rats stick together)
@@ -194,7 +212,8 @@ public class RatBoid : MonoBehaviour
                 rat.velocity += separationVel * adjustedDT; //Apply unclamped velocity to rat
             }
 
-            if (rat.follower) //Rat must be a follower for these rules to apply
+            //FOLLOWER RULES:
+            if (rat.targetStatus == TargetStatus.Leader) //Rat must be a follower for these rules to apply
             {
                 //Get current target:
                 MasterRatController.TrailPointData data = MasterRatController.main.GetClosestPointOnTrail(rat.flatPos, rat.lastTrailValue, settings.maxTrailSkip * deltaTime); //Get data for closest point to rat position
@@ -245,6 +264,7 @@ public class RatBoid : MonoBehaviour
                 }
             }
 
+            //SPATIAL RULES:
             Vector3 checkPoint = rat.transform.position + (UnFlattenVector(rat.velocity).normalized * rat.settings.obstacleSeparation); //Get point (projected using velocity) which will be used to check for incoming obstacles
             if (Physics.Linecast(rat.transform.position, checkPoint, out RaycastHit hit, rat.settings.obstructionLayers)) //Rat is heading toward an obstacle it is too close to
             {
@@ -260,7 +280,9 @@ public class RatBoid : MonoBehaviour
             else //Rat has no obstacles directly in front of it
             {
                 //RULE - Ledge Avoidance: (rats will tend to avoid getting too close to steep ledges)
-                float heightCheckDepth = rat.settings.fallHeight + (rat.settings.baseHeight * rat.transform.localScale.x); //Get value used to check for ledges
+                float heightCheckDepth = rat.settings.baseHeight * rat.sizeFactor;                                             //Get value used to check for ledges
+                if (rat.targetStatus == TargetStatus.Leader) heightCheckDepth += MasterRatController.main.settings.fallHeight; //Apply leader's fall height if being lead
+                else heightCheckDepth += rat.settings.fallHeight;                                                              //Otherwise, use rat's natural fall height
                 if (!Physics.Raycast(checkPoint, Vector3.down, heightCheckDepth, rat.settings.obstructionLayers)) //Rat is moving toward an edge
                 {
                     Vector3 depthPoint = checkPoint + (Vector3.down * heightCheckDepth); //Get point at end of line used to check height depth
@@ -274,6 +296,67 @@ public class RatBoid : MonoBehaviour
                 }
             }
         }
+    }
+
+    //FUNCTIONALITY METHODS:
+    /// <summary>
+    /// Releases rat from target it is currently following, initiating freeroam behavior.
+    /// </summary>
+    public void ReleaseTarget()
+    {
+        switch (targetStatus) //Determine procedure based on current targeting status
+        {
+            case TargetStatus.Free: return; //Ignore if rat is not currently targeting anything
+            case TargetStatus.Leader: //Rat is currently a follower of the mama rat
+                if (MasterRatController.main.followerRats.Contains(this)) //Leader has this rat as a follower
+                {
+                    MasterRatController.main.followerRats.Remove(this); //Remove rat from master follower list
+                    MasterRatController.main.UpdateSwarmSettings();     //Update rat swarm settings
+                }
+                break;
+            case TargetStatus.Point:
+                if (MasterRatController.main.deployedRats.Contains(this)) //This rat is currently deployed
+                {
+                    MasterRatController.main.deployedRats.Remove(this); //Remove rat from deployed rats list
+                }
+                break;
+            case TargetStatus.Other: //Rat is currently targeting a generic object
+
+                break;
+        }
+
+        //Cleanup:
+        if (!freeRats.Contains(this)) freeRats.Add(this); //Add rat to list of freeroaming rats
+        lastTrailValue = -1;                              //Clear rat's memory of target trail
+        targetStatus = TargetStatus.Free;                 //Indicate that rat is now freeroaming
+    }
+    /// <summary>
+    /// Makes rat a follower, adding it to main rat swarm.
+    /// </summary>
+    public void MakeFollower()
+    {
+        if (!MasterRatController.main.followerRats.Contains(this)) //Rat is not already a follower
+        {
+            MasterRatController.main.followerRats.Add(this); //Add rat to master list of followers
+            MasterRatController.main.UpdateSwarmSettings();  //Adjust swarm settings in accordance with new follower quantity
+        }
+        if (MasterRatController.main.deployedRats.Contains(this)) MasterRatController.main.deployedRats.Remove(this); //Remove rat from list of deployed rats if applicable
+        if (freeRats.Contains(this)) freeRats.Remove(this);                                                           //Remove rat from list of free rats
+        targetStatus = TargetStatus.Leader;                                                                           //Indicate that rat is a follower
+    }
+    /// <summary>
+    /// Makes rat go to deployed position (according to leader pointing location)
+    /// </summary>
+    public void MakeDeployed()
+    {
+        if (!MasterRatController.main.deployedRats.Contains(this)) //Rat is not already deployed
+        {
+            MasterRatController.main.deployedRats.Add(this); //Add rat to master list of deployed rats
+            MasterRatController.main.UpdateSwarmSettings();  //Adjust swarm settings in accordance with new follower quantity
+        }
+        if (MasterRatController.main.followerRats.Contains(this)) MasterRatController.main.followerRats.Remove(this); //Remove rat from list of follower rats if applicable
+        if (freeRats.Contains(this)) freeRats.Remove(this);                                                           //Remove rat from list of free rats
+        targetStatus = TargetStatus.Point;                                                                            //Indicate that rat is deployed to point
     }
 
     //UTILITY METHODS:

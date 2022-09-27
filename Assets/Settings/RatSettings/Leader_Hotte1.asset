@@ -24,4 +24,4 @@ MonoBehaviour:
   fallHeight: 0.2
   maxObstacleCollisions: 3
   basicRatPrefab: {fileID: 4272964666275407885, guid: 16e94108f81788e4c9ded77f0823772f, type: 3}
-  spawnRadius: 3
+  spawnRadius: 0.01

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   baseHeight: 0.04
   fallHeight: 0.13
-  heightChangeRate: 0.5
+  heightChangeRate: 1
   obstructionLayers:
     serializedVersion: 2
     m_Bits: 384
