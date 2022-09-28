@@ -27,5 +27,5 @@ MonoBehaviour:
   influenceRadius: 0.8
   spawnOffset: {x: 0, y: 0.05, z: -0.1}
   spawnArea: {x: 0.16, y: 0.05}
-  spawnAngle: {x: 15, y: 45}
-  spawnForce: {x: 1.5, y: 2.2}
+  spawnAngle: {x: 15, y: 42}
+  spawnForce: {x: 1.5, y: 2}
