@@ -10,5 +10,5 @@ namespace CustomEnums
     /// <summary>
     /// Denotes targeting behavior of a single RatBoid.
     /// </summary>
-    public enum TargetStatus { Free, Leader, Point, Other }
+    public enum RatBehavior { Free, TrailFollower, Deployed, Distracted, Projectile }
 }

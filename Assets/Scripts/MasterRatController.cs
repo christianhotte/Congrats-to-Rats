@@ -81,11 +81,11 @@ public class MasterRatController : MonoBehaviour
         if (main == null) main = this; else Destroy(this);                                                                  //Singleton-ize this script instance
 
         //Globabl initialization:
-        Application.targetFrameRate = 60; //Set target framerate
+        Application.targetFrameRate = 120; //Set target framerate
 
         //Local initialization:
         trail.Insert(0, PosAsVector2()); //Add starting position as first point in trail
-        UpdateSwarmSettings();           //Set up swarm settings and do initial update
+        OnFollowerCountChanged();        //Set up swarm settings and do initial update
         MoveRat(0);                      //Snap rat to floor
     }
     private void Start()
@@ -99,7 +99,7 @@ public class MasterRatController : MonoBehaviour
         MoveRat(Time.deltaTime);                                  //Move the big rat
         RatBoid.UpdateRats(Time.deltaTime, currentSwarmSettings); //Move all the little rats
 
-        UpdateSwarmSettings(); //TEMP: Keep swarm settings regularly up-to-date for debugging purposes
+        OnFollowerCountChanged(); //TEMP: Keep swarm settings regularly up-to-date for debugging purposes
 
         //Visualize trail:
         if (trail.Count > 1)
@@ -260,17 +260,6 @@ public class MasterRatController : MonoBehaviour
                 segLengths[0] = Vector2.Distance(trail[0], trail[1]); //Update new length of first segment
                 totalTrailLength += segLengths[0];                    //Add new segment length to total
             }
-
-            //Do slither:
-            /*if (trail.Count > 1) //Only try to do slither if there are at least two points in trail
-            {
-                float slitherFactor = (currentSpeed / settings.speed) * currentSwarmSettings.slitherFreq * deltaTime;                    //Get speed of slither this frame
-                slitherValue += slitherFactor; while (slitherValue > 1) { slitherValue -= 1; }                                           //Increase slither value and wrap around if necessary
-                slitherValue = settings.slitherCurve.Evaluate(slitherValue);                                                             //Use curve to make value oscillate
-                slitherValue = Mathf.Lerp(-currentSwarmSettings.slitherWidth / 2, -currentSwarmSettings.slitherWidth / 2, slitherValue); //Lerp to get actual X offset induced by slither effect
-                Vector2 slitherVector = RatBoid.FlattenVector(rightAngleRotator * RatBoid.UnFlattenVector(forward));                     //Get vector orthogonal to current forward direction of rat
-                trail[1] += slitherVector * slitherValue;                                                                                //Apply slither effect to second point in trail
-            }*/
         }
     }
 
@@ -313,75 +302,29 @@ public class MasterRatController : MonoBehaviour
         RatBoid ratController = newRat.GetComponent<RatBoid>(); //Get controller from spawned rat
 
         //Get spawn position:
-        Vector3 spawnPoint = transform.position;                                      //Use position of mama rat as basis for spawnpoint
-        spawnPoint.x += Random.Range(-settings.spawnRadius, settings.spawnRadius);    //Randomize X position of spawnpoint within given range
-        spawnPoint.z += Random.Range(-settings.spawnRadius, settings.spawnRadius);    //Randomize Y position of spawnpoint within given range
-        spawnPoint.y += ratController.settings.baseHeight * ratController.sizeFactor; //Add modified base spawn height of rat based on settings and scaled to rat size
-        spawnPoint.y -= settings.collisionRadius;                                     //Subtract approximate standing height from leader rat
+        Vector3 spawnDirection = new Vector3(Random.Range(-settings.spawnArea.x / 2, settings.spawnArea.x / 2), 0, //Get vector which moves spawnpoint away from center by a random amount
+                                             Random.Range(-settings.spawnArea.y / 2, settings.spawnArea.y / 2));   //Add random amount to depth separately
+        Vector3 spawnPoint = transform.position + settings.spawnOffset + spawnDirection;                   //Use position of mama rat plus offset and random bias as basis for spawnpoint
+
+        //Get launch characteristics:
+        Vector3 launchVel = Vector3.up * Random.Range(settings.spawnForce.x, settings.spawnForce.y); //Initialize force vector for launching rat (with random force value)
+        float launchAngle = Random.Range(settings.spawnAngle.x, settings.spawnAngle.y);              //Randomize angle at which rat is launched
+        float spawnAngle = Vector2.SignedAngle(Vector2.down, RatBoid.FlattenVector(spawnDirection)); //Get angle between spawnpoint and mother rat position
+        launchVel = Quaternion.AngleAxis(launchAngle, Vector3.right) * launchVel;                    //Rotate launch vector forward by launch angle
+        launchVel = Quaternion.AngleAxis(spawnAngle, Vector3.up) * launchVel;                        //Rotate launch vector around mother rat by spawn angle
 
         //Cleanup:
         newRat.position = spawnPoint;                              //Set rat position to spawnpoint
         ratController.flatPos = RatBoid.FlattenVector(spawnPoint); //Update flat position tracker of spawned rat
-        ratController.MakeFollower();                              //Immediately make rat a follower
-    }
-    /// <summary>
-    /// Returns the point on trail which is closest to given reference point (NOTE: very expensive).
-    /// </summary>
-    public TrailPointData GetClosestPointOnTrail(Vector2 origin)
-    {
-        //Validity checks:
-        if (trail.Count == 1) return new TrailPointData(trail[0]); //Simply return only point in trail if applicable
-
-        //Find closest point:
-        Vector2 pointA = trail[0]; //Initialize container for first point (will be closest point to start of trail)
-        Vector2 pointB = trail[1]; //Initialize second point at second item in trail
-        int closestIndex = 1;      //Initialize container to store index of closest point (later switches use to index of earliest point in trail)
-        if (trail.Count > 2) //Only search harder if there are more than two points to check
-        {
-            //Get closest point:
-            float closestDistance = Vector2.Distance(origin, pointB); //Initialize closest point tracker at distance between origin and second item in trail
-            for (int i = 2; i < trail.Count - 1; i++) //Iterate through points in trail which have two neighbors (and are not already point A)
-            {
-                float distance = Vector2.Distance(origin, trail[i]); //Check distance between origin and point
-                if (distance < closestDistance) //Current point is closer than previous closest point
-                {
-                    closestDistance = distance; //Store closest distance
-                    closestIndex = i;           //Store closest index
-                    pointA = trail[i];          //Update point A
-                }
-            }
-
-            //Get closest adjacent point:
-            if (Vector2.Distance(origin, trail[closestIndex - 1]) <= Vector2.Distance(origin, trail[closestIndex + 1])) //Former point is closer to origin
-            {
-                pointB = pointA;                  //Make point B the latter point
-                pointA = trail[closestIndex - 1]; //Make point A the former point
-                closestIndex -= 1;                //Make closestIndex the index of point A
-            }
-            else //Latter point is closer to origin
-            {
-                pointB = trail[closestIndex + 1]; //Make point B the latter point
-            }
-        }
-        Vector2 closestPoint = GetClosestPointOnLine(pointA, pointB, origin); //Get closest point to target between two found points in trail
-
-        //Get position of point in line:
-        float trailValue = 0; //Initialize container to store total line distance
-        for (int i = 0; i < closestIndex; i++) //Iterate through each segment before segment containing target
-        {
-            trailValue += segLengths[i]; //Add up segment lengths
-        }
-        trailValue += Vector2.Distance(closestPoint, pointB); //Add partial distance of current segment to total distance
-        trailValue = trailValue / totalTrailLength;           //Get value as percentage of total length of trail
-
-        //Return point data:
-        if (closestPoint == trail[0]) return new TrailPointData(closestPoint, (trail[0] - trail[1]).normalized, 0); //If the closest point is the very beginning of the trail, give it a direction which points toward the leader
-        return new TrailPointData(closestPoint, -(pointB - pointA).normalized, trailValue);                         //Otherwise, return closest point with known direction
+        ratController.Launch(launchVel);                           //Launch spawned rat
     }
     /// <summary>
     /// Returns the point on trail which is closest to given reference point, but within given distance behind given trail value.
     /// </summary>
-    public TrailPointData GetClosestPointOnTrail(Vector2 origin, float prevValue, float maxBackup)
+    /// <param name="origin">Reference point which returned position will be as close as possible to.</param>
+    /// <param name="prevValue">Previous trail value (0 - 1) used to restrict section of checked trail. Pass negative for a clean check.</param>
+    /// <param name="maxBackup">Maximum distance along trail by which returned point can be behind point at prevValue.</param>
+    public TrailPointData GetClosestPointOnTrail(Vector2 origin, float prevValue = -1, float maxBackup = 0)
     {
         //Trim down trail:
         if (trail.Count == 1) return new TrailPointData(trail[0]); //Simply return only point in trail if applicable
@@ -514,11 +457,14 @@ public class MasterRatController : MonoBehaviour
         return new Vector2(transform.position.x, transform.position.z);
     }
     /// <summary>
-    /// Updates currentSwarmSettings according to given settings list and current number of rats. Should be done every time follower count changes, and at beginning of runtime.
+    /// Updates stuff which depends on current number of follower rats. Should be called whenever follower count changes.
     /// </summary>
-    public void UpdateSwarmSettings()
+    public void OnFollowerCountChanged()
     {
-        //Setup:
+        //Update UI:
+        InterfaceMaster.SetCounter(followerRats.Count); //Set rat counter
+
+        //Update swarm settings:
         if (currentSwarmSettings == null) //Swarm settings have not been set up yet
         {
             if (swarmSettings.Count == 0) { Debug.LogError("Big Rat needs at least one swarmSettings object"); Destroy(this); } //Make sure big rat has swarmSettings
@@ -526,8 +472,6 @@ public class MasterRatController : MonoBehaviour
             else currentSwarmSettings = ScriptableObject.CreateInstance<SwarmSettings>();                                       //Create a temporary object instance for swarm settings as part of normal setup
         }
         if (swarmSettings.Count == 1) return; //Ignore if swarm settings are just a copy of single given settings object
-
-        //Get interpolant settings:
         int ratNumber = followerRats.Count; //Get current number of follower rats
         SwarmSettings lerpSettingsA = null; //Initialize container to store lower bound settings
         SwarmSettings lerpSettingsB = null; //Initialize container to store upper bound settings
@@ -554,3 +498,57 @@ public class MasterRatController : MonoBehaviour
         currentSwarmSettings.Lerp(lerpSettingsA, lerpSettingsB, ratNumber); //Lerp settings between two identified bounds
     }
 }
+
+//BONEYARD:
+/*
+    public TrailPointData GetClosestPointOnTrail(Vector2 origin)
+    {
+        //Validity checks:
+        if (trail.Count == 1) return new TrailPointData(trail[0]); //Simply return only point in trail if applicable
+
+        //Find closest point:
+        Vector2 pointA = trail[0]; //Initialize container for first point (will be closest point to start of trail)
+        Vector2 pointB = trail[1]; //Initialize second point at second item in trail
+        int closestIndex = 1;      //Initialize container to store index of closest point (later switches use to index of earliest point in trail)
+        if (trail.Count > 2) //Only search harder if there are more than two points to check
+        {
+            //Get closest point:
+            float closestDistance = Vector2.Distance(origin, pointB); //Initialize closest point tracker at distance between origin and second item in trail
+            for (int i = 2; i < trail.Count - 1; i++) //Iterate through points in trail which have two neighbors (and are not already point A)
+            {
+                float distance = Vector2.Distance(origin, trail[i]); //Check distance between origin and point
+                if (distance < closestDistance) //Current point is closer than previous closest point
+                {
+                    closestDistance = distance; //Store closest distance
+                    closestIndex = i;           //Store closest index
+                    pointA = trail[i];          //Update point A
+                }
+            }
+
+            //Get closest adjacent point:
+            if (Vector2.Distance(origin, trail[closestIndex - 1]) <= Vector2.Distance(origin, trail[closestIndex + 1])) //Former point is closer to origin
+            {
+                pointB = pointA;                  //Make point B the latter point
+                pointA = trail[closestIndex - 1]; //Make point A the former point
+                closestIndex -= 1;                //Make closestIndex the index of point A
+            }
+            else //Latter point is closer to origin
+            {
+                pointB = trail[closestIndex + 1]; //Make point B the latter point
+            }
+        }
+        Vector2 closestPoint = GetClosestPointOnLine(pointA, pointB, origin); //Get closest point to target between two found points in trail
+
+        //Get position of point in line:
+        float trailValue = 0; //Initialize container to store total line distance
+        for (int i = 0; i < closestIndex; i++) //Iterate through each segment before segment containing target
+        {
+            trailValue += segLengths[i]; //Add up segment lengths
+        }
+        trailValue += Vector2.Distance(closestPoint, pointB); //Add partial distance of current segment to total distance
+        trailValue = trailValue / totalTrailLength;           //Get value as percentage of total length of trail
+
+        //Return point data:
+        if (closestPoint == trail[0]) return new TrailPointData(closestPoint, (trail[0] - trail[1]).normalized, 0); //If the closest point is the very beginning of the trail, give it a direction which points toward the leader
+        return new TrailPointData(closestPoint, -(pointB - pointA).normalized, trailValue);                         //Otherwise, return closest point with known direction
+    }*/

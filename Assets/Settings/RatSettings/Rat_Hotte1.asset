@@ -12,14 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70aeed3edc9e9af4ca525b3b7ff69f65, type: 3}
   m_Name: Rat_Hotte1
   m_EditorClassIdentifier: 
+  maxSpeed: 1
+  maxOvertakeSpeed: 0.8
   baseHeight: 0.04
   fallHeight: 0.13
   heightChangeRate: 1
   obstructionLayers:
     serializedVersion: 2
     m_Bits: 384
+  obstacleSeparation: 0.12
+  obstacleAvoidanceWeight: 4
   sizeVariance: 0.25
   altColor: {r: 0.5019608, g: 0.3647059, b: 0.28235295, a: 1}
   timeBetweenFlips: 0.4
-  obstacleSeparation: 0.12
-  obstacleAvoidanceWeight: 4
+  gravity: 9.5
+  drag: 0
