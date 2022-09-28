@@ -312,6 +312,7 @@ public class MasterRatController : MonoBehaviour
         float spawnAngle = Vector2.SignedAngle(Vector2.down, RatBoid.FlattenVector(spawnDirection)); //Get angle between spawnpoint and mother rat position
         launchVel = Quaternion.AngleAxis(launchAngle, Vector3.right) * launchVel;                    //Rotate launch vector forward by launch angle
         launchVel = Quaternion.AngleAxis(spawnAngle, Vector3.up) * launchVel;                        //Rotate launch vector around mother rat by spawn angle
+        launchVel += RatBoid.UnFlattenVector(velocity);                                              //Add current velocity of mother rat to launch velocity of child
 
         //Cleanup:
         newRat.position = spawnPoint;                              //Set rat position to spawnpoint
@@ -324,7 +325,7 @@ public class MasterRatController : MonoBehaviour
     /// <param name="origin">Reference point which returned position will be as close as possible to.</param>
     /// <param name="prevValue">Previous trail value (0 - 1) used to restrict section of checked trail. Pass negative for a clean check.</param>
     /// <param name="maxBackup">Maximum distance along trail by which returned point can be behind point at prevValue.</param>
-    public TrailPointData GetClosestPointOnTrail(Vector2 origin, float prevValue = -1, float maxBackup = 0)
+    public TrailPointData GetClosestPointOnTrail(Vector3 origin, float prevValue = -1, float maxBackup = 0)
     {
         //Trim down trail:
         if (trail.Count == 1) return new TrailPointData(trail[0]); //Simply return only point in trail if applicable
@@ -346,16 +347,17 @@ public class MasterRatController : MonoBehaviour
         }
 
         //Find closest point:
-        Vector2 pointA = tempTrail[0]; //Initialize container for first point (will be closest point to start of trail)
-        Vector2 pointB = tempTrail[1]; //Initialize second point at second item in trail
-        int closestIndex = 1;          //Initialize container to store index of closest point (later switches use to index of earliest point in trail)
+        Vector2 flatOrigin = RatBoid.FlattenVector(origin); //Get origin as flat vector (for efficiency)
+        Vector2 pointA = tempTrail[0];                      //Initialize container for first point (will be closest point to start of trail)
+        Vector2 pointB = tempTrail[1];                      //Initialize second point at second item in trail
+        int closestIndex = 1;                               //Initialize container to store index of closest point (later switches use to index of earliest point in trail)
         if (tempTrail.Count > 2) //Only search harder if there are more than two points to check
         {
             //Get closest point:
-            float closestDistance = Vector2.Distance(origin, pointB); //Initialize closest point tracker at distance between origin and second item in trail
+            float closestDistance = Vector2.Distance(flatOrigin, pointB); //Initialize closest point tracker at distance between origin and second item in trail
             for (int i = 2; i < tempTrail.Count - 1; i++) //Iterate through points in trail which have two neighbors (and are not already point A)
             {
-                float distance = Vector2.Distance(origin, tempTrail[i]); //Check distance between origin and point
+                float distance = Vector2.Distance(flatOrigin, tempTrail[i]); //Check distance between origin and point
                 if (distance < closestDistance) //Current point is closer than previous closest point
                 {
                     closestDistance = distance; //Store closest distance
@@ -365,7 +367,7 @@ public class MasterRatController : MonoBehaviour
             }
 
             //Get closest adjacent point:
-            if (Vector2.Distance(origin, tempTrail[closestIndex - 1]) <= Vector2.Distance(origin, tempTrail[closestIndex + 1])) //Former point is closer to origin
+            if (Vector2.Distance(flatOrigin, tempTrail[closestIndex - 1]) <= Vector2.Distance(flatOrigin, tempTrail[closestIndex + 1])) //Former point is closer to origin
             {
                 pointB = pointA;                      //Make point B the latter point
                 pointA = tempTrail[closestIndex - 1]; //Make point A the former point
@@ -376,7 +378,7 @@ public class MasterRatController : MonoBehaviour
                 pointB = tempTrail[closestIndex + 1]; //Make point B the latter point
             }
         }
-        Vector2 closestPoint = GetClosestPointOnLine(pointA, pointB, origin); //Get closest point to target between two found points in trail
+        Vector2 closestPoint = GetClosestPointOnLine(pointA, pointB, flatOrigin); //Get closest point to target between two found points in trail
 
         //Get position of point in line:
         float trailValue = 0; //Initialize container to store total line distance

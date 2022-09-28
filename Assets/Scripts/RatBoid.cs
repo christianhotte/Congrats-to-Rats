@@ -154,10 +154,14 @@ public class RatBoid : MonoBehaviour
                     float surfaceAngle = Vector3.Angle(hit.normal, Vector3.up); //Get angle of surface relative to flat floor
                     if (surfaceAngle > MasterRatController.main.settings.maxWalkAngle) //Surface is too steep for rat to land on
                     {
-                        print("Steep rat landing");
+                        //Bounce rat:
+                        rat.airVelocity = Vector3.Reflect(rat.airVelocity, hit.normal); //Reflect velocity of rat against surface
+                        rat.airVelocity *= rat.settings.bounciness;                     //Retain percentage of velocity depending on setting
+                        newPos = hit.point + (-rat.airVelocity.normalized * 0.001f);    //Move rat to position close to wall but not inside it
                     }
-                    else //Rat is able to land safely
+                    else //Surface is flat enough for rat to land on
                     {
+                        //Land rat:
                         newPos = hit.point + (hit.normal * adjustedHeight);                                     //Set landing position
                         rat.billboarder.SetZRot(-Vector3.SignedAngle(Vector3.up, hit.normal, Vector3.forward)); //Twist billboard so rat is flat on surface
                         rat.Land();                                                                             //Indicate that rat has landed
@@ -268,59 +272,73 @@ public class RatBoid : MonoBehaviour
                 rat.velocity += separationVel * adjustedDT; //Apply unclamped velocity to rat
             }
 
-            //FOLLOWER RULES:
-            if (rat.behavior == RatBehavior.TrailFollower) //Rat must be a follower for these rules to apply
+            if (rat.behavior == RatBehavior.Deployed) //Rat is set aside as deployed
             {
-                //Get current target:
-                MasterRatController.TrailPointData data = MasterRatController.main.GetClosestPointOnTrail(rat.flatPos, rat.lastTrailValue, settings.maxTrailSkip * deltaTime); //Get data for closest point to rat position
-                rat.lastTrailValue = data.linePosition;                                                                                                                        //Remember line position
+                //DEPLOYMENT RULES:
 
-                Vector2 target = data.point;                                                                 //Get position of target from data
-                float targetDistance = Vector2.Distance(rat.flatPos, target);                                //Get separation between rat and target
-                float targetRadius = settings.EvaluateTargetSize(data.linePosition) * settings.targetRadius; //Get target size depending on position in line and base target radius
-                if (targetDistance > targetRadius) //Rat must be outside target distance for these rules to apply
+            }
+            else //Rat is not deployed
+            {
+                //FOLLOWER RULES:
+                MasterRatController.TrailPointData data = MasterRatController.main.GetClosestPointOnTrail(rat.transform.position, rat.lastTrailValue, settings.maxTrailSkip * deltaTime); //Get data for closest point to rat position
+                float leaderDistance = Vector2.Distance(rat.flatPos, data.point);                                                                                                         //Get separation between rat and leader/trail
+                if (leaderDistance <= MasterRatController.main.settings.influenceRadius) //Rat is within influence radius of leader
                 {
-                    //RULE - Targeting: (rats tend to move toward target)
-                    Vector2 targetVel = (target - rat.flatPos).normalized; //Get direction toward target
-                    targetVel *= 0.01f * settings.targetWeight;            //Apply weight and balancing values to target velocity
-                    rat.velocity += targetVel * adjustedDT;                //Apply velocity to rat
+                    rat.lastTrailValue = data.linePosition;                   //Remember line position
+                    if (rat.behavior == RatBehavior.Free) rat.MakeFollower(); //Add rat to the swarm if it has just come under the influence of the leader
                 }
-                else if (data.linePosition > settings.trailBuffer                                                         //Rat is within target distance and not too far ahead in line
-                            && Vector2.Angle(MasterRatController.main.forward, data.forward) < 180 - settings.maxSegAngle //Prevent rats from being lead when main rat is backtracking
-                            || data.linePosition > settings.backtrackBuffer)                                              //Lead all rats which are at least partially down the trail
+                else //Rat is outside influence radius of leader
                 {
-                    //RULE - Following: (rats on a trail will move along it toward the leader)
-                    Vector2 followVel = data.forward;          //Get follow velocity from forward direction of trail
-                    followVel *= 0.1f * settings.followWeight; //Apply weight and balancing values to follow velocity
-                    rat.velocity += followVel * adjustedDT;    //Apply unclamped velocity to rat
+                    if (rat.behavior == RatBehavior.TrailFollower) rat.ReleaseTarget(); //Release from leader if rat has strayed too far away
+                }
+                if (rat.behavior == RatBehavior.TrailFollower) //Rat must be a follower for these rules to apply
+                {
+                    Vector2 target = data.point;                                                                 //Get position of target from data
+                    float targetRadius = settings.EvaluateTargetSize(data.linePosition) * settings.targetRadius; //Get target size depending on position in line and base target radius
+                    if (leaderDistance > targetRadius) //Rat must be outside target distance for these rules to apply
+                    {
+                        //RULE - Targeting: (rats tend to move toward target)
+                        Vector2 targetVel = (target - rat.flatPos).normalized; //Get direction toward target
+                        targetVel *= 0.01f * settings.targetWeight;            //Apply weight and balancing values to target velocity
+                        rat.velocity += targetVel * adjustedDT;                //Apply velocity to rat
+                    }
+                    else if (data.linePosition > settings.trailBuffer                                                         //Rat is within target distance and not too far ahead in line
+                                && Vector2.Angle(MasterRatController.main.forward, data.forward) < 180 - settings.maxSegAngle //Prevent rats from being lead when main rat is backtracking
+                                || data.linePosition > settings.backtrackBuffer)                                              //Lead all rats which are at least partially down the trail
+                    {
+                        //RULE - Following: (rats on a trail will move along it toward the leader)
+                        Vector2 followVel = data.forward;          //Get follow velocity from forward direction of trail
+                        followVel *= 0.1f * settings.followWeight; //Apply weight and balancing values to follow velocity
+                        rat.velocity += followVel * adjustedDT;    //Apply unclamped velocity to rat
                     
-                    //RULE - Leading: (rats on a trail will move along it when leader is moving)
-                    Vector2 leadVel = data.forward * MasterRatController.main.currentSpeed;    //Get lead velocity from forward direction of trail and speed of leader
-                    float followStrength = settings.EvaluateFollowStrength(data.linePosition); //Get follow strength depending on position of rat in line
-                    leadVel *= 0.1f * followStrength * settings.leadWeight;                    //Apply weight value and balancing values to lead velocity
-                    rat.velocity += leadVel * adjustedDT;                                      //Apply unclamped velocity to rat
-                }
-
-                if (MasterRatController.main.totalTrailLength >= settings.minTrailLength) //Trail must be long enough for these rules to apply
-                {
-                    if (data.linePosition <= settings.trailBuffer) //Rat must be ahead of line for these rules to apply
-                    {
-                        //RULE - Staying Behind: (rats in front of leader tend to want to get behind it)
-                        Vector2 stayBackVel = -data.forward;           //Make stay back velocity keep rat on trail
-                        stayBackVel *= 0.1f * settings.stayBackWeight; //Apply weight and balancing values to stay back velocity
-                        rat.velocity += stayBackVel * adjustedDT;      //Apply unclamped velocity to rat
+                        //RULE - Leading: (rats on a trail will move along it when leader is moving)
+                        Vector2 leadVel = data.forward * MasterRatController.main.currentSpeed;    //Get lead velocity from forward direction of trail and speed of leader
+                        float followStrength = settings.EvaluateFollowStrength(data.linePosition); //Get follow strength depending on position of rat in line
+                        leadVel *= 0.1f * followStrength * settings.leadWeight;                    //Apply weight value and balancing values to lead velocity
+                        rat.velocity += leadVel * adjustedDT;                                      //Apply unclamped velocity to rat
                     }
-                    else if (data.linePosition >= 1 - settings.trailBuffer) //Rat must be behind line for these rules to apply
-                    {
-                        //RULE - Straggler Prevention: (rats behind the line will speed up)
-                        Vector2 stragglerVel = data.forward;       //Make velocity move rats toward end of trail
-                        stragglerVel *= settings.stragglerWeight;  //Apply weight and balancing values to velocity
-                        rat.velocity += stragglerVel * adjustedDT; //Apply unclamped velocity to rat
-                    }
-                }
 
-                //RULE - Max Follow Speed: (rats cannot move too fast relative to their leader)
-                rat.velocity = Vector2.ClampMagnitude(rat.velocity, MasterRatController.main.currentSpeed + rat.settings.maxOvertakeSpeed); //Clamp rat velocity to effective max speed
+                    if (MasterRatController.main.totalTrailLength >= settings.minTrailLength) //Trail must be long enough for these rules to apply
+                    {
+                        if (data.linePosition <= settings.trailBuffer) //Rat must be ahead of line for these rules to apply
+                        {
+                            //RULE - Staying Behind: (rats in front of leader tend to want to get behind it)
+                            Vector2 stayBackVel = -data.forward;           //Make stay back velocity keep rat on trail
+                            stayBackVel *= 0.1f * settings.stayBackWeight; //Apply weight and balancing values to stay back velocity
+                            rat.velocity += stayBackVel * adjustedDT;      //Apply unclamped velocity to rat
+                        }
+                        else if (data.linePosition >= 1 - settings.trailBuffer) //Rat must be behind line for these rules to apply
+                        {
+                            //RULE - Straggler Prevention: (rats behind the line will speed up)
+                            Vector2 stragglerVel = data.forward;       //Make velocity move rats toward end of trail
+                            stragglerVel *= settings.stragglerWeight;  //Apply weight and balancing values to velocity
+                            rat.velocity += stragglerVel * adjustedDT; //Apply unclamped velocity to rat
+                        }
+                    }
+
+                    //RULE - Max Follow Speed: (rats cannot move too fast relative to their leader)
+                    rat.velocity = Vector2.ClampMagnitude(rat.velocity, MasterRatController.main.currentSpeed + rat.settings.maxOvertakeSpeed); //Clamp rat velocity to effective max speed
+                }
             }
 
             //SPATIAL RULES:
@@ -438,12 +456,13 @@ public class RatBoid : MonoBehaviour
     public void Land()
     {
         //Check for ownership:
-        Vector2 leaderTarget = MasterRatController.main.GetClosestPointOnTrail(flatPos).point;                            //Get closest point to this rat on leader trail
+        Vector2 leaderTarget = MasterRatController.main.GetClosestPointOnTrail(transform.position).point;                 //Get closest point to this rat on leader trail
         if (Vector2.Distance(leaderTarget, flatPos) <= MasterRatController.main.settings.influenceRadius) MakeFollower(); //Make rat a follower immediately if it lands within leader influence radius
         else behavior = RatBehavior.Free;                                                                                 //Otherwise, mark rat as free
 
         //Cleanup:
         airVelocity = Vector3.zero; //Clear air velocity (but keep momentum by retaining flat velocity)
+        lastTrailValue = -1;        //Reset trail value so that rat can find its mother
     }
 
     //UTILITY METHODS:

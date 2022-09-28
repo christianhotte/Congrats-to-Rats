@@ -27,3 +27,4 @@ MonoBehaviour:
   timeBetweenFlips: 0.4
   gravity: 9.5
   drag: 0
+  bounciness: 0.9

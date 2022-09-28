@@ -22,6 +22,7 @@ public class RatSettings : ScriptableObject
     [Tooltip("Darkest alternative color, rat color is randomized within range between this and default color")] public Color altColor;
     [Tooltip("Increase this to prevent rat from flipping back and forth rapidly")]                              public float timeBetweenFlips;
     [Header("Airborne Behavior:")]
-    [Tooltip("Force of gravity acting on velocity of airborne rats")] public float gravity;
-    [Tooltip("Force of air resistance acting on airborne rats")]      public float drag;
+    [Tooltip("Force of gravity acting on velocity of airborne rats")]                                      public float gravity;
+    [Tooltip("Force of air resistance acting on airborne rats")]                                           public float drag;
+    [Range(0, 1), Tooltip("Percentage of velocity which is retained each time rat bounces off of a wall")] public float bounciness;
 }
