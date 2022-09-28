@@ -46,9 +46,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   settings: {fileID: 11400000, guid: b04ba707182ca5d4ea5d119eab17b809, type: 2}
-  scaleRandomness: 0.25
-  altColor: {r: 0.5, g: 0.36292955, b: 0.28144652, a: 1}
-  timeBetweenFlips: 0.4
 --- !u!1 &7187241238139597378
 GameObject:
   m_ObjectHideFlags: 0
@@ -102,7 +99,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: c49611c01696b26438b7ae86e7dcf21f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -123,7 +120,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 1ae39ce4d7549364ca0f238f741e3ed1, type: 3}
+  m_Sprite: {fileID: 21300000, guid: fa4d6aa344441bd45af1683b4664e1bf, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -147,4 +144,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxZDelta: 120
-  flipRotation: 1

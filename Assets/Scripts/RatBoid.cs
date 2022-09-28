@@ -24,12 +24,6 @@ public class RatBoid : MonoBehaviour
     internal Billboarder billboarder; //Component which rotates this rat's sprite
     public RatSettings settings;      //Settings object determining this rat's properties
 
-    //Settings: NOTE: Put these in a scriptableObject
-    [Header("Settings:")]
-    [Min(0), Tooltip("Maximum allowed variance in scale (can go up or down)")]     public float scaleRandomness;
-    [Tooltip("Alternate color rats can spawn with")]                               public Color altColor;
-    [Tooltip("Increase this to prevent rat from flipping back and forth rapidly")] public float timeBetweenFlips;
-
     //Realtime Vars:
     /// <summary>
     /// Current speed and direction of boid.
@@ -63,11 +57,16 @@ public class RatBoid : MonoBehaviour
         spawnedRats.Add(this); //Add this rat to master list of spawned rats
         freeRats.Add(this);    //Every rat initializes as freeroaming
 
-        //Randomize properties:
+        //Randomize scale:
         float newScale = 1 + Random.Range(-settings.sizeVariance, settings.sizeVariance); //Get value of new scale
         transform.localScale = Vector3.one * newScale;                                    //Set new scale
         sizeFactor = newScale;                                                            //Record size factor
-        r.color = Color.Lerp(r.color, settings.altColor, Random.value);                   //Randomize color
+
+        //Set colors:
+        r.material.SetColor("_FurColor", settings.GetFurColor()); //Get and apply random fur color from settings
+        Color[] hatColors = settings.GetHatColors();              //Get random hat scheme from settings
+        r.material.SetColor("_HatBaseColor", hatColors[0]);       //Apply hat base color
+        r.material.SetColor("_HatStripeColor", hatColors[1]);     //Apply hat stripe color
     }
     private void OnDestroy()
     {
