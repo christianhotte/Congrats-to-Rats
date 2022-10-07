@@ -30,6 +30,6 @@ public class InterfaceMaster : MonoBehaviour
     /// <param name="ratNumber"></param>
     public static void SetCounter(float amount)
     {
-        main.ratCounter.text = amount.ToString(); //Set text to given number
+        if (main != null) main.ratCounter.text = amount.ToString(); //Set text to given number
     }
 }
