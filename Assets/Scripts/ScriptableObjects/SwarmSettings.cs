@@ -9,11 +9,9 @@ public class SwarmSettings : ScriptableObject
     //Data:
     [Header("General:")]
     [Min(1), Tooltip("The quantity of rats these settings work best for")]                                                            public int targetRatNumber;
-    [Min(0), Tooltip("Maximum speed rats may travel at")]                                                                             public float maxSpeed;
     [Min(0), Tooltip("Distance with rats will try to keep between themselves and other rats")]                                        public float separationRadius;
     [Min(0), Tooltip("Distance at which rats will influence each other and clump together (should be larger than separationRadius)")] public float neighborRadius;
     [Min(0), Tooltip("Rough radius around target path which rat swarm tries to congregate in")]                                       public float targetRadius;
-    [Min(0), Tooltip("Radius around target path within which rats will be subject to leader-based velocity influences")]              public float influenceRadius;
     [Space()]
     [SerializeField, Tooltip("Use this to tweak followWeight according to where rats are along the trail")] private AnimationCurve followStrengthCurve;
     [SerializeField, Tooltip("Use modify target radius along length of path")]                              private AnimationCurve targetSizeCurve;
@@ -52,18 +50,17 @@ public class SwarmSettings : ScriptableObject
         lerpSettingsA = settingsA;                                                                                              //Save interpolant settings
         lerpSettingsB = settingsB;                                                                                              //Save interpolant settings
 
-        //Interpolate float settings (NOTE: kinda gross):
-        maxSpeed = Mathf.Lerp(settingsA.maxSpeed, settingsB.maxSpeed, currentInterpolant);
+        //Interpolate float settings (NOTE: remember to update this whenever adding a variable to this object):
         separationRadius = Mathf.Lerp(settingsA.separationRadius, settingsB.separationRadius, currentInterpolant);
         neighborRadius = Mathf.Lerp(settingsA.neighborRadius, settingsB.neighborRadius, currentInterpolant);
         targetRadius = Mathf.Lerp(settingsA.targetRadius, settingsB.targetRadius, currentInterpolant);
-        influenceRadius = Mathf.Lerp(settingsA.influenceRadius, settingsB.influenceRadius, currentInterpolant);
 
         trailDensity = Mathf.Lerp(settingsA.trailDensity, settingsB.trailDensity, currentInterpolant);
         trailBuffer = Mathf.Lerp(settingsA.trailBuffer, settingsB.trailBuffer, currentInterpolant);
         minTrailSegLength = Mathf.Lerp(settingsA.minTrailSegLength, settingsB.minTrailSegLength, currentInterpolant);
         velTrailLengthMultiplier = Mathf.Lerp(settingsA.velTrailLengthMultiplier, settingsB.velTrailLengthMultiplier, currentInterpolant);
         maxSegAngle = Mathf.Lerp(settingsA.maxSegAngle, settingsB.maxSegAngle, currentInterpolant);
+        backtrackBuffer = Mathf.Lerp(settingsA.backtrackBuffer, settingsB.backtrackBuffer, currentInterpolant);
         maxTrailSkip = Mathf.Lerp(settingsA.maxTrailSkip, settingsB.maxTrailSkip, currentInterpolant);
         minTrailLength = Mathf.Lerp(settingsA.minTrailLength, settingsB.minTrailLength, currentInterpolant);
 

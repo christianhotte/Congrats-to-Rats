@@ -8,7 +8,10 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/BoidTestScene.unity
     guid: 75057b49be1783347a05a64d172fa6c6
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/RatTest2.unity
     guid: 27601067817e97d4b9e4121b10ccb7ee
+  - enabled: 1
+    path: Assets/Scenes/RatTest3.unity
+    guid: c3e232f9d0126e04b849f34f5cb8d93c
   m_configObjects: {}

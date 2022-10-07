@@ -30,4 +30,14 @@ public class Billboarder : MonoBehaviour
         //Cleanup:
         transform.rotation = newRot; //Apply new orientation
     }
+
+    //FUNCTIONALITY METHODS:
+    /// <summary>
+    /// Sets Z rotation of billboard, ignoring smooth approach.
+    /// </summary>
+    public void SetZRot(float rot)
+    {
+        targetZRot = rot;  //Set target rotation to given value
+        currentZRot = rot; //Snap current rotation to given value
+    }
 }

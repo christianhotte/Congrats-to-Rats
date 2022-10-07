@@ -1,0 +1,30 @@
+fileFormatVersion: 2
+guid: 0c4d0e67a15dec24fab8bce23c35855d
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Devina Rodent
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: b0e242449f418c843be33469a6ad0440, type: 3}
+  - {fileID: 12800000, guid: d87a66f3e601a594aada45f240905f21, type: 3}
+  - {fileID: 12800000, guid: 45db00b3a1050894683a9891eb8a78dd, type: 3}
+  - {fileID: 12800000, guid: 8619c9d084188b34e8ded0f5f64f638a, type: 3}
+  - {fileID: 12800000, guid: 88dcd53aee14d5c40b570a473ac46056, type: 3}
+  - {fileID: 12800000, guid: b3648269dee139d4f9e41605000039b0, type: 3}
+  - {fileID: 12800000, guid: 0195b1ef95658824dbd344332e34407a, type: 3}
+  - {fileID: 12800000, guid: 33783fa43af2e2a48988bf14d11b5a16, type: 3}
+  - {fileID: 12800000, guid: c6907e37adbe2af4cb9fc04f322d9e40, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
