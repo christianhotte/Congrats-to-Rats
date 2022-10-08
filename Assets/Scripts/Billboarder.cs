@@ -7,6 +7,9 @@ using UnityEngine;
 /// </summary>
 public class Billboarder : MonoBehaviour
 {
+    //Objects & Components:
+    private SpriteRenderer r; //Render component for this billboard's sprite
+
     //Settings:
     [Header("Settings:")]
     [SerializeField, Min(0), Tooltip("Maximum rotation speed of billboard (in degrees per second)")] private float maxZDelta;
@@ -17,6 +20,11 @@ public class Billboarder : MonoBehaviour
     internal float targetZRot = 0;
     private float currentZRot = 0; //Current rotation of billboard sprite (relative to camera forward axis)
 
+    private void Awake()
+    {
+        //Get objects & components:
+        r = GetComponent<SpriteRenderer>(); //Get renderer
+    }
     void Update()
     {
         //Initialize:
@@ -28,7 +36,8 @@ public class Billboarder : MonoBehaviour
         newRot = Quaternion.AngleAxis(currentZRot, Camera.main.transform.forward) * newRot;                                                                                              //Rotate billboard relative to forward direction of camera
 
         //Cleanup:
-        transform.rotation = newRot; //Apply new orientation
+        transform.rotation = newRot;                                                                //Apply new orientation
+        if (r.material.HasProperty("_LightAngle")) r.material.SetFloat("_LightAngle", currentZRot * (r.flipX ? -1 : 1)); //Set light angle to directly upwards if relevant (flip if sprite is flipped)
     }
 
     //FUNCTIONALITY METHODS:

@@ -140,7 +140,7 @@ public class RatBoid : MonoBehaviour
                 {
                     if (Physics.Raycast(fallPoint, -UnFlattenVector(rat.velocity), out hit, rat.velocity.magnitude, rat.settings.obstructionLayers)) //Fall can be prevented
                     {
-                        newPos = hit.point + (rat.velocity.magnitude * deltaTime * -hit.normal) + (Vector3.up * floorCheckHeight); //Trace back up over the edge and place rat there
+                        newPos = hit.point + (rat.velocity.magnitude * deltaTime * -hit.normal) + (Vector3.down * floorCheckHeight); //Trace back up over the edge and place rat there
                     }
                     else //Fall cannot be avoided for some reason (very rare)
                     {

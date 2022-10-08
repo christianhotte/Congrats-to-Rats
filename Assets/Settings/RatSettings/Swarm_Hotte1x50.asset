@@ -16,31 +16,8 @@ MonoBehaviour:
   separationRadius: 0.07
   neighborRadius: 0.23
   targetRadius: 0.1
-  followStrengthCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0.5
-      inSlope: 0.021545826
-      outSlope: 0.021545826
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.031775016
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0.01938304
-      outSlope: 0.01938304
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.10882753
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
   trailDensity: 65
+  targetTrailCompression: 11
   trailBuffer: 0.02
   minTrailSegLength: 0.07
   velTrailLengthMultiplier: 1
@@ -48,12 +25,11 @@ MonoBehaviour:
   backtrackBuffer: 0.1
   maxTrailSkip: 8
   minTrailLength: 0.5
-  targetTrailCompression: 11
   cohesionWeight: 0.4
   separationWeight: 0.5
-  conformityWeight: 0
+  conformityWeight: 0.07
   targetWeight: 4
   followWeight: 3
-  leadWeight: 8
+  leadWeight: 6
   stayBackWeight: 0.7
   stragglerWeight: 1
