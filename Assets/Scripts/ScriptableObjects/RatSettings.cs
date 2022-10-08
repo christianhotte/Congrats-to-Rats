@@ -28,8 +28,15 @@ public class RatSettings : ScriptableObject
     [Tooltip("Desired distance this rat keeps between itself and walls/cliffs")] public float obstacleSeparation;
     [Min(0), Tooltip("Tendency for rats to avoid walls and cliffs")]             public float obstacleAvoidanceWeight;
     [Header("Visuals:")]
-    [Tooltip("Maximum amount of random scale increase or decrease when spawning a new rat")] public float sizeVariance;
-    [Tooltip("Increase this to prevent rat from flipping back and forth rapidly")]           public float timeBetweenFlips;
+    [Tooltip("Maximum amount of random scale increase or decrease when spawning a new rat")]                    public float sizeVariance;
+    [Tooltip("Increase this to prevent rat from flipping back and forth rapidly")]                              public float timeBetweenFlips;
+    [Tooltip("Minimum crush amount to initiate pile system, crush value which corresponds to max pile amount")] public Vector2 crushRange;
+    [Range(0, 1), Tooltip("How intense crush occlusion effect will be")]                                        public float occlusionIntensity;
+    [Tooltip("Colors which rat crush occlusion lerps between depending on crush value")]                        public ColorScheme occlusionColors;
+    [Min(0), Tooltip("Maximum additional height rat can reach from having other rats pressing against it")]     public float maxPileHeight;
+    [Tooltip("Curve describing occlusion intensity depending on crush amount")]                                 public AnimationCurve occlusionCurve;
+    [Tooltip("Curve describing transition between primary and secondary occlusion color depending on crush")]   public AnimationCurve occlusionColorCurve;
+    [Tooltip("Curve describing cross-sectional shape of rat pile")]                                             public AnimationCurve pileCurve;
     [Space()]
     [Tooltip("Array of coloration schemes for rat fur (Color A is lightest variant, Color B is darkest variant)")] public ColorScheme[] furColorSchemes;
     [Tooltip("Array of coloration schemes for party hat (Color A is base, Color B is stripe)")]                    public ColorScheme[] hatColorSchemes;

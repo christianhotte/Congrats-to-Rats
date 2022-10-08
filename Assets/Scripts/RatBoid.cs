@@ -44,7 +44,9 @@ public class RatBoid : MonoBehaviour
     internal float sizeFactor = 1;                                  //Factor used to change certain properties of rat based on scale variance
     internal Vector3 airVelocity;                                   //3D velocity used when rat is falling
 
-    private float timeUntilFlip; //Time before this rat is able to flip its sprite orientation (prevents jiggling)
+    private float timeUntilFlip;   //Time before this rat is able to flip its sprite orientation (prevents jiggling)
+    internal float neighborCrush;  //Represents how many neighbors this rat has and how close they are
+    internal float pileHeight = 0; //Additional height added to rat due to piling
 
     //RUNTIME METHODS:
     private void Awake()
@@ -111,6 +113,7 @@ public class RatBoid : MonoBehaviour
             newPos.x += rat.velocity.x * deltaTime;                          //Add X velocity
             newPos.z += rat.velocity.y * deltaTime;                          //Add Y velocity
             float adjustedHeight = rat.settings.baseHeight * rat.sizeFactor; //Get effective height of rat based on scale
+            adjustedHeight += rat.pileHeight;                                //Add pile effect to rat's adjusted height
 
             //Check new position:
             if (rat.behavior != RatBehavior.Projectile) //Rat is moving across the floor
@@ -180,6 +183,7 @@ public class RatBoid : MonoBehaviour
             rat.transform.position = newPos;                    //Move rat to match new position
             rat.currentNeighbors = new List<RatBoid>();         //Clear neighbors list
             rat.currentSeparators = new List<RatBoid>();        //Clear separators list
+            rat.neighborCrush = 0;                              //Reset rat's neighbor crush value
         }
 
         //Establish proximity relationships:
@@ -202,6 +206,7 @@ public class RatBoid : MonoBehaviour
                     float dist = Vector2.Distance(rat.flatPos, otherRat.flatPos); //Get distance between rats
                     if (dist <= settings.neighborRadius) //Rats are close enough to be neighbors
                     {
+                        //Update lists:
                         rat.currentNeighbors.Add(otherRat); //Add other rat to neighbors list
                         otherRat.currentNeighbors.Add(rat); //Add this rat to other rat's neighbors list
                         if (dist <= settings.separationRadius) //Rats are close enough to be separators
@@ -209,6 +214,11 @@ public class RatBoid : MonoBehaviour
                             rat.currentSeparators.Add(otherRat); //Add other rat to separators list
                             otherRat.currentSeparators.Add(rat); //Add this rat to other rat's separators list
                         }
+
+                        //Add crush value:
+                        float addCrush = 1 - Mathf.InverseLerp(0, settings.neighborRadius, dist); //Get crush value added by neighbor based on proximity
+                        rat.neighborCrush += addCrush;                                            //Add crush value to this rat
+                        otherRat.neighborCrush += addCrush;                                       //Add crush value to other rat
                     }
                 }
             }
@@ -292,9 +302,8 @@ public class RatBoid : MonoBehaviour
                 }
                 if (rat.behavior == RatBehavior.TrailFollower) //Rat must be a follower for these rules to apply
                 {
-                    Vector2 target = data.point;                                                                 //Get position of target from data
-                    float targetRadius = settings.EvaluateTargetSize(data.linePosition) * settings.targetRadius; //Get target size depending on position in line and base target radius
-                    if (leaderDistance > targetRadius) //Rat must be outside target distance for these rules to apply
+                    Vector2 target = data.point;                //Get position of target from data
+                    if (leaderDistance > settings.targetRadius) //Rat must be outside target distance for these rules to apply
                     {
                         //RULE - Targeting: (rats tend to move toward target)
                         Vector2 targetVel = (target - rat.flatPos).normalized; //Get direction toward target
@@ -305,16 +314,18 @@ public class RatBoid : MonoBehaviour
                                 && Vector2.Angle(MasterRatController.main.forward, data.forward) < 180 - settings.maxSegAngle //Prevent rats from being lead when main rat is backtracking
                                 || data.linePosition > settings.backtrackBuffer)                                              //Lead all rats which are at least partially down the trail
                     {
-                        //RULE - Following: (rats on a trail will move along it toward the leader)
-                        Vector2 followVel = data.forward;          //Get follow velocity from forward direction of trail
-                        followVel *= 0.1f * settings.followWeight; //Apply weight and balancing values to follow velocity
-                        rat.velocity += followVel * adjustedDT;    //Apply unclamped velocity to rat
-                    
+                        //RULE - Following: (rats on a trail will move along it toward the leader, seeking a target amount of compression)
+                        if (rat.neighborCrush < settings.targetTrailCompression) //Rat is not as compressed as it should be
+                        {
+                            Vector2 followVel = data.forward;          //Get follow velocity from forward direction of trail
+                            followVel *= 0.1f * settings.followWeight; //Apply weight and balancing values to follow velocity
+                            rat.velocity += followVel * adjustedDT;    //Apply unclamped velocity to rat
+                        }
+
                         //RULE - Leading: (rats on a trail will move along it when leader is moving)
-                        Vector2 leadVel = data.forward * MasterRatController.main.currentSpeed;    //Get lead velocity from forward direction of trail and speed of leader
-                        float followStrength = settings.EvaluateFollowStrength(data.linePosition); //Get follow strength depending on position of rat in line
-                        leadVel *= 0.1f * followStrength * settings.leadWeight;                    //Apply weight value and balancing values to lead velocity
-                        rat.velocity += leadVel * adjustedDT;                                      //Apply unclamped velocity to rat
+                        Vector2 leadVel = data.forward * MasterRatController.main.currentSpeed; //Get lead velocity from forward direction of trail and speed of leader
+                        leadVel *= 0.1f * settings.leadWeight;                                  //Apply weight value and balancing values to lead velocity
+                        rat.velocity += leadVel * adjustedDT;                                   //Apply unclamped velocity to rat
                     }
 
                     if (MasterRatController.main.totalTrailLength >= settings.minTrailLength) //Trail must be long enough for these rules to apply
@@ -370,6 +381,28 @@ public class RatBoid : MonoBehaviour
                         rat.velocity += avoidanceVel * adjustedDT;                                                                             //Apply unclamped velocity to rat
                     }
                 }
+            }
+
+            //Crush effects:
+            if (rat.neighborCrush >= rat.settings.crushRange.x) //Rat currently has enough neighbors to be occluded
+            {
+                //Initialization:
+                float crushValue = Mathf.Clamp01(Mathf.InverseLerp(rat.settings.crushRange.x, rat.settings.crushRange.y, rat.neighborCrush)); //Get interpolant value representing intensity of crush
+
+                //Occlusion:
+                float occlusionValue = Mathf.Lerp(0, rat.settings.occlusionIntensity, crushValue);                                                                                      //Get occlusion value based on crush condition and curve settings
+                Color occlusionColor = Color.Lerp(rat.settings.occlusionColors.colorA, rat.settings.occlusionColors.colorB, rat.settings.occlusionColorCurve.Evaluate(occlusionValue)); //Get color used for rat occlusion based on crush amount and color curve
+                occlusionValue = rat.settings.occlusionCurve.Evaluate(occlusionValue);
+                rat.r.material.SetFloat("_OcclusionIntensity", occlusionValue);                                                                                                         //Apply occlusion intensity to shader
+                rat.r.material.SetColor("_OcclusionColor", occlusionColor);                                                                                                             //Apply occlusion color to shader
+
+                //Piling:
+                rat.pileHeight = Mathf.Lerp(0, rat.settings.maxPileHeight, rat.settings.pileCurve.Evaluate(crushValue)); //Determine how much extra height this rat gets from piling (smoothly move toward value)
+            }
+            else //Rat does not have enough neighbors to be occluded
+            {
+                rat.r.material.SetFloat("_OcclusionIntensity", 0); //Ensure rat is not occluded
+                rat.pileHeight = 0;                                //Set pile height to zero
             }
         }
     }
@@ -448,6 +481,10 @@ public class RatBoid : MonoBehaviour
         //Modify velocity:
         velocity = Vector2.zero; //Zero out normal velocity
         airVelocity = force;     //Apply launch force to velocity
+
+        //Cleanup:
+        r.material.SetFloat("_OcclusionIntensity", 0); //Ensure rat is not darkened
+        pileHeight = 0;                                //Reset rat's pile value
     }
     /// <summary>
     /// Called when a launched rat hits a surface and does not bounce off of it.

@@ -12,11 +12,9 @@ public class SwarmSettings : ScriptableObject
     [Min(0), Tooltip("Distance with rats will try to keep between themselves and other rats")]                                        public float separationRadius;
     [Min(0), Tooltip("Distance at which rats will influence each other and clump together (should be larger than separationRadius)")] public float neighborRadius;
     [Min(0), Tooltip("Rough radius around target path which rat swarm tries to congregate in")]                                       public float targetRadius;
-    [Space()]
-    [SerializeField, Tooltip("Use this to tweak followWeight according to where rats are along the trail")] private AnimationCurve followStrengthCurve;
-    [SerializeField, Tooltip("Use modify target radius along length of path")]                              private AnimationCurve targetSizeCurve;
     [Header("Trail:")]
     [Min(0), Tooltip("Number of rats per unit of trail")]                                                      public float trailDensity;
+    [Min(0), Tooltip("Target density of trail")]                                                               public float targetTrailCompression;
     [Range(0, 0.5f), Tooltip("Distance rats will try to keep from each end of trail")]                         public float trailBuffer;
     [Min(0), Tooltip("Minimum distance between two trail points (higher values will make trail simpler)")]     public float minTrailSegLength;
     [Min(1), Tooltip("Determines how much trail stretches when big rat is moving")]                            public float velTrailLengthMultiplier = 1;
@@ -26,8 +24,8 @@ public class SwarmSettings : ScriptableObject
     [Min(0), Tooltip("Trail length below which rats will swarm in a blob instead of a trail")]                 public float minTrailLength;
     [Header("Rules:")]
     [Min(0), Tooltip("Tendency for rats to move toward other nearby rats")]              public float cohesionWeight;
-    [Min(0), Tooltip("Tendency for rats to maintain a small distance from nearby rats")] public float separationWeight;
-    [Min(0), Tooltip("Tendency for rats to match speed with other nearby rats")]         public float conformityWeight;
+    [Min(0), Tooltip("Tendency for rats to maintain a small distance from nearby rats")] public float separationWeight; //NOTE: Enlarges rat swarm
+    [Min(0), Tooltip("Tendency for rats to match speed with other nearby rats")]         public float conformityWeight; //NOTE: Improves smoothness of rat swarm at the expense of instability while stationary
     [Min(0), Tooltip("Tendency for rats to move toward desired position")]               public float targetWeight;
     [Min(0), Tooltip("Tendency for rats to move along path toward leader")]              public float followWeight;
     [Min(0), Tooltip("Tendency for rats to match leader velocity while on path")]        public float leadWeight;
@@ -56,6 +54,7 @@ public class SwarmSettings : ScriptableObject
         targetRadius = Mathf.Lerp(settingsA.targetRadius, settingsB.targetRadius, currentInterpolant);
 
         trailDensity = Mathf.Lerp(settingsA.trailDensity, settingsB.trailDensity, currentInterpolant);
+        targetTrailCompression = Mathf.Lerp(settingsA.targetTrailCompression, settingsB.targetTrailCompression, currentInterpolant);
         trailBuffer = Mathf.Lerp(settingsA.trailBuffer, settingsB.trailBuffer, currentInterpolant);
         minTrailSegLength = Mathf.Lerp(settingsA.minTrailSegLength, settingsB.minTrailSegLength, currentInterpolant);
         velTrailLengthMultiplier = Mathf.Lerp(settingsA.velTrailLengthMultiplier, settingsB.velTrailLengthMultiplier, currentInterpolant);
@@ -73,16 +72,12 @@ public class SwarmSettings : ScriptableObject
         stayBackWeight = Mathf.Lerp(settingsA.stayBackWeight, settingsB.stayBackWeight, currentInterpolant);
         stragglerWeight = Mathf.Lerp(settingsA.stragglerWeight, settingsB.stragglerWeight, currentInterpolant);
     }
+    /*
     public float EvaluateFollowStrength(float time)
     {
         if (currentInterpolant == -1 || lerpSettingsA == null || lerpSettingsB == null) { return followStrengthCurve.Evaluate(time); } //Evaluate standard curve if settings are not interpolated
         else { return LerpCurves(lerpSettingsA.followStrengthCurve, lerpSettingsB.followStrengthCurve, time); }                        //Get interpolation between curve evaluations for interpolated settings
-    }
-    public float EvaluateTargetSize(float time)
-    {
-        if (currentInterpolant == -1 || lerpSettingsA == null || lerpSettingsB == null) { return targetSizeCurve.Evaluate(time); } //Evaluate standard curve if settings are not interpolated
-        else { return LerpCurves(lerpSettingsA.targetSizeCurve, lerpSettingsB.targetSizeCurve, time); }                            //Get interpolation between curve evaluations for interpolated settings
-    }
+    }*/
 
     //UTILITY METHODS:
     /// <summary>

@@ -24,6 +24,84 @@ MonoBehaviour:
   obstacleAvoidanceWeight: 4
   sizeVariance: 0.25
   timeBetweenFlips: 0.4
+  crushRange: {x: 7.4, y: 24}
+  occlusionIntensity: 0.682
+  occlusionColors:
+    colorA: {r: 0, g: 0, b: 0, a: 1}
+    colorB: {r: 0.990566, g: 0.9399272, b: 0.77251685, a: 1}
+  maxPileHeight: 0.135
+  occlusionCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 2.144691
+      outSlope: 2.144691
+      tangentMode: 0
+      weightedMode: 2
+      inWeight: 0
+      outWeight: 0.19448502
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.4067231
+      outSlope: 0.4067231
+      tangentMode: 0
+      weightedMode: 1
+      inWeight: 0.57213295
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  occlusionColorCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.22554047
+      outSlope: 0.22554047
+      tangentMode: 0
+      weightedMode: 3
+      inWeight: 0
+      outWeight: 0.8075237
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.004908879
+      outSlope: 0.004908879
+      tangentMode: 0
+      weightedMode: 3
+      inWeight: 0.4647553
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  pileCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.0013909107
+      outSlope: 0.0013909107
+      tangentMode: 0
+      weightedMode: 2
+      inWeight: 0
+      outWeight: 0.5467494
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.29566666
+      outSlope: 0.29566666
+      tangentMode: 0
+      weightedMode: 1
+      inWeight: 0.6712929
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   furColorSchemes:
   - colorA: {r: 0.8584906, g: 0.69601023, b: 0.48323837, a: 1}
     colorB: {r: 0.6320754, g: 0.4720689, b: 0.2663462, a: 1}
