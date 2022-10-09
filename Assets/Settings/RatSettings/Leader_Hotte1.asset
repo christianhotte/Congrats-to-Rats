@@ -16,6 +16,10 @@ MonoBehaviour:
   accel: 5
   decel: 4
   flipAll: 1
+  cliffHop: 1.5
+  gravity: 9.5
+  airDrag: 0.05
+  bounciness: 0.9
   blockingLayers:
     serializedVersion: 2
     m_Bits: 640

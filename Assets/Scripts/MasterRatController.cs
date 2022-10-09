@@ -50,8 +50,9 @@ public class MasterRatController : MonoBehaviour
     public static MasterRatController main;
 
     //Objects & Components:
-    private SpriteRenderer sprite; //Sprite renderer component for big rat
-    private Animator anim;         //Animator controller for big rat
+    private SpriteRenderer sprite;   //Sprite renderer component for big rat
+    private Animator anim;           //Animator controller for big rat
+    private Billboarder billboarder; //Component used to manage sprite orientation
 
     [Header("Settings:")]
     [Tooltip("Interchangeable data object describing settings of the main rat")]                                                    public BigRatSettings settings;
@@ -65,13 +66,14 @@ public class MasterRatController : MonoBehaviour
     private List<float> segLengths = new List<float>();        //List of lengths corresponding to segments in trail
     internal float totalTrailLength = 0;                       //Current length of trail
 
-    internal Vector2 velocity;   //Current speed and direction of movement
-    internal Vector2 forward;    //Normalized vector representing which direction big rat was most recently moving
-    internal float currentSpeed; //Current speed at which rat is moving
-    private Vector2 moveInput;   //Current input direction for movement
-    internal bool falling;       //Whether or not rat is currently falling
-    internal bool commanding;    //Whether or not rat is currently deploying rats to a location
-    private bool aiming;         //True when rat is preparing for a throw
+    internal Vector2 velocity;    //Current speed and direction of movement
+    internal Vector3 airVelocity; //3D velocity used when rat is falling
+    internal Vector2 forward;     //Normalized vector representing which direction big rat was most recently moving
+    internal float currentSpeed;  //Current speed at which rat is moving
+    private Vector2 moveInput;    //Current input direction for movement
+    private bool falling;        //Whether or not rat is currently falling
+    internal bool commanding;     //Whether or not rat is currently deploying rats to a location
+    private bool aiming;          //True when rat is preparing for a throw
 
     //RUNTIME METHODS:
     private void Awake()
@@ -81,7 +83,7 @@ public class MasterRatController : MonoBehaviour
         if (swarmSettings.Count == 0) { Debug.LogError("Big rat needs at least one swarmSettings object"); Destroy(this); } //Make sure rat swarm has settings
         if (main == null) main = this; else Destroy(this);                                                                  //Singleton-ize this script instance
 
-        //Globabl initialization:
+        //Global initialization:
         Application.targetFrameRate = 120; //Set target framerate
 
         //Local initialization:
@@ -92,8 +94,9 @@ public class MasterRatController : MonoBehaviour
     private void Start()
     {
         //Get objects & components:
-        sprite = GetComponentInChildren<SpriteRenderer>(); //Get spriteRenderer component
-        anim = GetComponentInChildren<Animator>();         //Get animator controller component
+        sprite = GetComponentInChildren<SpriteRenderer>();   //Get spriteRenderer component
+        anim = GetComponentInChildren<Animator>();           //Get animator controller component
+        billboarder = GetComponentInChildren<Billboarder>(); //Get billboarder component
     }
     private void Update()
     {
@@ -120,90 +123,135 @@ public class MasterRatController : MonoBehaviour
     /// </summary>
     private void MoveRat(float deltaTime)
     {
+        //Initialize:
+        Vector3 newPos = transform.position; //Get current position of rat
+
         //Modify velocity:
-        if (moveInput != Vector2.zero) //Player is moving rat in a direction
+        if (falling) //Rat is currently falling through the air
         {
-            //Add velocity:
-            Vector2 addVel = moveInput * settings.accel; //Get added velocity based on input this frame
-            velocity += addVel * deltaTime;              //Add velocity as acceleration over time
+            //Modify velocity:
+            Vector3 addVel = new Vector3();                       //Initialize vector to store acceleration
+            addVel += Vector3.down * settings.gravity;            //Get acceleration due to gravity
+            addVel += -airVelocity.normalized * settings.airDrag; //Get deceleration due to drag
+            airVelocity += addVel * deltaTime;                    //Apply change in velocity
+            velocity = RatBoid.FlattenVector(airVelocity);        //Update flat velocity to match air velocity
 
-            //Flip sprite:
-            if (moveInput.x != 0) sprite.flipX = settings.flipAll ? moveInput.x < 0 : moveInput.x > 0; //Flip sprite to direction of horizontal move input
-        }
-        else if (velocity != Vector2.zero) //No input is given but rat is still moving
-        {
-            velocity = Vector2.MoveTowards(velocity, Vector2.zero, settings.decel * deltaTime); //Slow rat down based on deceleration over time
-        }
-        currentSpeed = velocity.magnitude; //Get current speed of main rat
-        if (currentSpeed > settings.speed) //Check if current speed is faster than target speed
-        {
-            velocity = Vector2.ClampMagnitude(velocity, settings.speed); //Clamp velocity to target speed
-            currentSpeed = settings.speed;                               //Update current speed value
-        }
-        if (anim != null) anim.SetFloat("Speed", currentSpeed / settings.speed); //Send speed value to animator
-
-        //Get new position:
-        if (velocity != Vector2.zero) //Only update position if player has velocity
-        {
-            //Initialize:
-            Vector3 newPos = transform.position; //Initialize new position as current position of rat
-            newPos.x += velocity.x * deltaTime;  //Add X velocity over time to position target
-            newPos.z += velocity.y * deltaTime;  //Add Y velocity over time to position target
-
-            //Solve obstructions:
-            Vector3 castDir = RatBoid.UnFlattenVector(velocity); //Create container to store direction of spherecasts, initialized based on velocity
-            float castDist = currentSpeed * Time.deltaTime;      //Create container to store distance of spherecasts, initialized based on speed
-            bool touchingFloor = false;                          //Initialize bool to confirm whether or not floor has been found
-            for (int i = 0; i < settings.maxObstacleCollisions; i++) //Iterate collision check for, at most, maximum allowed number of obstacle collisions
+            //Get new position:
+            newPos += airVelocity * deltaTime; //Get target position based on velocity over time
+            float airSpeed = Vector3.Distance(transform.position, newPos); //Get current airspeed of rat
+            if (Physics.SphereCast(transform.position, settings.collisionRadius, (newPos - transform.position).normalized, out RaycastHit hit, airSpeed, settings.blockingLayers)) //Fall is obstructed
             {
-                if (Physics.SphereCast(transform.position, settings.collisionRadius, castDir, out RaycastHit hit, castDist, settings.blockingLayers)) //Rat is currently moving into an obstacle
+                float surfaceAngle = Vector3.Angle(hit.normal, Vector3.up); //Get angle of surface relative to flat floor
+                if (surfaceAngle > settings.maxWalkAngle) //Surface is too steep for rat to land on
                 {
-                    //Get obstructed position:
-                    Vector3 idealPos = newPos;                                               //Get position rat would be at if not obstructed
-                    newPos = hit.point + ((settings.collisionRadius + 0.001f) * hit.normal); //Get position at center of sphere colliding with obstruction
-                    newPos += Vector3.ProjectOnPlane(idealPos - newPos, hit.normal);         //Add remainder of velocity by projecting change in position onto plane defined by hit normal
+                    //Bounce:
+                    airVelocity = Vector3.Reflect(airVelocity, hit.normal); //Reflect velocity of rat against surface
+                    airVelocity *= settings.bounciness;                     //Retain percentage of velocity depending on setting
+                    newPos = transform.position;                            //Do not allow rat to move into wall
+                }
+                else //Surface is flat enough for rat to land on
+                {
+                    //Land rat:
+                    newPos = hit.point + (hit.normal * (settings.collisionRadius + 0.001f));            //Set landing position
+                    billboarder.SetZRot(-Vector3.SignedAngle(Vector3.up, hit.normal, Vector3.forward)); //Twist billboard so rat is flat on surface
+
+                    //Landing cleanup:
+                    falling = false;            //Indicate that rat is no longer falling
+                    airVelocity = Vector3.zero; //Cancel all air velocity
+                }
+            }
+        }
+        else //Rat is moving normally along a surface
+        {
+            //Modify velocity:
+            if (moveInput != Vector2.zero) //Player is moving rat in a direction
+            {
+                //Add velocity:
+                Vector2 addVel = moveInput * settings.accel; //Get added velocity based on input this frame
+                velocity += addVel * deltaTime;              //Add velocity as acceleration over time
+
+                //Flip sprite:
+                if (moveInput.x != 0) sprite.flipX = settings.flipAll ? moveInput.x < 0 : moveInput.x > 0; //Flip sprite to direction of horizontal move input
+            }
+            else if (velocity != Vector2.zero) //No input is given but rat is still moving
+            {
+                velocity = Vector2.MoveTowards(velocity, Vector2.zero, settings.decel * deltaTime); //Slow rat down based on deceleration over time
+            }
+
+            currentSpeed = velocity.magnitude; //Get current speed of main rat
+            if (currentSpeed > settings.speed) //Check if current speed is faster than target speed
+            {
+                velocity = Vector2.ClampMagnitude(velocity, settings.speed); //Clamp velocity to target speed
+                currentSpeed = settings.speed;                               //Update current speed value
+            }
+            if (anim != null) anim.SetFloat("Speed", currentSpeed / settings.speed); //Send speed value to animator
+
+            //Get new position:
+            if (velocity != Vector2.zero) //Only update position if player has velocity
+            {
+                //Initialize:
+                newPos.x += velocity.x * deltaTime; //Add X velocity over time to position target
+                newPos.z += velocity.y * deltaTime; //Add Y velocity over time to position target
+
+                //Solve obstructions:
+                Vector3 castDir = RatBoid.UnFlattenVector(velocity); //Create container to store direction of spherecasts, initialized based on velocity
+                float castDist = currentSpeed * Time.deltaTime;      //Create container to store distance of spherecasts, initialized based on speed
+                bool touchingFloor = false;                          //Initialize bool to confirm whether or not floor has been found
+                for (int i = 0; i < settings.maxObstacleCollisions; i++) //Iterate collision check for, at most, maximum allowed number of obstacle collisions
+                {
+                    if (Physics.SphereCast(transform.position, settings.collisionRadius, castDir, out RaycastHit hit, castDist, settings.blockingLayers)) //Rat is currently moving into an obstacle
+                    {
+                        //Get obstructed position:
+                        Vector3 idealPos = newPos;                                               //Get position rat would be at if not obstructed
+                        newPos = hit.point + ((settings.collisionRadius + 0.001f) * hit.normal); //Get position at center of sphere colliding with obstruction
+                        newPos += Vector3.ProjectOnPlane(idealPos - newPos, hit.normal);         //Add remainder of velocity by projecting change in position onto plane defined by hit normal
                     
-                    //Check for floor:
-                    if (Vector3.Angle(Vector3.up, hit.normal) <= settings.maxWalkAngle) //Obstruction is recognized as a FLOOR
+                        //Check for floor:
+                        if (Vector3.Angle(Vector3.up, hit.normal) <= settings.maxWalkAngle) //Obstruction is recognized as a FLOOR
+                        {
+                            GetComponentInChildren<Billboarder>().targetZRot = Vector3.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(hit.normal, Vector3.forward), Vector3.forward); //Twist billboard so rat is flat on surface
+                            touchingFloor = true;                                                                                                                                     //Indicate that floor has been found prematurely
+                        }
+                        else //Obstruction is recognized as a WALL
+                        {
+                            newPos.y = idealPos.y; //Prevent walls from lifting the player (by carrying over Y value from floors or original transform position)
+                        }
+
+                        //Prep for next cast:
+                        castDir = newPos - transform.position; //Update direction of cast
+                        castDist = castDir.magnitude;          //Update distance of cast
+                    }
+                    else break; //End collision checking once rat is no longer obstructed
+                }
+                if (Physics.CheckSphere(newPos, settings.collisionRadius, settings.blockingLayers)) //Rat is still colliding with something (collision avoidance has failed)
+                {
+                    newPos = transform.position; //Cancel entire movement
+                }
+
+                //Stick to floor:
+                if (!touchingFloor) //Floor was not registered as an obstruction
+                {
+                    if (Physics.SphereCast(newPos, settings.collisionRadius, Vector3.down, out RaycastHit hit, settings.fallHeight, settings.blockingLayers)) //Rat has a floor under it
                     {
+                        newPos = hit.point + ((settings.collisionRadius + 0.001f) * hit.normal);                                                                                  //Modify position to stick to found floor
                         GetComponentInChildren<Billboarder>().targetZRot = Vector3.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(hit.normal, Vector3.forward), Vector3.forward); //Twist billboard so rat is flat on surface
-                        touchingFloor = true;                                                                                                                                     //Indicate that floor has been found prematurely
+                        touchingFloor = true;                                                                                                                                     //Indicate that rat is now touching floor
                     }
-                    else //Obstruction is recognized as a WALL
+                    else //Rat is hovering above empty space
                     {
-                        newPos.y = idealPos.y; //Prevent walls from lifting the player (by carrying over Y value from floors or original transform position)
+                        Launch(RatBoid.UnFlattenVector(velocity)); //Launch rat off cliff at current velocity
                     }
-
-                    //Prep for next cast:
-                    castDir = newPos - transform.position; //Update direction of cast
-                    castDist = castDir.magnitude;          //Update distance of cast
-                }
-                else break; //End collision checking once rat is no longer obstructed
-            }
-            if (Physics.CheckSphere(newPos, settings.collisionRadius, settings.blockingLayers)) //Rat is still colliding with something (collision avoidance has failed)
-            {
-                newPos = transform.position; //Cancel entire movement
-            }
-
-            //Stick to floor:
-            if (!touchingFloor) //Floor was not registered as an obstruction
-            {
-                if (Physics.SphereCast(newPos, settings.collisionRadius, Vector3.down, out RaycastHit hit, settings.fallHeight, settings.blockingLayers)) //Rat has a floor under it
-                {
-                    newPos = hit.point + ((settings.collisionRadius + 0.001f) * hit.normal);                                                                                  //Modify position to stick to found floor
-                    GetComponentInChildren<Billboarder>().targetZRot = Vector3.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(hit.normal, Vector3.forward), Vector3.forward); //Twist billboard so rat is flat on surface
-                    touchingFloor = true;                                                                                                                                     //Indicate that rat is now touching floor
-                }
-                else //Rat is hovering above empty space
-                {
-                    //INITIATE FALL
+                    if (!Physics.Raycast(transform.position, Vector3.down, settings.fallHeight + settings.collisionRadius, settings.blockingLayers)) //Check for floor directly below rat
+                    {
+                        Launch(new Vector3(velocity.x, settings.cliffHop, velocity.y)); //Bump rat off cliff
+                    }
                 }
             }
-
-            //Cleanup:
-            transform.position = newPos;   //Apply new position
-            forward = velocity.normalized; //Update forward direction tracker
         }
+
+        //Movement cleanup:
+        transform.position = newPos;   //Apply new position
+        forward = velocity.normalized; //Update forward direction tracker
 
         //Update trail characteristics:
         trail.Insert(0, PosAsVector2());                        //Add new trailPoint for current position
@@ -302,6 +350,18 @@ public class MasterRatController : MonoBehaviour
 
         }
     }
+    public void OnJumpInput(InputAction.CallbackContext context)
+    {
+        if (context.performed) //Jump button has just been pressed
+        {
+            if (!falling) //Player can only jump while they are not in the air
+            {
+                Vector3 jumpforce = RatBoid.UnFlattenVector(velocity).normalized * settings.jumpPower.x; //Get horizontal jump power
+                jumpforce.y = settings.jumpPower.y;                                                      //Get vertical jump power
+                Launch(jumpforce);                                                                       //Launch rat using jump force
+            }
+        }
+    }
 
     //FUNCTIONALITY METHODS:
     /// <summary>
@@ -316,7 +376,7 @@ public class MasterRatController : MonoBehaviour
         //Get spawn position:
         Vector3 spawnDirection = new Vector3(Random.Range(-settings.spawnArea.x / 2, settings.spawnArea.x / 2), 0, //Get vector which moves spawnpoint away from center by a random amount
                                              Random.Range(-settings.spawnArea.y / 2, settings.spawnArea.y / 2));   //Add random amount to depth separately
-        Vector3 spawnPoint = transform.position + settings.spawnOffset + spawnDirection;                   //Use position of mama rat plus offset and random bias as basis for spawnpoint
+        Vector3 spawnPoint = transform.position + settings.spawnOffset + spawnDirection;                           //Use position of mama rat plus offset and random bias as basis for spawnpoint
 
         //Get launch characteristics:
         Vector3 launchVel = Vector3.up * Random.Range(settings.spawnForce.x, settings.spawnForce.y); //Initialize force vector for launching rat (with random force value)
@@ -331,6 +391,21 @@ public class MasterRatController : MonoBehaviour
         ratController.flatPos = RatBoid.FlattenVector(spawnPoint); //Update flat position tracker of spawned rat
         ratController.Launch(launchVel);                           //Launch spawned rat
     }
+    /// <summary>
+    /// Launches rat into the air.
+    /// </summary>
+    /// <param name="force">Direction and power with which rat will be launched.</param>
+    public void Launch(Vector3 force)
+    {
+        //Modify velocity:
+        velocity = Vector2.zero; //Erase conventional velocity
+        airVelocity = force;     //Apply force to airborne velocity
+
+        //Cleanup:
+        falling = true; //Indicate that rat is now falling
+    }
+
+    //UTILITY METHODS:
     /// <summary>
     /// Returns the point on trail which is closest to given reference point, but within given distance behind given trail value.
     /// </summary>
@@ -405,6 +480,7 @@ public class MasterRatController : MonoBehaviour
         if (closestPoint == tempTrail[0]) return new TrailPointData(closestPoint, (tempTrail[0] - tempTrail[1]).normalized, 0); //If the closest point is the very beginning of the trail, give it a direction which points toward the leader
         return new TrailPointData(closestPoint, -(pointB - pointA).normalized, trailValue);                                     //Otherwise, return closest point with known direction
     }
+
     /// <summary>
     /// Returns distance (in units) between points at given values on trail.
     /// </summary>
@@ -448,8 +524,6 @@ public class MasterRatController : MonoBehaviour
         Debug.LogError("GetTrailPointFromValue failed"); //Post error
         return new TrailPointData();                     //Return empty data container
     }
-
-    //UTILITY METHODS:
     /// <summary>
     /// Returns point between pointA and pointB which is closest to target.
     /// </summary>

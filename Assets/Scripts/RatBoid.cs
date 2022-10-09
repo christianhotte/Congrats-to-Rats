@@ -380,7 +380,7 @@ public class RatBoid : MonoBehaviour
                         Vector2 avoidanceVel = -FlattenVector(hit.normal) * distanceValue;                                                     //Get velocity which pushes rat away from ledge
                         avoidanceVel *= rat.settings.obstacleAvoidanceWeight;                                                                  //Apply weight value to added velocity
                         rat.velocity += avoidanceVel * adjustedDT;                                                                             //Apply unclamped velocity to rat
-                        rat.neighborCrush *= distanceValue;                                                                                    //Prevent rats from piling up against a ledge
+                        //rat.neighborCrush *= 1 - distanceValue;                                                                                //Prevent rats from piling up against a ledge
                     }
                 }
             }
