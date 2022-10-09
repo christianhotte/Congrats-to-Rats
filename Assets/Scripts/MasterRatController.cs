@@ -71,6 +71,7 @@ public class MasterRatController : MonoBehaviour
     private Vector2 moveInput;   //Current input direction for movement
     internal bool falling;       //Whether or not rat is currently falling
     internal bool commanding;    //Whether or not rat is currently deploying rats to a location
+    private bool aiming;         //True when rat is preparing for a throw
 
     //RUNTIME METHODS:
     private void Awake()
@@ -289,6 +290,17 @@ public class MasterRatController : MonoBehaviour
             anim.SetBool("Pointing", false); //End pointing animation
         }
             
+    }
+    public void OnThrowInput(InputAction.CallbackContext context)
+    {
+        if (context.performed) //Throw button has just been pressed
+        {
+
+        }
+        else //Throw button has just been released
+        {
+
+        }
     }
 
     //FUNCTIONALITY METHODS:

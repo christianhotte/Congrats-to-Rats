@@ -140,6 +140,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 36e7cf72-104d-4104-8b7b-6b29b6279230
     m_ActionName: Default/Command[/Mouse/leftButton]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 2760126436428266732}
+        m_TargetAssemblyTypeName: 
+        m_MethodName: 
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: e183b063-b163-4bfc-bb38-2131e559ef2a
+    m_ActionName: Default/Throw[/Mouse/leftButton]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Default

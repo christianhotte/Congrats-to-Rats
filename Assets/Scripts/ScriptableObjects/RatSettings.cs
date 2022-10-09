@@ -38,6 +38,9 @@ public class RatSettings : ScriptableObject
     [Tooltip("Curve describing transition between primary and secondary occlusion color depending on crush")]   public AnimationCurve occlusionColorCurve;
     [Tooltip("Curve describing cross-sectional shape of rat pile")]                                             public AnimationCurve pileCurve;
     [Space()]
+    [Tooltip("Determines how rat coloration reacts to environmental brightness")]                                         public AnimationCurve shadowSensitivityCurve;
+    [Min(0), Tooltip("Maximum change in shadow value per second. Increase this to make rat shadow transitions smoother")] public float maxShadowDelta;
+    [Space()]
     [Tooltip("Array of coloration schemes for rat fur (Color A is lightest variant, Color B is darkest variant)")] public ColorScheme[] furColorSchemes;
     [Tooltip("Array of coloration schemes for party hat (Color A is base, Color B is stripe)")]                    public ColorScheme[] hatColorSchemes;
     [Header("Airborne Behavior:")]

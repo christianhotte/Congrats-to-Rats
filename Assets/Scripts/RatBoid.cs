@@ -135,6 +135,7 @@ public class RatBoid : MonoBehaviour
                 {
                     newPos = Vector3.MoveTowards(newPos, hit.point + (Vector3.up * adjustedHeight), rat.settings.heightChangeRate * deltaTime);         //Move target position upward according to height of floor
                     rat.billboarder.targetZRot = Vector3.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(hit.normal, Vector3.forward), Vector3.forward); //Twist billboard so rat is flat on surface
+                    rat.GetLightingFromHit(hit, deltaTime);                                                                                               //Update rat lighting based on light properties of hit surface
                 }
                 else //No floor found
                 {
@@ -379,6 +380,7 @@ public class RatBoid : MonoBehaviour
                         Vector2 avoidanceVel = -FlattenVector(hit.normal) * distanceValue;                                                     //Get velocity which pushes rat away from ledge
                         avoidanceVel *= rat.settings.obstacleAvoidanceWeight;                                                                  //Apply weight value to added velocity
                         rat.velocity += avoidanceVel * adjustedDT;                                                                             //Apply unclamped velocity to rat
+                        rat.neighborCrush *= distanceValue;                                                                                    //Prevent rats from piling up against a ledge
                     }
                 }
             }
@@ -484,6 +486,7 @@ public class RatBoid : MonoBehaviour
 
         //Cleanup:
         r.material.SetFloat("_OcclusionIntensity", 0); //Ensure rat is not darkened
+        r.material.SetFloat("_ShadowIntensity", 0);    //Clear rat shadow value
         pileHeight = 0;                                //Reset rat's pile value
     }
     /// <summary>
@@ -522,5 +525,47 @@ public class RatBoid : MonoBehaviour
         Vector2 totalPos = Vector2.zero;                           //Initialize container to store total position of all group members
         foreach (RatBoid rat in ratGroup) totalPos += rat.flatPos; //Get total planar position of all rats in group
         return totalPos / ratGroup.Length;                         //Return average position of all given rats
+    }
+    /// <summary>
+    /// Dynamically updates rat's coloration based on baked shadows of given surface hit.
+    /// </summary>
+    public void GetLightingFromHit(RaycastHit hit, float deltaTime)
+    {
+        if (hit.collider.TryGetComponent(out MeshRenderer mr)) //Only valid if object has a meshrenderer
+        {
+            //Initialize:
+            LightmapData lightMap = LightmapSettings.lightmaps[mr.lightmapIndex]; //Get lightmap data of object rat is touching
+            Texture2D colorMap = lightMap.lightmapColor;                          //Get colored lightmap texture
+            Texture2D dirMap = lightMap.lightmapDir;                              //Get directional lightmap texture
+
+            //Update shadow intensity:
+            if (colorMap.isReadable) //Only scan pixels if lightmap is read/write enabled
+            {
+                Vector2Int pixelCoords = new Vector2Int(Mathf.RoundToInt(hit.lightmapCoord.x * colorMap.width), Mathf.RoundToInt(hit.lightmapCoord.y * colorMap.height)); //Pixel coordinates of point on lightmap rat is touching
+                float darkness = 1 - colorMap.GetPixel(pixelCoords.x, pixelCoords.y).grayscale;                                       //Get relative darkness of point rat is standing on
+                darkness = settings.shadowSensitivityCurve.Evaluate(darkness);                                                        //Make shadow intensity relative to settings
+                darkness = Mathf.MoveTowards(darkness, r.material.GetFloat("_ShadowIntensity"), settings.maxShadowDelta * deltaTime); //Smoothly move from current darkness to target
+                r.material.SetFloat("_ShadowIntensity", darkness);                                                                    //Apply new darkness value
+            }
+            else //Lightmap is not read/write enabled
+            {
+                Debug.LogWarning("Failed to reference lightmap at index" + mr.lightmapIndex + ", make sure baked lightmaps are manually set to Read/Write"); //Post warning indicating problem
+            }
+
+            //Update lighting direction:
+            /*if (dirMap.isReadable) //Only scan pixels if directional lightmap is read/write enabled
+            {
+                Vector2Int pixelCoords = new Vector2Int(Mathf.RoundToInt(hit.lightmapCoord.x * dirMap.width), Mathf.RoundToInt(hit.lightmapCoord.y * dirMap.height)); //Pixel coordinates of point on directionMap rat is touching
+                Color dirColor = dirMap.GetPixel(pixelCoords.x, pixelCoords.y).linear;                                                                                //Get color representing direction of lights at point
+                //NOTE: Figure out how to allow for negatives
+                Vector3 lightDirection = new Vector3(dirColor.b - 0.5f, dirColor.g - 0.5f, dirColor.r - 0.5f).normalized;
+                print(lightDirection);
+                Debug.DrawRay(hit.point, lightDirection, dirColor);
+            }
+            else //Directional lightmap is not read/write enabled
+            {
+                Debug.LogWarning("Failed to reference directional lightmap at index" + mr.lightmapIndex + ", make sure baked lightmaps are manually set to Read/Write"); //Post warning indicating problem
+            }*/
+        }
     }
 }

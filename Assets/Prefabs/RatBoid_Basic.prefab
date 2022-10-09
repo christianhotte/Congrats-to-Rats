@@ -58,7 +58,7 @@ GameObject:
   - component: {fileID: 885003442669944435}
   - component: {fileID: 7096880036706010672}
   - component: {fileID: 3217536394306337484}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: ShadowCaster
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -73,8 +73,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4453434122209394387}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.0469, z: 0}
-  m_LocalScale: {x: 0.06578465, y: 0.050650608, z: 0.06578465}
+  m_LocalPosition: {x: 0, y: -0.0835, z: 0}
+  m_LocalScale: {x: 0.114629745, y: 0.071155034, z: 0.114629745}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4272964666275407873}
@@ -96,7 +96,7 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4453434122209394387}
   m_Enabled: 1
-  m_CastShadows: 1
+  m_CastShadows: 3
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
