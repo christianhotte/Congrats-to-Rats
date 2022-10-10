@@ -193,7 +193,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: ca255e01143804a48899e157eabcdbf0, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 62145bcd439383440b332d96e8be20d0, type: 2}
+      objectReference: {fileID: 2100000, guid: a227305da3dc89041b49beb2710a2a38, type: 2}
     - target: {fileID: 919132149155446097, guid: ca255e01143804a48899e157eabcdbf0, type: 3}
       propertyPath: m_Name
       value: LWall
@@ -332,7 +332,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: ca255e01143804a48899e157eabcdbf0, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 62145bcd439383440b332d96e8be20d0, type: 2}
+      objectReference: {fileID: 2100000, guid: a227305da3dc89041b49beb2710a2a38, type: 2}
     - target: {fileID: 919132149155446097, guid: ca255e01143804a48899e157eabcdbf0, type: 3}
       propertyPath: m_Name
       value: RWall
@@ -1247,7 +1247,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 19f258da59efaf64db8808818f32de0c, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: c07a47e1b52416c44924f7aae7c753b9, type: 2}
+      objectReference: {fileID: 2100000, guid: 5e2d97c107b880e4aa7d457fce070b83, type: 2}
     - target: {fileID: 919132149155446097, guid: 19f258da59efaf64db8808818f32de0c, type: 3}
       propertyPath: m_Name
       value: Floor
@@ -1410,7 +1410,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: d700b23609aff7049809627d2acd24a0, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 85236c8377c99cd4bacf57f9295bc3ed, type: 2}
+      objectReference: {fileID: 2100000, guid: a227305da3dc89041b49beb2710a2a38, type: 2}
     - target: {fileID: 919132149155446097, guid: d700b23609aff7049809627d2acd24a0, type: 3}
       propertyPath: m_Name
       value: Back_Wall
@@ -1664,6 +1664,10 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 29aaa75191a54af4e899ff5f399cfd6c, type: 2}
+    - target: {fileID: 5968265476618769225, guid: fc7ce32d8010d1848a36a36bd3cdba64, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 82cc89158964fe644b4e54d30021ad2b, type: 2}
     - target: {fileID: 6841443699829023066, guid: fc7ce32d8010d1848a36a36bd3cdba64, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
