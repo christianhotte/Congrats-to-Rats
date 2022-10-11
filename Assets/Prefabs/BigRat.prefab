@@ -172,6 +172,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 7da1f371-4eeb-4f67-a11b-6253095dc7a2
     m_ActionName: Default/Jump[/Keyboard/space]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 2760126436428266732}
+        m_TargetAssemblyTypeName: MasterRatController, Assembly-CSharp
+        m_MethodName: OnMousePositionMove
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: ed64964a-80d4-4a3f-a9d0-95c2af3040d5
+    m_ActionName: Default/MousePosition[/Mouse/position]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Default

@@ -17,13 +17,13 @@ MonoBehaviour:
   neighborRadius: 0.23
   mamaRadius: 0.2
   leadRadius: 0.1
-  targetRadius: 0.01
-  trailDensity: 70
-  compressionRange: {x: 7.740679, y: 16.837925}
-  trailBuffer: 0.02
+  targetRadius: 0.03
+  trailDensity: 35
+  compressionRange: {x: 6.2893143, y: 9.581047}
+  trailBuffer: 0.05
   minTrailSegLength: 0.07
   velTrailLengthMultiplier: 1
-  stillConformMultiplier: 0.1
+  stillConformMultiplier: 0.6
   maxSegAngle: 100
   backtrackBuffer: 0.1
   maxTrailSkip: 8
@@ -32,10 +32,10 @@ MonoBehaviour:
   followerJumpBoost: 0.3
   cohesionWeight: 0.4
   separationWeight: 0.5
-  conformityWeight: 0.2
-  targetWeight: 4.37
-  dispersionWeight: 1
+  conformityWeight: 0.05
+  targetWeight: 12
+  dispersionWeight: 0.4
   leadWeight: 8
-  leaderSeparationWeight: 0
-  stayBackWeight: 1.52
+  leaderSeparationWeight: 1
+  stayBackWeight: 1.5
   stragglerWeight: 1

@@ -98,14 +98,15 @@ public class MasterRatController : MonoBehaviour
     internal float totalTrailLength = 0;                           //Current length of trail (in units)
     internal int currentJumpMarkers = 0;                           //Current number of jump markers in trail
 
-    internal Vector2 velocity;    //Current speed and direction of movement
-    internal Vector3 airVelocity; //3D velocity used when rat is falling
-    internal Vector2 forward;     //Normalized vector representing which direction big rat was most recently moving
-    internal float currentSpeed;  //Current speed at which rat is moving
-    private Vector2 moveInput;    //Current input direction for movement
-    private bool falling;        //Whether or not rat is currently falling
-    internal bool commanding;     //Whether or not rat is currently deploying rats to a location
-    private bool aiming;          //True when rat is preparing for a throw
+    internal Vector2 velocity;          //Current speed and direction of movement
+    internal Vector3 airVelocity;       //3D velocity used when rat is falling
+    internal Vector2 forward;           //Normalized vector representing which direction big rat was most recently moving
+    internal float currentSpeed;        //Current speed at which rat is moving
+    private Vector2 moveInput;          //Current input direction for movement
+    private bool falling;               //Whether or not rat is currently falling
+    internal bool commanding;           //Whether or not rat is currently deploying rats to a location
+    private bool aiming;                //True when rat is preparing for a throw
+    private Vector3 currentMouseTarget; //Current position in real space which mouse is pointing at
 
     //RUNTIME METHODS:
     private void Awake()
@@ -198,7 +199,7 @@ public class MasterRatController : MonoBehaviour
         else //Rat is moving normally along a surface
         {
             //Modify velocity:
-            if (moveInput != Vector2.zero) //Player is moving rat in a direction
+            if (moveInput != Vector2.zero && !aiming) //Player is moving rat in a direction (and not aiming)
             {
                 //Add velocity:
                 Vector2 addVel = moveInput * settings.accel; //Get added velocity based on input this frame
@@ -376,13 +377,22 @@ public class MasterRatController : MonoBehaviour
     }
     public void OnThrowInput(InputAction.CallbackContext context)
     {
-        if (context.performed) //Throw button has just been pressed
+        if (context.performed && followerRats.Count > 0) //Throw button has just been pressed (and there is at least one rat to throw)
         {
-
+            aiming = true;                //Indicate that rat is now aiming
+            anim.SetBool("Aiming", true); //Play aim animation
         }
-        else //Throw button has just been released
+        else if (aiming) //Throw button has just been released while aiming
         {
-
+            aiming = false;                //Indicate that rat is no longer aiming
+            anim.SetBool("Aiming", false); //Play throw animation
+            if (followerRats.Count > 0)
+            {
+                RatBoid throwRat = followerRats[0];
+                throwRat.transform.position = transform.position;
+                throwRat.tempBounceMod = -0.7f;
+                throwRat.Launch((currentMouseTarget - transform.position).normalized * settings.throwForce);
+            }
         }
     }
     public void OnJumpInput(InputAction.CallbackContext context)
@@ -396,6 +406,14 @@ public class MasterRatController : MonoBehaviour
                 if (moveInput == Vector2.zero) jumpforce.y *= settings.stationaryJumpMultiplier;          //Apply multiplier to vertical jump if rat is stationary
                 Launch(jumpforce);                                                                        //Launch rat using jump force
             }
+        }
+    }
+    public void OnMousePositionMove(InputAction.CallbackContext context)
+    {
+        Ray mouseRay = Camera.main.ScreenPointToRay(context.ReadValue<Vector2>());
+        if (Physics.Raycast(mouseRay, out RaycastHit hit))
+        {
+            currentMouseTarget = hit.point;
         }
     }
 

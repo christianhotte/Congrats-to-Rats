@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8e58a829cf81d4478cc242c07f00b84, type: 3}
   m_Name: Swarm_Hotte1x300
   m_EditorClassIdentifier: 
-  targetRatNumber: 50
+  targetRatNumber: 300
   separationRadius: 0.07
   neighborRadius: 0.23
   mamaRadius: 0.2
   leadRadius: 0.1
   targetRadius: 0.01
-  trailDensity: 70
+  trailDensity: 90
   compressionRange: {x: 7.740679, y: 16.837925}
   trailBuffer: 0.02
   minTrailSegLength: 0.07

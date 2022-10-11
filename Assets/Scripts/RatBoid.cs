@@ -44,9 +44,10 @@ public class RatBoid : MonoBehaviour
     internal float sizeFactor = 1;                                  //Factor used to change certain properties of rat based on scale variance
     internal Vector3 airVelocity;                                   //3D velocity used when rat is falling
 
-    private float timeUntilFlip;   //Time before this rat is able to flip its sprite orientation (prevents jiggling)
-    internal float neighborCrush;  //Represents how many neighbors this rat has and how close they are
-    internal float pileHeight = 0; //Additional height added to rat due to piling
+    private float timeUntilFlip;      //Time before this rat is able to flip its sprite orientation (prevents jiggling)
+    internal float neighborCrush;     //Represents how many neighbors this rat has and how close they are
+    internal float pileHeight = 0;    //Additional height added to rat due to piling
+    internal float tempBounceMod = 0; //Modifier added to bounciness upon launch, erased upon landing
 
     //RUNTIME METHODS:
     private void Awake()
@@ -157,9 +158,15 @@ public class RatBoid : MonoBehaviour
                     float surfaceAngle = Vector3.Angle(hit.normal, Vector3.up); //Get angle of surface relative to flat floor
                     if (surfaceAngle > MasterRatController.main.settings.maxWalkAngle) //Surface is too steep for rat to land on
                     {
+                        //Apply force:
+                        if (hit.collider.TryGetComponent(out Rigidbody hitBody)) //Hit object has an attached rigidbody
+                        {
+                            hitBody.AddForceAtPosition(rat.airVelocity * rat.settings.mass, hit.point, ForceMode.Impulse);
+                        }
+
                         //Bounce rat:
                         rat.airVelocity = Vector3.Reflect(rat.airVelocity, hit.normal); //Reflect velocity of rat against surface
-                        rat.airVelocity *= rat.settings.bounciness;                     //Retain percentage of velocity depending on setting
+                        rat.airVelocity *= rat.settings.bounciness + rat.tempBounceMod; //Retain percentage of velocity depending on setting
                         newPos = hit.point + (-rat.airVelocity.normalized * 0.001f);    //Move rat to position close to wall but not inside it
                     }
                     else //Surface is flat enough for rat to land on
@@ -567,6 +574,7 @@ public class RatBoid : MonoBehaviour
         if (MasterRatController.main.jumpingFollowers.Contains(this)) MasterRatController.main.jumpingFollowers.Remove(this); //Remove rat from jumping follower list if applicable
 
         //Cleanup:
+        tempBounceMod = 0;          //Reset bounce modifier
         lastTrailValue = -1;        //Reset trail value (just to be sure)
         airVelocity = Vector3.zero; //Clear air velocity (but keep momentum by retaining flat velocity)
     }
@@ -598,41 +606,43 @@ public class RatBoid : MonoBehaviour
     /// </summary>
     public void GetLightingFromHit(RaycastHit hit, float deltaTime)
     {
-        if (hit.collider.TryGetComponent(out MeshRenderer mr)) //Only valid if object has a meshrenderer
+        //Validity checks:
+        if (!hit.collider.gameObject.isStatic) return;                                             //Ignore if object is static
+        if (!hit.collider.TryGetComponent(out MeshRenderer mr)) return;                            //Ignore if object does not have a meshRenderer
+        if (mr.lightmapIndex < 0 || mr.lightmapIndex >= LightmapSettings.lightmaps.Length) return; //Ignore if object does not have an associated lightmap
+
+        //Initialize:
+        LightmapData lightMap = LightmapSettings.lightmaps[mr.lightmapIndex]; //Get lightmap data of object rat is touching
+        Texture2D colorMap = lightMap.lightmapColor;                          //Get colored lightmap texture
+        Texture2D dirMap = lightMap.lightmapDir;                              //Get directional lightmap texture
+
+        //Update shadow intensity:
+        if (colorMap.isReadable) //Only scan pixels if lightmap is read/write enabled
         {
-            //Initialize:
-            LightmapData lightMap = LightmapSettings.lightmaps[mr.lightmapIndex]; //Get lightmap data of object rat is touching
-            Texture2D colorMap = lightMap.lightmapColor;                          //Get colored lightmap texture
-            Texture2D dirMap = lightMap.lightmapDir;                              //Get directional lightmap texture
-
-            //Update shadow intensity:
-            if (colorMap.isReadable) //Only scan pixels if lightmap is read/write enabled
-            {
-                Vector2Int pixelCoords = new Vector2Int(Mathf.RoundToInt(hit.lightmapCoord.x * colorMap.width), Mathf.RoundToInt(hit.lightmapCoord.y * colorMap.height)); //Pixel coordinates of point on lightmap rat is touching
-                float darkness = 1 - colorMap.GetPixel(pixelCoords.x, pixelCoords.y).grayscale;                                       //Get relative darkness of point rat is standing on
-                darkness = settings.shadowSensitivityCurve.Evaluate(darkness);                                                        //Make shadow intensity relative to settings
-                darkness = Mathf.MoveTowards(darkness, r.material.GetFloat("_ShadowIntensity"), settings.maxShadowDelta * deltaTime); //Smoothly move from current darkness to target
-                r.material.SetFloat("_ShadowIntensity", darkness);                                                                    //Apply new darkness value
-            }
-            else //Lightmap is not read/write enabled
-            {
-                Debug.LogWarning("Failed to reference lightmap at index" + mr.lightmapIndex + ", make sure baked lightmaps are manually set to Read/Write"); //Post warning indicating problem
-            }
-
-            //Update lighting direction:
-            /*if (dirMap.isReadable) //Only scan pixels if directional lightmap is read/write enabled
-            {
-                Vector2Int pixelCoords = new Vector2Int(Mathf.RoundToInt(hit.lightmapCoord.x * dirMap.width), Mathf.RoundToInt(hit.lightmapCoord.y * dirMap.height)); //Pixel coordinates of point on directionMap rat is touching
-                Color dirColor = dirMap.GetPixel(pixelCoords.x, pixelCoords.y).linear;                                                                                //Get color representing direction of lights at point
-                //NOTE: Figure out how to allow for negatives
-                Vector3 lightDirection = new Vector3(dirColor.b - 0.5f, dirColor.g - 0.5f, dirColor.r - 0.5f).normalized;
-                print(lightDirection);
-                Debug.DrawRay(hit.point, lightDirection, dirColor);
-            }
-            else //Directional lightmap is not read/write enabled
-            {
-                Debug.LogWarning("Failed to reference directional lightmap at index" + mr.lightmapIndex + ", make sure baked lightmaps are manually set to Read/Write"); //Post warning indicating problem
-            }*/
+            Vector2Int pixelCoords = new Vector2Int(Mathf.RoundToInt(hit.lightmapCoord.x * colorMap.width), Mathf.RoundToInt(hit.lightmapCoord.y * colorMap.height)); //Pixel coordinates of point on lightmap rat is touching
+            float darkness = 1 - colorMap.GetPixel(pixelCoords.x, pixelCoords.y).grayscale;                                       //Get relative darkness of point rat is standing on
+            darkness = settings.shadowSensitivityCurve.Evaluate(darkness);                                                        //Make shadow intensity relative to settings
+            darkness = Mathf.MoveTowards(darkness, r.material.GetFloat("_ShadowIntensity"), settings.maxShadowDelta * deltaTime); //Smoothly move from current darkness to target
+            r.material.SetFloat("_ShadowIntensity", darkness);                                                                    //Apply new darkness value
         }
+        else //Lightmap is not read/write enabled
+        {
+            Debug.LogWarning("Failed to reference lightmap at index" + mr.lightmapIndex + ", make sure baked lightmaps are manually set to Read/Write"); //Post warning indicating problem
+        }
+
+        //Update lighting direction:
+        /*if (dirMap.isReadable) //Only scan pixels if directional lightmap is read/write enabled
+        {
+            Vector2Int pixelCoords = new Vector2Int(Mathf.RoundToInt(hit.lightmapCoord.x * dirMap.width), Mathf.RoundToInt(hit.lightmapCoord.y * dirMap.height)); //Pixel coordinates of point on directionMap rat is touching
+            Color dirColor = dirMap.GetPixel(pixelCoords.x, pixelCoords.y).linear;                                                                                //Get color representing direction of lights at point
+            //NOTE: Figure out how to allow for negatives
+            Vector3 lightDirection = new Vector3(dirColor.b - 0.5f, dirColor.g - 0.5f, dirColor.r - 0.5f).normalized;
+            print(lightDirection);
+            Debug.DrawRay(hit.point, lightDirection, dirColor);
+        }
+        else //Directional lightmap is not read/write enabled
+        {
+            Debug.LogWarning("Failed to reference directional lightmap at index" + mr.lightmapIndex + ", make sure baked lightmaps are manually set to Read/Write"); //Post warning indicating problem
+        }*/
     }
 }

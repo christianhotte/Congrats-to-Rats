@@ -163,3 +163,4 @@ MonoBehaviour:
   gravity: 9.5
   drag: 0
   bounciness: 0.9
+  mass: 0.05

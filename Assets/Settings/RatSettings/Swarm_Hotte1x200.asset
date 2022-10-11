@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8e58a829cf81d4478cc242c07f00b84, type: 3}
   m_Name: Swarm_Hotte1x200
   m_EditorClassIdentifier: 
-  targetRatNumber: 50
+  targetRatNumber: 200
   separationRadius: 0.07
   neighborRadius: 0.23
   mamaRadius: 0.2
-  leadRadius: 0.1
-  targetRadius: 0.01
-  trailDensity: 70
-  compressionRange: {x: 7.740679, y: 16.837925}
+  leadRadius: 0.2
+  targetRadius: 0.15
+  trailDensity: 65
+  compressionRange: {x: 1.9351718, y: 11.03242}
   trailBuffer: 0.02
   minTrailSegLength: 0.07
   velTrailLengthMultiplier: 1
@@ -33,9 +33,9 @@ MonoBehaviour:
   cohesionWeight: 0.4
   separationWeight: 0.5
   conformityWeight: 0.2
-  targetWeight: 4.37
+  targetWeight: 5
   dispersionWeight: 1
-  leadWeight: 8
+  leadWeight: 15
   leaderSeparationWeight: 0
   stayBackWeight: 1.52
   stragglerWeight: 1
