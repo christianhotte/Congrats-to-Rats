@@ -335,9 +335,15 @@ public class RatBoid : MonoBehaviour
                                 if (trailPoint.jumpTokens == 0) MasterRatController.main.currentJumpMarkers--; //Indicate that a jump marker has been fully expended
 
                                 //Determine launch velocity:
-                                Vector3 launchVel = new Vector3();                                                                      //Initialize launch velocity at rat's current speed
-                                launchVel.y = MasterRatController.main.settings.jumpPower.y;                                            //Give rat vertical jump power of leader
-                                Vector2 horizontalLaunchVel = data.forward * MasterRatController.main.settings.jumpPower.x;             //Get isolated horizontal jump power from leader
+                                Vector3 launchVel = new Vector3();                           //Initialize launch velocity at rat's current speed
+                                launchVel.y = MasterRatController.main.settings.jumpPower.y; //Give rat vertical jump power of leader
+                                Vector2 horizontalLaunchVel = data.forward;                  //Initialize direction of horizontal jump
+                                if (data.linePosition <= settings.trailBuffer &&                                          //Rat is very close to the leader
+                                    Vector2.Angle(data.forward, MasterRatController.main.forward) > settings.maxSegAngle) //Rat is trying to jump at very different angle from leader
+                                {
+                                    horizontalLaunchVel = MasterRatController.main.forward;
+                                }
+                                horizontalLaunchVel *= MasterRatController.main.settings.jumpPower.x;                                   //Get isolated horizontal jump power from leader
                                 horizontalLaunchVel *= 1 + Random.Range(-rat.settings.jumpRandomness.x, rat.settings.jumpRandomness.x); //Apply randomness to horizontal velocity
                                 launchVel.y *= 1 + Random.Range(-rat.settings.jumpRandomness.y, rat.settings.jumpRandomness.y);         //Apply randomness to vertical velocity
                                 launchVel += UnFlattenVector(horizontalLaunchVel);                                                      //Apply horizontal component to net launch velocity

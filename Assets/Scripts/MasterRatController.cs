@@ -401,10 +401,13 @@ public class MasterRatController : MonoBehaviour
         {
             if (!falling) //Player can only jump while they are not in the air
             {
-                Vector3 jumpforce = RatBoid.UnFlattenVector(moveInput).normalized * settings.jumpPower.x; //Get horizontal jump power
-                jumpforce.y = settings.jumpPower.y;                                                       //Get vertical jump power
-                if (moveInput == Vector2.zero) jumpforce.y *= settings.stationaryJumpMultiplier;          //Apply multiplier to vertical jump if rat is stationary
-                Launch(jumpforce);                                                                        //Launch rat using jump force
+                if (currentJumpMarkers < currentSwarmSettings.maxJumpMarkers) //Only allow a jump to be performed if max number is not already exceeded
+                {
+                    Vector3 jumpforce = RatBoid.UnFlattenVector(moveInput).normalized * settings.jumpPower.x; //Get horizontal jump power
+                    jumpforce.y = settings.jumpPower.y;                                                       //Get vertical jump power
+                    if (moveInput == Vector2.zero) jumpforce.y *= settings.stationaryJumpMultiplier;          //Apply multiplier to vertical jump if rat is stationary
+                    Launch(jumpforce);                                                                        //Launch rat using jump force
+                }
             }
         }
     }

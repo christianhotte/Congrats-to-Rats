@@ -27,6 +27,7 @@ public class SwarmSettings : ScriptableObject
     [Min(0), Tooltip("Trail length below which rats will swarm in a blob instead of a trail")]                                                           public float minTrailLength;
     [Min(0), Tooltip("Maximum speed at which follower rats can overtake leader")]                                                                        public float maxOvertakeSpeed;
     [Tooltip("Additional force given to followers when jumping after leader")]                                                                           public float followerJumpBoost;
+    [Min(1), Tooltip("Maximum number of running jumps allowed in trail at a time")]                                                                      public int maxJumpMarkers;
     [Header("Curves:")]
     //[Tooltip("Use this curve to assign different multipliers for target compression depending on where rats are in trail (allows trail to be tapered)")] public AnimationCurve compressionCurve;
     //[Tooltip("Use this curve to change rat dispersal and leading characteristics depending on how close they are to the center of the trial")]           public AnimationCurve convectionCurve;
@@ -77,6 +78,7 @@ public class SwarmSettings : ScriptableObject
         minTrailLength = Mathf.Lerp(settingsA.minTrailLength, settingsB.minTrailLength, currentInterpolant);
         maxOvertakeSpeed = Mathf.Lerp(settingsA.maxOvertakeSpeed, settingsB.maxOvertakeSpeed, currentInterpolant);
         followerJumpBoost = Mathf.Lerp(settingsA.followerJumpBoost, settingsB.followerJumpBoost, currentInterpolant);
+        maxJumpMarkers = (int)Mathf.Lerp(settingsA.maxJumpMarkers, settingsB.maxJumpMarkers, currentInterpolant);
 
         cohesionWeight = Mathf.Lerp(settingsA.cohesionWeight, settingsB.cohesionWeight, currentInterpolant);
         separationWeight = Mathf.Lerp(settingsA.separationWeight, settingsB.separationWeight, currentInterpolant);
