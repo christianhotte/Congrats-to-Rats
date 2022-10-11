@@ -17,8 +17,7 @@ public class RatSettings : ScriptableObject
 
     //DATA:
     [Header("Movement:")]
-    [Tooltip("Maximum speed at which rat can normally travel on ground")]              public float maxSpeed;
-    [Tooltip("Maximum speed at which rat can move relative to leader (if following)")] public float maxOvertakeSpeed;
+    [Tooltip("Maximum speed at which rat can normally travel on ground")] public float maxSpeed;
     [Header("Obstacles & Floor:")]
     [Tooltip("Height above ground at which rat will rest")]                                       public float baseHeight;
     [Tooltip("Height at and above which rat will fall off ledges instead of climbing down them")] public float fallHeight;
@@ -43,10 +42,12 @@ public class RatSettings : ScriptableObject
     [Space()]
     [Tooltip("Array of coloration schemes for rat fur (Color A is lightest variant, Color B is darkest variant)")] public ColorScheme[] furColorSchemes;
     [Tooltip("Array of coloration schemes for party hat (Color A is base, Color B is stripe)")]                    public ColorScheme[] hatColorSchemes;
-    [Header("Airborne Behavior:")]
-    [Tooltip("Force of gravity acting on velocity of airborne rats")]                                      public float gravity;
-    [Tooltip("Force of air resistance acting on airborne rats")]                                           public float drag;
-    [Range(0, 1), Tooltip("Percentage of velocity which is retained each time rat bounces off of a wall")] public float bounciness;
+    [Header("Jumping & Falling:")]
+    [Tooltip("Horizontal and vertical power of jumps autonomously made by rats (for navigational purposes)")] public Vector2 autoJumpPower;
+    [Tooltip("Random percentage up or down (along each individual axis) by which jumps may deviate")]         public Vector2 jumpRandomness;
+    [Tooltip("Force of gravity acting on velocity of airborne rats")]                                         public float gravity;
+    [Tooltip("Force of air resistance acting on airborne rats")]                                              public float drag;
+    [Range(0, 1), Tooltip("Percentage of velocity which is retained each time rat bounces off of a wall")]    public float bounciness;
 
     //FUNCTIONALITY METHODS:
     /// <summary>

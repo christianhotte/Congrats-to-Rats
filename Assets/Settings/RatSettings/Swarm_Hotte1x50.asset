@@ -15,21 +15,27 @@ MonoBehaviour:
   targetRatNumber: 50
   separationRadius: 0.07
   neighborRadius: 0.23
-  targetRadius: 0.1
-  trailDensity: 65
-  targetTrailCompression: 11
-  trailBuffer: 0.02
+  mamaRadius: 0.2
+  leadRadius: 0.1
+  targetRadius: 0.06
+  trailDensity: 70
+  compressionRange: {x: 13.546192, y: 20.70827}
+  trailBuffer: 0.04
   minTrailSegLength: 0.07
   velTrailLengthMultiplier: 1
+  stillConformMultiplier: 0.3
   maxSegAngle: 100
   backtrackBuffer: 0.1
   maxTrailSkip: 8
   minTrailLength: 0.5
+  maxOvertakeSpeed: 1
+  followerJumpBoost: 0.3
   cohesionWeight: 0.4
   separationWeight: 0.5
-  conformityWeight: 0.07
-  targetWeight: 4
-  followWeight: 3
-  leadWeight: 6
-  stayBackWeight: 0.7
+  conformityWeight: 0.2
+  targetWeight: 6.55
+  dispersionWeight: 0.79
+  leadWeight: 7.88
+  leaderSeparationWeight: 0
+  stayBackWeight: 1.52
   stragglerWeight: 1

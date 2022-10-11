@@ -14,11 +14,14 @@ public class BigRatSettings : ScriptableObject
     [Min(0), Tooltip("How quickly the rat comes to a stop")]   public float decel;
     [Header("Jumping & Falling:")]
     [Min(0), Tooltip("Forward and upward power of rat jump")]                                           public Vector2 jumpPower;
+    [Min(1), Tooltip("Multiplier added to jump force when jumping while standing")]                     public float stationaryJumpMultiplier;
+    [Range(0, 1), Tooltip("Percentage of normal movement control rat has while in the air")]            public float airControl;
     [Min(0), Tooltip("Force used to bounce rat off cliffs to prevent jank")]                            public float cliffHop;
     [Min(0), Tooltip("Step height at which rat will fall instead of climbing down")]                    public float fallHeight;
     [Min(0), Tooltip("Downward acceleration (in units per second squared) while falling")]              public float gravity;
     [Min(0), Tooltip("Resistance to motion while in air")]                                              public float airDrag;
     [Range(0, 1), Tooltip("Percentage of velocity which is retained each time rat bounces off a wall")] public float bounciness;
+    [Min(0), Tooltip("Low velocity value used to prevent rat from hanging on walls after jumping")]     public float wallRepulse;
     [Header("Collisions:")]
     [Tooltip("Layers which will obstruct rat movement")]                                      public LayerMask blockingLayers;
     [Min(0), Tooltip("Physical thickness of rat when bumping into walls and touching floor")] public float collisionRadius;

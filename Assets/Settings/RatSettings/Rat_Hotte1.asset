@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: Rat_Hotte1
   m_EditorClassIdentifier: 
   maxSpeed: 1
-  maxOvertakeSpeed: 0.8
   baseHeight: 0.043
   fallHeight: 0.13
   heightChangeRate: 1
@@ -159,6 +158,8 @@ MonoBehaviour:
     colorB: {r: 0.41176474, g: 0.47058827, b: 0.8352942, a: 1}
   - colorA: {r: 0.91372555, g: 0.9058824, b: 0.8862746, a: 1}
     colorB: {r: 0.654902, g: 0.81568635, b: 0.6509804, a: 1}
+  autoJumpPower: {x: 1, y: 1}
+  jumpRandomness: {x: 0.1, y: 0.1}
   gravity: 9.5
   drag: 0
   bounciness: 0.9
