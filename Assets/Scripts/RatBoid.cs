@@ -354,7 +354,7 @@ public class RatBoid : MonoBehaviour
                             //Rule prep:
                             float multiplier = Mathf.Min(1, data.linePosition / settings.trailBuffer);                                    //Initialize general multiplier as value which goes down the farther ahead of the line this rat is
                             if (!(Vector2.Angle(MasterRatController.main.forward, data.forward) < 180 - settings.maxSegAngle)             //Leader is backtracking relative to this rat...
-                                && data.linePosition < settings.backtrackBuffer) multiplier *= 0;                                         //...and rat is fairly close to leader along trail, prevent following in this case
+                                && data.linePosition < settings.backtrackBuffer) multiplier = 0;                                          //...and rat is fairly close to leader along trail, prevent following in this case
                             multiplier *= Mathf.InverseLerp(settings.compressionRange.y, settings.compressionRange.x, rat.neighborCrush); //Penalize overcrowding smoothly within density range
 
                             //RULE - Dispersion: (rats on a trail will tend to move along it toward the leader, stabilizing at target amount of compression)

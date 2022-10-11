@@ -193,6 +193,9 @@ MonoBehaviour:
   swarmSettings:
   - {fileID: 11400000, guid: 16bf19914b8540a41a8fab6ec653430e, type: 2}
   - {fileID: 11400000, guid: 72812ea4b8be10545bc0b43555238642, type: 2}
+  - {fileID: 11400000, guid: 446d38860912a9a4e8194ea0d34c46ab, type: 2}
+  - {fileID: 11400000, guid: ae663544867f8b84f9c66124b9756980, type: 2}
+  - {fileID: 11400000, guid: 2f8b5e85a39eb03428a90992a4303e0c, type: 2}
 --- !u!81 &2760126436428266706
 AudioListener:
   m_ObjectHideFlags: 0
