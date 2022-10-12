@@ -234,7 +234,7 @@ public class RatBoid : MonoBehaviour
 
         //RAT RULES:
         float adjustedDT = deltaTime * timeBalancer;                                                                                    //Get adjusted deltaTime to uncouple acceleration changes from framerate
-        Vector2 leaderFlatPos = MasterRatController.main.PosAsVector2();                                                                //Get flat position of mama rat
+        Vector2 leaderFlatPos = MasterRatController.main.flatPos;                                                                       //Get flat position of mama rat
         float leaderSpeedValue = MasterRatController.main.currentSpeed / MasterRatController.main.settings.speed;                       //Get value between 0 and 1 representing main rat's current speed
         float leaderStandingHeight = MasterRatController.main.transform.position.y - MasterRatController.main.settings.collisionRadius; //Approximate height of bottom of leader's sprite
         foreach (RatBoid rat in spawnedRats) //Iterate through every rat in list
@@ -341,7 +341,10 @@ public class RatBoid : MonoBehaviour
                                 if (data.linePosition <= settings.trailBuffer &&                                          //Rat is very close to the leader
                                     Vector2.Angle(data.forward, MasterRatController.main.forward) > settings.maxSegAngle) //Rat is trying to jump at very different angle from leader
                                 {
-                                    horizontalLaunchVel = MasterRatController.main.forward;
+                                    trailPoint.jumpTokens = 0;
+                                    MasterRatController.main.currentJumpMarkers--;
+                                    continue;
+                                    //horizontalLaunchVel = MasterRatController.main.forward;
                                 }
                                 horizontalLaunchVel *= MasterRatController.main.settings.jumpPower.x;                                   //Get isolated horizontal jump power from leader
                                 horizontalLaunchVel *= 1 + Random.Range(-rat.settings.jumpRandomness.x, rat.settings.jumpRandomness.x); //Apply randomness to horizontal velocity
@@ -437,7 +440,8 @@ public class RatBoid : MonoBehaviour
                     Vector3 depthPoint = checkPoint + (Vector3.down * heightCheckDepth); //Get point at end of line used to check height depth
                     if (Physics.Raycast(depthPoint, -UnFlattenVector(rat.velocity), out hit, rat.settings.obstacleSeparation, rat.settings.obstructionLayers)) //Outside of ledge can be found
                     {
-                        if (rat.transform.position.y - (rat.pileHeight + (rat.settings.baseHeight * rat.sizeFactor)) >= leaderStandingHeight + rat.settings.fallHeight) //Rat is above leader and is being pushed against a ledge
+                        float distanceValue = 1 - (Vector2.Distance(FlattenVector(hit.point), rat.flatPos) / rat.settings.obstacleSeparation); //Get value between 0 and 1 which is inversely proportional to distance between rat and ledge
+                        if (rat.transform.position.y - (rat.pileHeight + (rat.settings.baseHeight * rat.sizeFactor)) >= leaderStandingHeight + rat.settings.fallHeight) //Rat is above leader
                         {
                             //Get jump velocity:
                             Vector3 launchVel = new Vector3();                                                    //Initialize launch velocity at zero
@@ -448,11 +452,10 @@ public class RatBoid : MonoBehaviour
                             rat.Launch(launchVel); //Apply launch velocity
                             continue;              //Cancel all other checks
                         }
-                        float distanceValue = 1 - (Vector2.Distance(FlattenVector(hit.point), rat.flatPos) / rat.settings.obstacleSeparation); //Get value between 0 and 1 which is inversely proportional to distance between rat and ledge
-                        Vector2 avoidanceVel = -FlattenVector(hit.normal) * distanceValue;                                                     //Get velocity which pushes rat away from ledge
-                        avoidanceVel *= rat.settings.obstacleAvoidanceWeight;                                                                  //Apply weight value to added velocity
-                        rat.velocity += avoidanceVel * adjustedDT;                                                                             //Apply unclamped velocity to rat
-                        //rat.neighborCrush *= 1 - distanceValue;                                                                                //Prevent rats from piling up against a ledge
+                        Vector2 avoidanceVel = -FlattenVector(hit.normal) * distanceValue; //Get velocity which pushes rat away from ledge
+                        avoidanceVel *= rat.settings.obstacleAvoidanceWeight;              //Apply weight value to added velocity
+                        rat.velocity += avoidanceVel * adjustedDT;                         //Apply unclamped velocity to rat
+                        //rat.neighborCrush *= 1 - distanceValue;                          //Prevent rats from piling up against a ledge
                     }
                 }
             }

@@ -43,8 +43,10 @@ public class RatSettings : ScriptableObject
     [Tooltip("Array of coloration schemes for rat fur (Color A is lightest variant, Color B is darkest variant)")] public ColorScheme[] furColorSchemes;
     [Tooltip("Array of coloration schemes for party hat (Color A is base, Color B is stripe)")]                    public ColorScheme[] hatColorSchemes;
     [Header("Jumping & Falling:")]
-    [Tooltip("Horizontal and vertical power of jumps autonomously made by rats (for navigational purposes)")] public Vector2 autoJumpPower;
-    [Tooltip("Random percentage up or down (along each individual axis) by which jumps may deviate")]         public Vector2 jumpRandomness;
+    [Tooltip("Horizontal and vertical power of jumps autonomously made by rats (for navigational purposes)")]                       public Vector2 autoJumpPower;
+    [Tooltip("Random percentage up or down (along each individual axis) by which jumps may deviate")]                               public Vector2 jumpRandomness;
+    [Range(0, 1), Tooltip("How close a rat has to get to a ledge before it is willing to hop off (in order to follow the leader)")] public float ledgeHopFear;
+    [Space()]
     [Tooltip("Force of gravity acting on velocity of airborne rats")]                                         public float gravity;
     [Tooltip("Force of air resistance acting on airborne rats")]                                              public float drag;
     [Range(0, 1), Tooltip("Percentage of velocity which is retained each time rat bounces off of a wall")]    public float bounciness;

@@ -108,6 +108,16 @@ public class MasterRatController : MonoBehaviour
     private bool aiming;                //True when rat is preparing for a throw
     private Vector3 currentMouseTarget; //Current position in real space which mouse is pointing at
 
+    //Utility Vars:
+    /// <summary>
+    /// Quantity of rats currently treated as followers.
+    /// </summary>
+    public int totalFollowerCount { get { return followerRats.Count + jumpingFollowers.Count; } }
+    /// <summary>
+    /// Current position of this rat projected onto world Y axis.
+    /// </summary>
+    public Vector2 flatPos { get { return new Vector2(transform.position.x, transform.position.z); } }
+
     //RUNTIME METHODS:
     private void Awake()
     {
@@ -120,9 +130,9 @@ public class MasterRatController : MonoBehaviour
         Application.targetFrameRate = 120; //Set target framerate
 
         //Local initialization:
-        trail.Insert(0, new TrailPoint(PosAsVector2())); //Add starting position as first point in trail
-        OnFollowerCountChanged();                        //Set up swarm settings and do initial update
-        MoveRat(0);                                      //Snap rat to floor
+        trail.Insert(0, new TrailPoint(flatPos)); //Add starting position as first point in trail
+        OnFollowerCountChanged();                 //Set up swarm settings and do initial update
+        MoveRat(0);                               //Snap rat to floor
     }
     private void Start()
     {
@@ -286,12 +296,12 @@ public class MasterRatController : MonoBehaviour
         }
 
         //Movement cleanup:
-        currentSpeed = Vector2.Distance(PosAsVector2(), RatBoid.FlattenVector(newPos)) / deltaTime; //Get actual current speed (after obstructions)
-        transform.position = newPos;                                                                //Apply new position
-        forward = velocity.normalized;                                                              //Update forward direction tracker
+        currentSpeed = Vector2.Distance(flatPos, RatBoid.FlattenVector(newPos)) / deltaTime; //Get actual current speed (after obstructions)
+        transform.position = newPos;                                                         //Apply new position
+        forward = velocity.normalized;                                                       //Update forward direction tracker
 
         //Update trail characteristics:
-        trail.Insert(0, new TrailPoint(PosAsVector2()));                         //Add new trailPoint for current position
+        trail.Insert(0, new TrailPoint(flatPos));                                //Add new trailPoint for current position
         float firstSegLength = Vector2.Distance(trail[0].point, trail[1].point); //Get length of new segment being created
         totalTrailLength += firstSegLength;                                      //Add length of new segment to total length of trail
         if (trail.Count > 1) trail[0].segLength = firstSegLength;                //Store length of new segment if applicable
@@ -314,7 +324,7 @@ public class MasterRatController : MonoBehaviour
             trail[0].segLength = firstSegLength; //Keep first segment in list constantly updated
 
             //Limit trail length:
-            float targetTrailLength = (1 / currentSwarmSettings.trailDensity) * (GetFollowerCount() + 0.01f);                 //Get target trail length based off of follower count and settings
+            float targetTrailLength = (1 / currentSwarmSettings.trailDensity) * (totalFollowerCount + 0.01f);                 //Get target trail length based off of follower count and settings
             targetTrailLength *= Mathf.Lerp(1, currentSwarmSettings.velTrailLengthMultiplier, currentSpeed / settings.speed); //Apply velocity-based length multiplier to target trail length
             while (totalTrailLength > targetTrailLength) //Current trail is longer than target length (and is non-zero)
             {
@@ -458,13 +468,21 @@ public class MasterRatController : MonoBehaviour
         velocity = Vector2.zero; //Erase conventional velocity
         airVelocity = force;     //Apply force to airborne velocity
 
-        //Cleanup:
-        if (placeMarker && trail.Count > 1 && force.normalized != Vector3.up) //Jump marker is requested, rat has a trail and is not jumping vertically
+        //Place jump marker:
+        if (force.normalized == Vector3.up) //Vertical jump
         {
-            trail[0].jumpTokens += GetFollowerCount(); //Place a jump marker on the current trail with enough tokens for each follower to jump once
+
+        }
+        if (placeMarker &&            //Jump marker is requested
+            totalFollowerCount > 0 && //Rat has at least one follower
+            trail.Count > 1)          //There is a trail to place the jump marker on
+        {
+            trail[0].jumpTokens += totalFollowerCount; //Place a jump marker on the current trail with enough tokens for each follower to jump once
             currentJumpMarkers++;                      //Indicate that a jump marker has been placed
         }
-        falling = true;             //Indicate that rat is now falling
+
+        //Cleanup:
+        falling = true; //Indicate that rat is now falling
     }
     /// <summary>
     /// Updates stuff which depends on current number of follower rats. Should be called whenever follower count changes.
@@ -472,7 +490,7 @@ public class MasterRatController : MonoBehaviour
     public void OnFollowerCountChanged()
     {
         //Update UI:
-        InterfaceMaster.SetCounter(GetFollowerCount()); //Set rat counter
+        InterfaceMaster.SetCounter(totalFollowerCount); //Set rat counter
 
         //Update swarm settings:
         if (currentSwarmSettings == null) //Swarm settings have not been set up yet
@@ -482,7 +500,7 @@ public class MasterRatController : MonoBehaviour
             else currentSwarmSettings = ScriptableObject.CreateInstance<SwarmSettings>();                                       //Create a temporary object instance for swarm settings as part of normal setup
         }
         if (swarmSettings.Count == 1) return; //Ignore if swarm settings are just a copy of single given settings object
-        int ratNumber = GetFollowerCount(); //Get current number of follower rats
+        int ratNumber = totalFollowerCount; //Get current number of follower rats
         SwarmSettings lerpSettingsA = null; //Initialize container to store lower bound settings
         SwarmSettings lerpSettingsB = null; //Initialize container to store upper bound settings
         foreach (SwarmSettings item in swarmSettings) //Iterate through each given settings item
@@ -631,20 +649,6 @@ public class MasterRatController : MonoBehaviour
         float product = Vector2.Dot(lhs, dir);         //Get dot product of direction and side
         product = Mathf.Clamp(product, 0, lineLength); //Clamp length to make sure projection is on line
         return pointA + (dir * product);               //Do projection to get actual closest point on trail
-    }
-    /// <summary>
-    /// Returns current position of rat as 2D vector (relative to world down).
-    /// </summary>
-    public Vector2 PosAsVector2()
-    {
-        return new Vector2(transform.position.x, transform.position.z);
-    }
-    /// <summary>
-    /// Returns total number of rats currently counted as followers.
-    /// </summary>
-    public int GetFollowerCount()
-    {
-        return followerRats.Count + jumpingFollowers.Count;
     }
 }
 
