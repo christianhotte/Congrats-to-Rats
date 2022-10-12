@@ -17,7 +17,6 @@ MonoBehaviour:
   separationRadius: 0.07
   neighborRadius: 0.3
   targetRadius: 0.1
-  influenceRadius: 0.5
   followStrengthCurve:
     serializedVersion: 2
     m_Curve:
@@ -72,9 +71,9 @@ MonoBehaviour:
   velTrailLengthMultiplier: 1.1
   maxSegAngle: 100
   backtrackBuffer: 0.1
-  maxTrailSkip: 5
-  slitherWidth: 0.3
-  slitherFreq: 1
+  maxTrailSkip: 8
+  minTrailLength: 0.5
+  maxOvertakeSpeed: 0.8
   cohesionWeight: 0.4
   separationWeight: 0.5
   conformityWeight: 0
@@ -82,4 +81,4 @@ MonoBehaviour:
   followWeight: 0.1
   leadWeight: 8
   stayBackWeight: 0.7
-  stragglerWeight: 0.2
+  stragglerWeight: 0

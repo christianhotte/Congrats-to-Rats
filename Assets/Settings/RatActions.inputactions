@@ -10,7 +10,7 @@
                     "type": "Value",
                     "id": "01ed5386-dfee-4154-b713-54a8c08cd638",
                     "expectedControlType": "Vector2",
-                    "processors": "",
+                    "processors": "InvertVector2",
                     "interactions": "",
                     "initialStateCheck": true
                 },
@@ -22,6 +22,15 @@
                     "processors": "Normalize(min=-1,max=1)",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "Command",
+                    "type": "Button",
+                    "id": "36e7cf72-104d-4104-8b7b-6b29b6279230",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -88,6 +97,17 @@
                     "processors": "Clamp(min=-1,max=1)",
                     "groups": "Keyboard & Mouse",
                     "action": "ScrollSpawn",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "0c32b75f-b0e6-437b-bc05-f0fbb51d4ee1",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard & Mouse",
+                    "action": "Command",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

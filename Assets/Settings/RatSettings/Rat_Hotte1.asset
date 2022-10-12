@@ -12,14 +12,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70aeed3edc9e9af4ca525b3b7ff69f65, type: 3}
   m_Name: Rat_Hotte1
   m_EditorClassIdentifier: 
-  baseHeight: 0.05
+  maxSpeed: 1
+  maxOvertakeSpeed: 0.8
+  baseHeight: 0.04
   fallHeight: 0.13
-  heightChangeRate: 0.5
+  heightChangeRate: 1
   obstructionLayers:
     serializedVersion: 2
-    m_Bits: 128
-  sizeVariance: 0.25
-  altColor: {r: 0.5019608, g: 0.3647059, b: 0.28235295, a: 1}
-  timeBetweenFlips: 0.4
+    m_Bits: 384
   obstacleSeparation: 0.12
   obstacleAvoidanceWeight: 4
+  sizeVariance: 0.25
+  timeBetweenFlips: 0.4
+  furColorSchemes:
+  - colorA: {r: 0.8584906, g: 0.69601023, b: 0.48323837, a: 1}
+    colorB: {r: 0.6320754, g: 0.4720689, b: 0.2663462, a: 1}
+  - colorA: {r: 0.8962264, g: 0.8962264, b: 0.8962264, a: 1}
+    colorB: {r: 0.5660378, g: 0.5660378, b: 0.5660378, a: 1}
+  hatColorSchemes:
+  - colorA: {r: 0.9843138, g: 0.8431373, b: 0.6039216, a: 1}
+    colorB: {r: 0.81568635, g: 0.3647059, b: 0.32941177, a: 1}
+  - colorA: {r: 0.9294118, g: 0.7019608, b: 0.909804, a: 1}
+    colorB: {r: 0.5882353, g: 0.4784314, b: 0.7568628, a: 1}
+  - colorA: {r: 0.5921569, g: 0.8705883, b: 0.9803922, a: 1}
+    colorB: {r: 0.41176474, g: 0.47058827, b: 0.8352942, a: 1}
+  - colorA: {r: 0.91372555, g: 0.9058824, b: 0.8862746, a: 1}
+    colorB: {r: 0.654902, g: 0.81568635, b: 0.6509804, a: 1}
+  gravity: 9.5
+  drag: 0
+  bounciness: 0.9

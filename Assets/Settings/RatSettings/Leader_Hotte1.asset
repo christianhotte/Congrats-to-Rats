@@ -13,16 +13,19 @@ MonoBehaviour:
   m_Name: Leader_Hotte1
   m_EditorClassIdentifier: 
   speed: 1
-  accel: 7
-  decel: 6
+  accel: 5
+  decel: 4
+  flipAll: 1
   blockingLayers:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 640
   collisionRadius: 0.135
   maxWalkAngle: 45
   fallHeight: 0.2
   maxObstacleCollisions: 3
   basicRatPrefab: {fileID: 4272964666275407885, guid: 16e94108f81788e4c9ded77f0823772f, type: 3}
-  spawnRadius: 3
-  baseFollowerHeight: 0.05
-  maxHeightChangeSpeed: 0.5
+  influenceRadius: 0.8
+  spawnOffset: {x: 0, y: 0.05, z: -0.1}
+  spawnArea: {x: 0.16, y: 0.05}
+  spawnAngle: {x: 15, y: 42}
+  spawnForce: {x: 1.5, y: 2}

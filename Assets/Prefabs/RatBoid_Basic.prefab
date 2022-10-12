@@ -46,9 +46,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   settings: {fileID: 11400000, guid: b04ba707182ca5d4ea5d119eab17b809, type: 2}
-  scaleRandomness: 0.25
-  altColor: {r: 0.5, g: 0.36292955, b: 0.28144652, a: 1}
-  timeBetweenFlips: 0.4
 --- !u!1 &7187241238139597378
 GameObject:
   m_ObjectHideFlags: 0
@@ -59,6 +56,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8896903363751541910}
   - component: {fileID: 7186459286166481971}
+  - component: {fileID: 8940478140835771270}
   - component: {fileID: 7187241238139597379}
   m_Layer: 0
   m_Name: Billboard
@@ -102,7 +100,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: c49611c01696b26438b7ae86e7dcf21f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -123,7 +121,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 1ae39ce4d7549364ca0f238f741e3ed1, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 9601549e4b506454d87cb5e37335f6db, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -134,6 +132,26 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!95 &8940478140835771270
+Animator:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7187241238139597378}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 9da1a01a3f5ba3f4ab66a26512829e32, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!114 &7187241238139597379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -146,4 +164,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12ea64c50c2930c4e86a6d6df90585ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxZDelta: 120
+  maxZDelta: 150
