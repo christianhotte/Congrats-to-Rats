@@ -16,6 +16,7 @@ public class MasterRatController : MonoBehaviour
     /// </summary>
     public class TrailPoint
     {
+        //Data:
         /// <summary>
         /// Position of trail point.
         /// </summary>
@@ -27,13 +28,101 @@ public class MasterRatController : MonoBehaviour
         /// <summary>
         /// If above zero, trail point is treated as a jump marker. Ticks down by one for each ratBoid which uses this to jump.
         /// </summary>
-        public int jumpTokens = 0; 
+        public int jumpTokens = 0; //TrailPoints do not initialize with jump tokens.
+        /// <summary>
+        /// Velocity of leader when this point was last updated.
+        /// </summary>
+        public Vector3 leaderVel;
+
+        //Utility Variables:
+        /// <summary>
+        /// Whether or not this point is a jump marker.
+        /// </summary>
+        public bool IsJumpMarker { get { return jumpTokens > 0; } }
+        /// <summary>
+        /// The current position of this point in the trail (between 0 and 1).
+        /// </summary>
+        public float trailValue {
+            get
+            {
+                //Initial checks:
+                if (main.trail.Count == 0) { Debug.LogError("Tried to get value of trail point which is not in trail."); return 0; } //Post error and return nothing if point is not in trail
+                if (main.trail.IndexOf(this) == 0) return 0;                                                                         //Return zero if this is the first point in the trail
+                if (main.trail.IndexOf(this) == main.trail.Count - 1) return 1;                                                      //Return one if this is the last point in the trail
+
+                //Find value:
+                float value = 0; //Initialize value at zero
+                foreach (TrailPoint otherPoint in main.trail) //Iterate through points in trail
+                {
+                    value += otherPoint.segLength; //Add up segment lengths of points up to and including this one
+                    if (otherPoint == this) break; //Stop iterating after this point has been reached
+                }
+                return Mathf.Clamp01(value / main.totalTrailLength); //Return value as percentage of total trail length at position of this point
+            }
+        }
 
         //OPERATION METHODS:
+        /// <summary>
+        /// Create a new trail point.
+        /// </summary>
+        /// <param name="_point">Position of this point in 2D space.</param>
         public TrailPoint (Vector2 _point)
         {
             //Get data:
-            point = _point; //Set point vector
+            point = _point;                                     //Set point vector
+            leaderVel = RatBoid.UnFlattenVector(main.velocity); //Store velocity of leader at time of point creation
+        }
+        /// <summary>
+        /// Make this trail point a jump marker.
+        /// </summary>
+        /// <param name="jumpVel">Initial velocity of jump</param>
+        public void MakeJumpMarker(Vector3 jumpVel)
+        {
+            if (main.totalFollowerCount > 0) //Leader must have some followers for a jump marker to be made
+            {
+                jumpTokens = main.totalFollowerCount; //Add one jump token for each follower
+                leaderVel = jumpVel;                  //Record jump velocity of leader
+                main.currentJumpMarkers++;            //Indicate that a new jump marker has been added
+            }
+        }
+        /// <summary>
+        /// Returns true if this point has any remaining jump tokens, and expends on if this is the case.
+        /// </summary>
+        public bool TryExpendToken()
+        {
+            //Not a jump marker:
+            if (!IsJumpMarker) return false; //Indicate false if point is not a jump marker
+
+            //Is a jump marker:
+            jumpTokens--; //Decrement jump token tracker
+            if (jumpTokens == 0) //Check if marker is out of tokens
+            {
+                main.currentJumpMarkers--; //Update total number of jump markers
+            }
+            return true; //Confirm that token was expended
+        }
+        /// <summary>
+        /// Remove this point's jump marker status.
+        /// </summary>
+        public void ClearJumpMarker()
+        {
+            if (IsJumpMarker) //Point is currently a jump marker
+            {
+                leaderVel.y = 0;           //Remove vertical velocity from memory
+                jumpTokens = 0;            //Expend all jump tokens immediately
+                main.currentJumpMarkers--; //Indicate that a marker has been removed
+            }
+        }
+        /// <summary>
+        /// Transfers all jump tokens to target trail point.
+        /// </summary>
+        public void TransferJumpTokens(TrailPoint target)
+        {
+            if (!IsJumpMarker) return;                           //Ignore if point is not a jump marker
+            if (!target.IsJumpMarker) main.currentJumpMarkers++; //Indicate that a new marker is being created if target is not already a jump marker
+            target.leaderVel = leaderVel;    //Pass leader velocity at jump point on to new jump marker
+            target.jumpTokens += jumpTokens; //Add jump tokens from this point to target
+            ClearJumpMarker();               //Clear this point's jump marker status
         }
     }
     /// <summary>
@@ -97,6 +186,7 @@ public class MasterRatController : MonoBehaviour
     private List<TrailPoint> trail = new List<TrailPoint>();       //List of points in current trail (used to assemble ratswarm behind main rat)
     internal float totalTrailLength = 0;                           //Current length of trail (in units)
     internal int currentJumpMarkers = 0;                           //Current number of jump markers in trail
+    private int prevFollowerCount = 0;                             //Total follower count last time follower count-contingent settings were updated
 
     internal Vector2 velocity;          //Current speed and direction of movement
     internal Vector3 airVelocity;       //3D velocity used when rat is falling
@@ -146,16 +236,18 @@ public class MasterRatController : MonoBehaviour
         MoveRat(Time.deltaTime);                                  //Move the big rat
         RatBoid.UpdateRats(Time.deltaTime, currentSwarmSettings); //Move all the little rats
 
-        OnFollowerCountChanged(); //TEMP: Keep swarm settings regularly up-to-date for debugging purposes
+        //OnFollowerCountChanged(); //TEMP: Keep swarm settings regularly up-to-date for debugging purposes
 
         //Visualize trail:
         if (trail.Count > 1)
         {
+            //float x = 1;
             for (int i = 1; i < trail.Count; i++)
             {
                 Vector3 p1 = new Vector3(trail[i].point.x, 0.1f, trail[i].point.y);
                 Vector3 p2 = new Vector3(trail[i - 1].point.x, 0.1f, trail[i - 1].point.y);
-                Debug.DrawLine(p1, p2, trail[i].jumpTokens > 0 || trail[i - 1].jumpTokens > 0 ? Color.yellow : Color.blue);
+                Debug.DrawLine(p1, p2, trail[i].IsJumpMarker || trail[i - 1].IsJumpMarker ? Color.yellow : Color.blue);
+                //if (trail[i].IsJumpMarker) { print("Marker " + x + "'s trail value is " + trail[i].trailValue); x++; }
             }
         }
     }
@@ -311,8 +403,9 @@ public class MasterRatController : MonoBehaviour
             float secondSegLength = Vector2.Distance(trail[1].point, trail[2].point); //Get length of second segment in trail
             if (secondSegLength < currentSwarmSettings.minTrailSegLength) //Check if second segment in trail is too short (first segment can be any length)
             {
+                //Fuse segments:
                 totalTrailLength -= firstSegLength + secondSegLength;              //Subtract lengths of both removed segments from total
-                trail[0].jumpTokens += trail[1].jumpTokens;                        //Pass jump tokens to the new point when merging segments
+                trail[1].TransferJumpTokens(trail[0]);                             //Pass jump tokens to the new point
                 trail.RemoveAt(1);                                                 //Remove second segment from trail
                 firstSegLength = Vector2.Distance(trail[0].point, trail[1].point); //Get new length of first segment
                 totalTrailLength += firstSegLength;                                //Add length of new segment back to total
@@ -328,14 +421,18 @@ public class MasterRatController : MonoBehaviour
             targetTrailLength *= Mathf.Lerp(1, currentSwarmSettings.velTrailLengthMultiplier, currentSpeed / settings.speed); //Apply velocity-based length multiplier to target trail length
             while (totalTrailLength > targetTrailLength) //Current trail is longer than target length (and is non-zero)
             {
-                float extraLength = totalTrailLength - targetTrailLength;                 //Get amount of extra length left in trail
-                float lastSegLength = Vector2.Distance(trail[^1].point, trail[^2].point); //Get distance between last two segments in trail NOTE: this distance check may not be needed
+                //State check:
+                if (trail[^1].IsJumpMarker && totalTrailLength < targetTrailLength * 1.5f) break; //Wait for jump markers to resolve in order to trim trail (but give up once trail gets too long)
+                float extraLength = totalTrailLength - targetTrailLength;                         //Get amount of extra length left in trail
+                float lastSegLength = Vector2.Distance(trail[^1].point, trail[^2].point);         //Get distance between last two segments in trail NOTE: this distance check may not be needed
+                
+                //Determine how to shorten trail:
                 if (extraLength >= lastSegLength) //Last segment is shorter than length which needs to be removed
                 {
-                    if (trail[^1].jumpTokens > 0) currentJumpMarkers = Mathf.Max(0, currentJumpMarkers - 1); //Check for a removed jump marker
-                    trail.RemoveAt(trail.Count - 1);                                                         //Remove last segment from trail
-                    totalTrailLength -= lastSegLength;                                                       //Subtract length of removed segment from total
-                    trail[^1].segLength = 0;                                                                 //Delete now-unnecessary segment length of final point in trail
+                    trail[^1].ClearJumpMarker();       //Clean up jump marker status (if applicable)
+                    trail.RemoveAt(trail.Count - 1);   //Remove last segment from trail
+                    totalTrailLength -= lastSegLength; //Subtract length of removed segment from total
+                    trail[^1].segLength = 0;           //Delete now-unnecessary segment length of final point in trail
                 }
                 else //Last segment is longer than length which needs to be removed
                 {
@@ -348,12 +445,15 @@ public class MasterRatController : MonoBehaviour
             //Check for kinks in line:
             while (trail.Count > 2 && Vector2.Angle(trail[1].point - trail[0].point, trail[1].point - trail[2].point) < 180 - currentSwarmSettings.maxSegAngle) //Trail is kinked (and contains more than one segment)
             {
+                //State check:
+                if (trail[1].IsJumpMarker) break;
+
                 //Fuse first two segments:
-                totalTrailLength -= trail[0].segLength + trail[1].segLength;                            //Remove deleted segment lengths from total trail length
-                if (trail[1].jumpTokens > 0) currentJumpMarkers = Mathf.Max(0, currentJumpMarkers - 1); //Check for a removed jump marker
-                trail.RemoveAt(1);                                                                      //Remove second point from trail (combining first and second segments)
-                trail[0].segLength = Vector2.Distance(trail[0].point, trail[1].point);                  //Update new length of first segment
-                totalTrailLength += trail[0].segLength;                                                 //Add new segment length to total
+                totalTrailLength -= trail[0].segLength + trail[1].segLength;           //Remove deleted segment lengths from total trail length
+                trail[1].ClearJumpMarker();                                            //Clean up jump marker status (if applicable)
+                trail.RemoveAt(1);                                                     //Remove second point from trail (combining first and second segments)
+                trail[0].segLength = Vector2.Distance(trail[0].point, trail[1].point); //Update new length of first segment
+                totalTrailLength += trail[0].segLength;                                //Add new segment length to total
             }
         }
     }
@@ -411,13 +511,11 @@ public class MasterRatController : MonoBehaviour
         {
             if (!falling) //Player can only jump while they are not in the air
             {
-                if (currentJumpMarkers < currentSwarmSettings.maxJumpMarkers) //Only allow a jump to be performed if max number is not already exceeded
-                {
-                    Vector3 jumpforce = RatBoid.UnFlattenVector(moveInput).normalized * settings.jumpPower.x; //Get horizontal jump power
-                    jumpforce.y = settings.jumpPower.y;                                                       //Get vertical jump power
-                    if (moveInput == Vector2.zero) jumpforce.y *= settings.stationaryJumpMultiplier;          //Apply multiplier to vertical jump if rat is stationary
-                    Launch(jumpforce);                                                                        //Launch rat using jump force
-                }
+                //Perform jump:
+                Vector3 jumpforce = RatBoid.UnFlattenVector(moveInput).normalized * settings.jumpPower.x; //Get horizontal jump power
+                jumpforce.y = settings.jumpPower.y;                                                       //Get vertical jump power
+                if (moveInput == Vector2.zero) jumpforce.y *= settings.stationaryJumpMultiplier;          //Apply multiplier to vertical jump if rat is stationary
+                Launch(jumpforce);                                                                        //Launch rat using jump force
             }
         }
     }
@@ -473,22 +571,70 @@ public class MasterRatController : MonoBehaviour
         {
 
         }
-        if (placeMarker &&            //Jump marker is requested
-            totalFollowerCount > 0 && //Rat has at least one follower
-            trail.Count > 1)          //There is a trail to place the jump marker on
+        else if (placeMarker &&            //Jump marker is requested
+                 totalFollowerCount > 0 && //Rat has at least one follower
+                 trail.Count > 1)          //There is a trail to place the jump marker on
         {
-            trail[0].jumpTokens += totalFollowerCount; //Place a jump marker on the current trail with enough tokens for each follower to jump once
-            currentJumpMarkers++;                      //Indicate that a jump marker has been placed
+            trail[0].MakeJumpMarker(force); //Make a jump marker at first trail point
         }
 
         //Cleanup:
         falling = true; //Indicate that rat is now falling
     }
     /// <summary>
-    /// Updates stuff which depends on current number of follower rats. Should be called whenever follower count changes.
+    /// Call to add given rat as a follower.
     /// </summary>
-    public void OnFollowerCountChanged()
+    public void AddRatAsFollower(RatBoid newFollower)
     {
+        //Initialize:
+        if (followerRats.Contains(newFollower)) return;      //Ignore if rat is already a follower
+        followerRats.Add(newFollower);                       //Add rat to followers list
+        if (totalFollowerCount == prevFollowerCount) return; //Ignore if this addition does not change follower count (likely due to aerial followers)
+
+        //Jump marker maintenance:
+        if (currentJumpMarkers > 0) //System has jump markers in place
+        {
+            for (int i = 0; i < trail.Count; i++) //Iterate through trail (from beginning to end)
+            {
+                if (trail[i].trailValue >= newFollower.lastTrailValue) break; //Don't check any points which are behind position at which rat joined
+                if (trail[i].IsJumpMarker) trail[i].jumpTokens++;             //Add a jump token to any jump markers ahead of new rat
+            }
+        }
+
+        //Cleanup:
+        OnFollowerCountChanged(); //Perform updates triggered by change in follower count
+    }
+    /// <summary>
+    /// Call to remove given rat from follower list.
+    /// </summary>
+    public void RemoveRatAsFollower(RatBoid oldFollower)
+    {
+        //Initialize:
+        if (!followerRats.Contains(oldFollower)) return;     //Ignore if rat is not currently a follower
+        followerRats.Remove(oldFollower);                    //Remove rat from followers list
+        if (totalFollowerCount == prevFollowerCount) return; //Ignore if this subtraction does not change follower count (likely due to aerial followers)
+
+        //Jump marker maintenance:
+        if (currentJumpMarkers > 0) //System has jump markers in place
+        {
+            for (int i = 0; i < trail.Count; i++) //Iterate through trail (from beginning to end)
+            {
+                if (trail[i].trailValue >= oldFollower.lastTrailValue) break; //Don't check any points which are behind position which rat left
+                trail[i].TryExpendToken();                                    //Remove a token from any trail point ahead of removed rat
+            }
+        }
+
+        //Cleanup:
+        OnFollowerCountChanged(); //Perform updates triggered by change in follower count
+    }
+    /// <summary>
+    /// Updates general stuff which depends on current number of follower rats. Works with rat addition and removal.
+    /// </summary>
+    private void OnFollowerCountChanged()
+    {
+        //Initialize:
+        prevFollowerCount = totalFollowerCount; //Update follower count memory
+
         //Update UI:
         InterfaceMaster.SetCounter(totalFollowerCount); //Set rat counter
 
@@ -533,7 +679,6 @@ public class MasterRatController : MonoBehaviour
     /// <param name="origin">Reference point which returned position will be as close as possible to.</param>
     /// <param name="prevValue">Previous trail value (0 - 1) used to restrict section of checked trail. Pass negative for a clean check.</param>
     /// <param name="maxBackup">Maximum distance along trail by which returned point can be behind point at prevValue.</param>
-    /// <param name="queryJump">If true, system will check whether or not point is a jump marker, and will expend a jump token if it is.</param>
     public TrailPointData GetClosestPointOnTrail(Vector3 origin, float prevValue = -1, float maxBackup = 0)
     {
         //Trim down trail:

@@ -306,10 +306,10 @@ public class RatBoid : MonoBehaviour
                 //FOLLOWER RULES:
                 MasterRatController.TrailPointData data = MasterRatController.main.GetClosestPointOnTrail(rat.transform.position, rat.lastTrailValue, settings.maxTrailSkip * deltaTime); //Get data for closest point to rat position
                 float trailDistance = Vector2.Distance(rat.flatPos, data.point);                                                                                                          //Get separation between rat and trail
+                rat.lastTrailValue = data.linePosition;                                                                                                                                   //Remember line position
                 if (trailDistance <= MasterRatController.main.settings.influenceRadius) //Rat is within influence radius of leader
                 {
                     //Recruitment:
-                    rat.lastTrailValue = data.linePosition;                   //Remember line position
                     if (rat.behavior == RatBehavior.Free) rat.MakeFollower(); //Add rat to the swarm if it has just come under the influence of the leader
 
                     //RULE - Leader Separation: (rats maintain a small distance from mama rat (while mama is standing still))
@@ -328,25 +328,12 @@ public class RatBoid : MonoBehaviour
                         //Jumping:
                         foreach (MasterRatController.TrailPoint trailPoint in data.trailPoints) //Iterate through each point in trail adjacent to data point
                         {
-                            if (trailPoint.jumpTokens > 0) //Trailpoint is a jump marker
+                            if (trailPoint.TryExpendToken()) //Trailpoint is a jump marker
                             {
-                                //Expend jump token:
-                                trailPoint.jumpTokens--;                                                       //Expend a single jump token
-                                if (trailPoint.jumpTokens == 0) MasterRatController.main.currentJumpMarkers--; //Indicate that a jump marker has been fully expended
-
                                 //Determine launch velocity:
-                                Vector3 launchVel = new Vector3();                           //Initialize launch velocity at rat's current speed
-                                launchVel.y = MasterRatController.main.settings.jumpPower.y; //Give rat vertical jump power of leader
-                                Vector2 horizontalLaunchVel = data.forward;                  //Initialize direction of horizontal jump
-                                if (data.linePosition <= settings.trailBuffer &&                                          //Rat is very close to the leader
-                                    Vector2.Angle(data.forward, MasterRatController.main.forward) > settings.maxSegAngle) //Rat is trying to jump at very different angle from leader
-                                {
-                                    trailPoint.jumpTokens = 0;
-                                    MasterRatController.main.currentJumpMarkers--;
-                                    continue;
-                                    //horizontalLaunchVel = MasterRatController.main.forward;
-                                }
-                                horizontalLaunchVel *= MasterRatController.main.settings.jumpPower.x;                                   //Get isolated horizontal jump power from leader
+                                Vector3 launchVel = new Vector3();                                                                      //Initialize launch velocity at rat's current speed
+                                launchVel.y = trailPoint.leaderVel.y;                                                                   //Give rat vertical jump power of leader jump at point
+                                Vector2 horizontalLaunchVel = FlattenVector(trailPoint.leaderVel);                                      //Get horizontal jump direction and power from leader launch velocity at point
                                 horizontalLaunchVel *= 1 + Random.Range(-rat.settings.jumpRandomness.x, rat.settings.jumpRandomness.x); //Apply randomness to horizontal velocity
                                 launchVel.y *= 1 + Random.Range(-rat.settings.jumpRandomness.y, rat.settings.jumpRandomness.y);         //Apply randomness to vertical velocity
                                 launchVel += UnFlattenVector(horizontalLaunchVel);                                                      //Apply horizontal component to net launch velocity
@@ -496,11 +483,7 @@ public class RatBoid : MonoBehaviour
             case RatBehavior.Projectile: //Rat is currently a projectile
                 break;
             case RatBehavior.TrailFollower: //Rat is currently a follower of the mama rat
-                if (MasterRatController.main.followerRats.Contains(this)) //Leader has this rat as a follower
-                {
-                    MasterRatController.main.followerRats.Remove(this); //Remove rat from master follower list
-                    MasterRatController.main.OnFollowerCountChanged();  //Update rat swarm settings
-                }
+                MasterRatController.main.RemoveRatAsFollower(this); //Remove rat from master follower list (if applicable)
                 break;
             case RatBehavior.Deployed:
                 if (MasterRatController.main.deployedRats.Contains(this)) //This rat is currently deployed
@@ -523,11 +506,7 @@ public class RatBoid : MonoBehaviour
     /// </summary>
     public void MakeFollower()
     {
-        if (!MasterRatController.main.followerRats.Contains(this)) //Rat is not already a follower
-        {
-            MasterRatController.main.followerRats.Add(this); //Add rat to master list of followers
-            MasterRatController.main.OnFollowerCountChanged();  //Adjust swarm settings in accordance with new follower quantity
-        }
+        MasterRatController.main.AddRatAsFollower(this);                                                              //Add rat to master follower list
         if (MasterRatController.main.deployedRats.Contains(this)) MasterRatController.main.deployedRats.Remove(this); //Remove rat from list of deployed rats if applicable
         if (freeRats.Contains(this)) freeRats.Remove(this);                                                           //Remove rat from list of free rats
 
@@ -542,11 +521,10 @@ public class RatBoid : MonoBehaviour
         if (!MasterRatController.main.deployedRats.Contains(this)) //Rat is not already deployed
         {
             MasterRatController.main.deployedRats.Add(this); //Add rat to master list of deployed rats
-            MasterRatController.main.OnFollowerCountChanged();  //Adjust swarm settings in accordance with new follower quantity
         }
-        if (MasterRatController.main.followerRats.Contains(this)) MasterRatController.main.followerRats.Remove(this); //Remove rat from list of follower rats if applicable
-        if (freeRats.Contains(this)) freeRats.Remove(this);                                                           //Remove rat from list of free rats
-        behavior = RatBehavior.Deployed;                                                                          //Indicate that rat is deployed to point
+        MasterRatController.main.RemoveRatAsFollower(this); //Remove rat from master follower list (if applicable)
+        if (freeRats.Contains(this)) freeRats.Remove(this); //Remove rat from list of free rats
+        behavior = RatBehavior.Deployed;                    //Indicate that rat is deployed to point
     }
     /// <summary>
     /// Launches rat into the air.
@@ -568,7 +546,6 @@ public class RatBoid : MonoBehaviour
         airVelocity = force;     //Apply launch force to velocity
 
         //Cleanup:
-        lastTrailValue = -1;                           //Reset trail value
         r.material.SetFloat("_OcclusionIntensity", 0); //Ensure rat is not darkened
         r.material.SetFloat("_ShadowIntensity", 0);    //Clear rat shadow value
         pileHeight = 0;                                //Reset rat's pile value
@@ -578,13 +555,21 @@ public class RatBoid : MonoBehaviour
     /// </summary>
     public void Land()
     {
-        //Check for ownership:
+        //Initialization:
         behavior = RatBehavior.Free;                                                                                          //Indicate that rat is now free (should already be released from target lists)
         if (MasterRatController.main.jumpingFollowers.Contains(this)) MasterRatController.main.jumpingFollowers.Remove(this); //Remove rat from jumping follower list if applicable
+        
+        //Auto-recruitment check:
+        MasterRatController.TrailPointData data = MasterRatController.main.GetClosestPointOnTrail(transform.position); //Check closest point to trail upon landing
+        float trailDistance = Vector2.Distance(flatPos, data.point);                                                   //Get separation between rat and trail
+        if (trailDistance <= MasterRatController.main.settings.influenceRadius) //Rat is within influence radius of leader
+        {
+            lastTrailValue = data.linePosition; //Remember line position
+            MakeFollower();                     //Immediately make rat a follower
+        }
 
         //Cleanup:
         tempBounceMod = 0;          //Reset bounce modifier
-        lastTrailValue = -1;        //Reset trail value (just to be sure)
         airVelocity = Vector3.zero; //Clear air velocity (but keep momentum by retaining flat velocity)
     }
 

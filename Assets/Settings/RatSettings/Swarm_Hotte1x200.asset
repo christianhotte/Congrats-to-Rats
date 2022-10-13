@@ -29,7 +29,7 @@ MonoBehaviour:
   maxTrailSkip: 8
   minTrailLength: 0.5
   maxOvertakeSpeed: 4
-  followerJumpBoost: 0.3
+  followerJumpBoost: 0.33
   maxJumpMarkers: 2
   cohesionWeight: 0.4
   separationWeight: 0.5

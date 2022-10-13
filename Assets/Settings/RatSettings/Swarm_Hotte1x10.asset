@@ -27,16 +27,16 @@ MonoBehaviour:
   maxSegAngle: 100
   backtrackBuffer: 0.1
   maxTrailSkip: 8
-  minTrailLength: 0.5
+  minTrailLength: 0.1
   maxOvertakeSpeed: 4
-  followerJumpBoost: 0.3
+  followerJumpBoost: 0.33
   maxJumpMarkers: 1
   cohesionWeight: 0.9
   separationWeight: 0.5
   conformityWeight: 0
   targetWeight: 4.37
   dispersionWeight: 0.1
-  leadWeight: 2
+  leadWeight: 6
   leaderSeparationWeight: 0.1
   stayBackWeight: 0.54
-  stragglerWeight: 1
+  stragglerWeight: 2
