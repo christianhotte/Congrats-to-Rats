@@ -76,9 +76,11 @@ public class MasterRatController : MonoBehaviour
             leaderVel = RatBoid.UnFlattenVector(main.velocity); //Store velocity of leader at time of point creation
 
             //Audio node instantiation:
+            /*
             GameObject newNode = new GameObject();           //Instantiate a new gameobject for the node
             newNode.name = "TrailAudioNode";                 //Name node
             audioNode = newNode.AddComponent<AudioSource>(); //Add an audioSource component to the node and get a reference to it
+            */
         }
         /// <summary>
         /// Make this trail point a jump marker.
