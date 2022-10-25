@@ -13,72 +13,30 @@ MonoBehaviour:
   m_Name: Swarm_Hotte1x10
   m_EditorClassIdentifier: 
   targetRatNumber: 10
-  maxSpeed: 1
   separationRadius: 0.07
-  neighborRadius: 0.3
-  targetRadius: 0.1
-  followStrengthCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0.5
-      inSlope: 0.021545826
-      outSlope: 0.021545826
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.031775016
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0.01938304
-      outSlope: 0.01938304
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.10882753
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  targetSizeCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: -0.7
-      outSlope: -0.7
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 0.3
-      inSlope: -0.7
-      outSlope: -0.7
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  trailDensity: 40
-  trailBuffer: 0.05
+  neighborRadius: 0.23
+  mamaRadius: 0.2
+  leadRadius: 0.05
+  targetRadius: 0.05
+  trailDensity: 20
+  compressionRange: {x: 3.38655, y: 8.613461}
+  trailBuffer: 0.03
   minTrailSegLength: 0.07
   velTrailLengthMultiplier: 1.1
+  stillConformMultiplier: 1
   maxSegAngle: 100
   backtrackBuffer: 0.1
   maxTrailSkip: 8
-  minTrailLength: 0.5
-  maxOvertakeSpeed: 0.8
-  cohesionWeight: 0.4
+  minTrailLength: 0.1
+  maxOvertakeSpeed: 4
+  followerJumpBoost: 0.33
+  maxJumpMarkers: 1
+  cohesionWeight: 0.9
   separationWeight: 0.5
   conformityWeight: 0
-  targetWeight: 4
-  followWeight: 0.1
-  leadWeight: 8
-  stayBackWeight: 0.7
-  stragglerWeight: 0
+  targetWeight: 4.37
+  dispersionWeight: 0.1
+  leadWeight: 6
+  leaderSeparationWeight: 0.1
+  stayBackWeight: 0.54
+  stragglerWeight: 2

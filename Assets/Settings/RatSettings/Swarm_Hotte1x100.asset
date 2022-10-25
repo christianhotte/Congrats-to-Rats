@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8e58a829cf81d4478cc242c07f00b84, type: 3}
+  m_Name: Swarm_Hotte1x100
+  m_EditorClassIdentifier: 
+  targetRatNumber: 100
+  separationRadius: 0.07
+  neighborRadius: 0.23
+  mamaRadius: 0.2
+  leadRadius: 0.1
+  targetRadius: 0.23
+  trailDensity: 55
+  compressionRange: {x: 7.2568865, y: 15.386548}
+  trailBuffer: 0.02
+  minTrailSegLength: 0.07
+  velTrailLengthMultiplier: 1
+  stillConformMultiplier: 1
+  maxSegAngle: 100
+  backtrackBuffer: 0.1
+  maxTrailSkip: 8
+  minTrailLength: 0.5
+  maxOvertakeSpeed: 4
+  followerJumpBoost: 0.33
+  maxJumpMarkers: 2
+  cohesionWeight: 0.4
+  separationWeight: 0.5
+  conformityWeight: 0
+  targetWeight: 15
+  dispersionWeight: 0.5
+  leadWeight: 10
+  leaderSeparationWeight: 1
+  stayBackWeight: 1
+  stragglerWeight: 1

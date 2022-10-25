@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Rat_Hotte1
   m_EditorClassIdentifier: 
   maxSpeed: 1
-  maxOvertakeSpeed: 0.8
-  baseHeight: 0.04
+  baseHeight: 0.043
   fallHeight: 0.13
   heightChangeRate: 1
   obstructionLayers:
@@ -24,6 +23,127 @@ MonoBehaviour:
   obstacleAvoidanceWeight: 4
   sizeVariance: 0.25
   timeBetweenFlips: 0.4
+  crushRange: {x: 7.4, y: 24}
+  occlusionIntensity: 0.682
+  occlusionColors:
+    colorA: {r: 0, g: 0, b: 0, a: 1}
+    colorB: {r: 0.8867924, g: 0.87619555, b: 0.83380795, a: 1}
+  maxPileHeight: 0.135
+  occlusionCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 2.144691
+      outSlope: 2.144691
+      tangentMode: 0
+      weightedMode: 2
+      inWeight: 0
+      outWeight: 0.19448502
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.4067231
+      outSlope: 0.4067231
+      tangentMode: 0
+      weightedMode: 1
+      inWeight: 0.57213295
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  occlusionColorCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.22554047
+      outSlope: 0.22554047
+      tangentMode: 0
+      weightedMode: 3
+      inWeight: 0
+      outWeight: 0.8075237
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.004908879
+      outSlope: 0.004908879
+      tangentMode: 0
+      weightedMode: 3
+      inWeight: 0.4647553
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  pileCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.0013909107
+      outSlope: 0.0013909107
+      tangentMode: 0
+      weightedMode: 2
+      inWeight: 0
+      outWeight: 0.5467494
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.29566666
+      outSlope: 0.29566666
+      tangentMode: 0
+      weightedMode: 1
+      inWeight: 0.6712929
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  shadowSensitivityCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: -0.00542188
+      outSlope: 0
+      tangentMode: 65
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.07012418
+    - serializedVersion: 3
+      time: 0.42530543
+      value: 0
+      inSlope: -0
+      outSlope: 0.03698684
+      tangentMode: 5
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.1452091
+    - serializedVersion: 3
+      time: 0.73887813
+      value: 0.6105703
+      inSlope: 0.08473493
+      outSlope: 0
+      tangentMode: 65
+      weightedMode: 0
+      inWeight: 0.114091516
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0.6105703
+      inSlope: -0
+      outSlope: 1.7551825
+      tangentMode: 5
+      weightedMode: 0
+      inWeight: 0.022096455
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  maxShadowDelta: 2
   furColorSchemes:
   - colorA: {r: 0.8584906, g: 0.69601023, b: 0.48323837, a: 1}
     colorB: {r: 0.6320754, g: 0.4720689, b: 0.2663462, a: 1}
@@ -38,6 +158,10 @@ MonoBehaviour:
     colorB: {r: 0.41176474, g: 0.47058827, b: 0.8352942, a: 1}
   - colorA: {r: 0.91372555, g: 0.9058824, b: 0.8862746, a: 1}
     colorB: {r: 0.654902, g: 0.81568635, b: 0.6509804, a: 1}
+  autoJumpPower: {x: 1, y: 1}
+  jumpRandomness: {x: 0.1, y: 0.1}
+  ledgeHopFear: 0.15
   gravity: 9.5
   drag: 0
   bounciness: 0.9
+  mass: 0.05

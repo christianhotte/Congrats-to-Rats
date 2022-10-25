@@ -6,16 +6,26 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "Data", menuName = "ScriptableObjects/BigRatSettings", order = 1)]
 public class BigRatSettings : ScriptableObject
 {
-    [Header("Movement:")]
-    [Min(0), Tooltip("How fast the rat can move")]                     public float speed;
-    [Min(0), Tooltip("How quickly the rat reaches max speed")]         public float accel;
-    [Min(0), Tooltip("How quickly the rat comes to a stop")]           public float decel;
+    [Header("General:")]
     [Tooltip("Flips all sprite visualizations on big and small rats")] public bool flipAll;
+    [Header("Movement:")]
+    [Min(0), Tooltip("How fast the rat can move")]             public float speed;
+    [Min(0), Tooltip("How quickly the rat reaches max speed")] public float accel;
+    [Min(0), Tooltip("How quickly the rat comes to a stop")]   public float decel;
+    [Header("Jumping & Falling:")]
+    [Min(0), Tooltip("Forward and upward power of rat jump")]                                           public Vector2 jumpPower;
+    [Min(1), Tooltip("Multiplier added to jump force when jumping while standing")]                     public float stationaryJumpMultiplier;
+    [Range(0, 1), Tooltip("Percentage of normal movement control rat has while in the air")]            public float airControl;
+    [Min(0), Tooltip("Force used to bounce rat off cliffs to prevent jank")]                            public float cliffHop;
+    [Min(0), Tooltip("Step height at which rat will fall instead of climbing down")]                    public float fallHeight;
+    [Min(0), Tooltip("Downward acceleration (in units per second squared) while falling")]              public float gravity;
+    [Min(0), Tooltip("Resistance to motion while in air")]                                              public float airDrag;
+    [Range(0, 1), Tooltip("Percentage of velocity which is retained each time rat bounces off a wall")] public float bounciness;
+    [Min(0), Tooltip("Low velocity value used to prevent rat from hanging on walls after jumping")]     public float wallRepulse;
     [Header("Collisions:")]
     [Tooltip("Layers which will obstruct rat movement")]                                      public LayerMask blockingLayers;
     [Min(0), Tooltip("Physical thickness of rat when bumping into walls and touching floor")] public float collisionRadius;
     [Tooltip("Maximum steepness of terrain rat can move normally on")]                        public float maxWalkAngle;
-    [Min(0), Tooltip("Step height at which rat will fall instead of climbing down")]          public float fallHeight;
     [Min(1), Tooltip("The maximum number of obstacles rat can collide with at once")]         public int maxObstacleCollisions;
     [Header("Spawning & Followers:")]
     [Tooltip("Prefab object for default rats in the swarm")]                                            public GameObject basicRatPrefab;
@@ -24,4 +34,5 @@ public class BigRatSettings : ScriptableObject
     [Tooltip("Width and depth of rectangular area within which new rats will spawn (and launch from)")] public Vector2 spawnArea;
     [MinMaxSlider(0, 90), Tooltip("Range of angles at which rat babies will be launched when spawned")] public Vector2 spawnAngle;
     [MinMaxSlider(0, 5), Tooltip("Force with which rat babies will be launched when spawned")]          public Vector2 spawnForce;
+    [Min(0), Tooltip("Force with which rat is able to throw other rats")]                               public float throwForce;
 }

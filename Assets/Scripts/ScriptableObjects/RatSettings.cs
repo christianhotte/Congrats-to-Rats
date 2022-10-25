@@ -17,8 +17,7 @@ public class RatSettings : ScriptableObject
 
     //DATA:
     [Header("Movement:")]
-    [Tooltip("Maximum speed at which rat can normally travel on ground")]              public float maxSpeed;
-    [Tooltip("Maximum speed at which rat can move relative to leader (if following)")] public float maxOvertakeSpeed;
+    [Tooltip("Maximum speed at which rat can normally travel on ground")] public float maxSpeed;
     [Header("Obstacles & Floor:")]
     [Tooltip("Height above ground at which rat will rest")]                                       public float baseHeight;
     [Tooltip("Height at and above which rat will fall off ledges instead of climbing down them")] public float fallHeight;
@@ -28,15 +27,30 @@ public class RatSettings : ScriptableObject
     [Tooltip("Desired distance this rat keeps between itself and walls/cliffs")] public float obstacleSeparation;
     [Min(0), Tooltip("Tendency for rats to avoid walls and cliffs")]             public float obstacleAvoidanceWeight;
     [Header("Visuals:")]
-    [Tooltip("Maximum amount of random scale increase or decrease when spawning a new rat")] public float sizeVariance;
-    [Tooltip("Increase this to prevent rat from flipping back and forth rapidly")]           public float timeBetweenFlips;
+    [Tooltip("Maximum amount of random scale increase or decrease when spawning a new rat")]                    public float sizeVariance;
+    [Tooltip("Increase this to prevent rat from flipping back and forth rapidly")]                              public float timeBetweenFlips;
+    [Tooltip("Minimum crush amount to initiate pile system, crush value which corresponds to max pile amount")] public Vector2 crushRange;
+    [Range(0, 1), Tooltip("How intense crush occlusion effect will be")]                                        public float occlusionIntensity;
+    [Tooltip("Colors which rat crush occlusion lerps between depending on crush value")]                        public ColorScheme occlusionColors;
+    [Min(0), Tooltip("Maximum additional height rat can reach from having other rats pressing against it")]     public float maxPileHeight;
+    [Tooltip("Curve describing occlusion intensity depending on crush amount")]                                 public AnimationCurve occlusionCurve;
+    [Tooltip("Curve describing transition between primary and secondary occlusion color depending on crush")]   public AnimationCurve occlusionColorCurve;
+    [Tooltip("Curve describing cross-sectional shape of rat pile")]                                             public AnimationCurve pileCurve;
+    [Space()]
+    [Tooltip("Determines how rat coloration reacts to environmental brightness")]                                         public AnimationCurve shadowSensitivityCurve;
+    [Min(0), Tooltip("Maximum change in shadow value per second. Increase this to make rat shadow transitions smoother")] public float maxShadowDelta;
     [Space()]
     [Tooltip("Array of coloration schemes for rat fur (Color A is lightest variant, Color B is darkest variant)")] public ColorScheme[] furColorSchemes;
     [Tooltip("Array of coloration schemes for party hat (Color A is base, Color B is stripe)")]                    public ColorScheme[] hatColorSchemes;
-    [Header("Airborne Behavior:")]
-    [Tooltip("Force of gravity acting on velocity of airborne rats")]                                      public float gravity;
-    [Tooltip("Force of air resistance acting on airborne rats")]                                           public float drag;
-    [Range(0, 1), Tooltip("Percentage of velocity which is retained each time rat bounces off of a wall")] public float bounciness;
+    [Header("Jumping & Falling:")]
+    [Tooltip("Horizontal and vertical power of jumps autonomously made by rats (for navigational purposes)")]                       public Vector2 autoJumpPower;
+    [Tooltip("Random percentage up or down (along each individual axis) by which jumps may deviate")]                               public Vector2 jumpRandomness;
+    [Range(0, 1), Tooltip("How close a rat has to get to a ledge before it is willing to hop off (in order to follow the leader)")] public float ledgeHopFear;
+    [Space()]
+    [Tooltip("Force of gravity acting on velocity of airborne rats")]                                         public float gravity;
+    [Tooltip("Force of air resistance acting on airborne rats")]                                              public float drag;
+    [Range(0, 1), Tooltip("Percentage of velocity which is retained each time rat bounces off of a wall")]    public float bounciness;
+    [Min(0.001f), Tooltip("Determines how much force will be imparted on an object when this rat hits it")]   public float mass;
 
     //FUNCTIONALITY METHODS:
     /// <summary>
