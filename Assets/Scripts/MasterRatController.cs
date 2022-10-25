@@ -16,6 +16,9 @@ public class MasterRatController : MonoBehaviour
     /// </summary>
     public class TrailPoint
     {
+        //Objects & Components:
+        private AudioSource audioNode; //The audio source component spawned specifically for this TrailPoint
+
         //Data:
         /// <summary>
         /// Position of trail point.
@@ -71,6 +74,11 @@ public class MasterRatController : MonoBehaviour
             //Get data:
             point = _point;                                     //Set point vector
             leaderVel = RatBoid.UnFlattenVector(main.velocity); //Store velocity of leader at time of point creation
+
+            //Audio node instantiation:
+            GameObject newNode = new GameObject();           //Instantiate a new gameobject for the node
+            newNode.name = "TrailAudioNode";                 //Name node
+            audioNode = newNode.AddComponent<AudioSource>(); //Add an audioSource component to the node and get a reference to it
         }
         /// <summary>
         /// Make this trail point a jump marker.
@@ -183,7 +191,7 @@ public class MasterRatController : MonoBehaviour
     internal List<RatBoid> followerRats = new List<RatBoid>();     //List of all rats currently following this controller
     internal List<RatBoid> jumpingFollowers = new List<RatBoid>(); //List of follower rats which are currently jumping (and therefore still counted toward total)
     internal List<RatBoid> deployedRats = new List<RatBoid>();     //List of all rats currently deployed by player
-    private List<TrailPoint> trail = new List<TrailPoint>();       //List of points in current trail (used to assemble ratswarm behind main rat)
+    internal List<TrailPoint> trail = new List<TrailPoint>();      //List of points in current trail (used to assemble ratswarm behind main rat)
     internal float totalTrailLength = 0;                           //Current length of trail (in units)
     internal int currentJumpMarkers = 0;                           //Current number of jump markers in trail
     private int prevFollowerCount = 0;                             //Total follower count last time follower count-contingent settings were updated
