@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using Unity.Collections;
 using CustomEnums;
+using UnityEngine.Events;
 
 /// <summary>
 /// Controls the big rat and governs behavior of all the little rats.
@@ -212,6 +213,12 @@ public class MasterRatController : MonoBehaviour
     /// </summary>
     private float MaxThrowChargeTime { get { return (1 / settings.throwChargeSpeed) + settings.throwChargeWait; } }
 
+    //Events & Delegates:
+    /// <summary>
+    /// Event which is triggered after follower count has been changed and other effects have taken place.
+    /// </summary>
+    public UnityAction followerCountChanged;
+
     //RUNTIME METHODS:
     private void Awake()
     {
@@ -227,6 +234,9 @@ public class MasterRatController : MonoBehaviour
         trail.Insert(0, new TrailPoint(FlatPos)); //Add starting position as first point in trail
         OnFollowerCountChanged();                 //Set up swarm settings and do initial update
         MoveRat(0);                               //Snap rat to floor
+
+        //Event subscriptions:
+        followerCountChanged += OnFollowerCountChanged; //Add official follower count changed method to event
     }
     private void Start()
     {
@@ -258,6 +268,10 @@ public class MasterRatController : MonoBehaviour
                 //if (trail[i].IsJumpMarker) { print("Marker " + x + "'s trail value is " + trail[i].trailValue); x++; }
             }
         }
+    }
+    private void OnDestroy()
+    {
+        //followerCountChanged -= OnFollowerCountChanged; //Unsubscribe from follower count changed event
     }
 
     //UPDATE METHODS:
@@ -629,7 +643,7 @@ public class MasterRatController : MonoBehaviour
         }
 
         //Cleanup:
-        OnFollowerCountChanged(); //Perform updates triggered by change in follower count
+        followerCountChanged.Invoke(); //Perform updates triggered by change in follower count
     }
     /// <summary>
     /// Call to remove given rat from follower list.
@@ -652,7 +666,7 @@ public class MasterRatController : MonoBehaviour
         }
 
         //Cleanup:
-        OnFollowerCountChanged(); //Perform updates triggered by change in follower count
+        followerCountChanged.Invoke(); //Perform updates triggered by change in follower count
     }
     /// <summary>
     /// Updates general stuff which depends on current number of follower rats. Works with rat addition and removal.
@@ -792,6 +806,33 @@ public class MasterRatController : MonoBehaviour
         //Return point data:
         if (closestPoint == trail[0].point) return new TrailPointData(closestPoint, pointRefs.ToArray(), (trail[0].point - trail[1].point).normalized, 0); //If the closest point is the very beginning of the trail, give it a direction which points toward the leader
         return new TrailPointData(closestPoint, pointRefs.ToArray(), -(pointB - pointA).normalized, trailValue);                                           //Otherwise, return closest point with known direction
+    }
+    /// <summary>
+    /// Returns point in trail which corresponds to given value.
+    /// </summary>
+    /// <param name="trailValue">Number between 0 and 1 representing position on trail (0 is the leader, 1 is the end).</param>
+    public TrailPointData GetTrailPointFromValue(float trailValue)
+    {
+        //Edge cases:
+        if (trail.Count < 2) return new TrailPointData(FlatPos, trail.ToArray());                                                                                                             //Return position of leader if trail has no segments (return extant trail points for good measure)
+        if (trail.Count == 2) return new TrailPointData(Vector2.Lerp(trail[0].point, trail[1].point, trailValue), trail.ToArray(), (trail[0].point - trail[1].point).normalized, trailValue); //If there is just one segment, simply lerp between its two points
+
+        //Find point:
+        float distanceRemaining = trailValue * totalTrailLength; //Get exact amount of distance which needs to be covered to get to point
+        for (int i = 0; i < trail.Count - 1; i++) //Iterate through trail points with at least one following point
+        {
+            if (trail[i].segLength >= distanceRemaining) //Point is inside this segment
+            {
+                Vector2 point = Vector2.MoveTowards(trail[i].point, trail[i + 1].point, distanceRemaining);          //Find point within current segment based on remaining distance
+                Vector2 direction = (trail[i].point - trail[i + 1].point).normalized;                                //Get direction of trail at this point
+                return new TrailPointData(point, new TrailPoint[] { trail[i], trail[i + 1]}, direction, trailValue); //Return point data
+            }
+            else distanceRemaining -= trail[i].segLength; //Otherwise, subtract segment length from remaining distance and move on to next point
+        }
+
+        //Point could not be found:
+        Debug.LogWarning("GetTrailPointFromValue failed to get point within trail, TotalTrailLength may be inaccurate.");                                  //Post warning
+        return new TrailPointData(trail[^1].point, new TrailPoint[] { trail[^2], trail[^1] }, (trail[^2].point - trail[^1].point).normalized, trailValue); //Assume point is at very end of trail
     }
     /// <summary>
     /// Returns distance (in units) between points at given values on trail.

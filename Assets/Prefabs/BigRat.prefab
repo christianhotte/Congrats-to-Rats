@@ -43,8 +43,9 @@ GameObject:
   - component: {fileID: 2760126436428266723}
   - component: {fileID: 2760126436428266733}
   - component: {fileID: 2760126436428266732}
-  - component: {fileID: 2760126436428266706}
   - component: {fileID: 6040844704268463626}
+  - component: {fileID: 2956998417977185440}
+  - component: {fileID: 2760126436428266706}
   - component: {fileID: 3350720154654400807}
   m_Layer: 0
   m_Name: BigRat
@@ -214,14 +215,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 446d38860912a9a4e8194ea0d34c46ab, type: 2}
   - {fileID: 11400000, guid: ae663544867f8b84f9c66124b9756980, type: 2}
   - {fileID: 11400000, guid: 2f8b5e85a39eb03428a90992a4303e0c, type: 2}
---- !u!81 &2760126436428266706
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2760126436428266735}
-  m_Enabled: 1
 --- !u!114 &6040844704268463626
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -234,6 +227,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1579db1e1704bb94aa5d66b951371f20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2956998417977185440
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2760126436428266735}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9f737261ff479d49b187adecfd63a60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ratsPerSource: 10
+  maxSourceCount: -1
+--- !u!81 &2760126436428266706
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2760126436428266735}
+  m_Enabled: 1
 --- !u!82 &3350720154654400807
 AudioSource:
   m_ObjectHideFlags: 0
