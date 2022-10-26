@@ -776,7 +776,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 668ad13e98ca03847ac16fd339752b42, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -18
+      value: -20
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 668ad13e98ca03847ac16fd339752b42, type: 3}
       propertyPath: m_LocalRotation.w
@@ -841,11 +841,11 @@ PrefabInstance:
     - target: {fileID: -7895341685849413702, guid: 668ad13e98ca03847ac16fd339752b42, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: ea73b3506abf72f4ebfbdfd4577d6040, type: 2}
+      objectReference: {fileID: 2100000, guid: 77e0e38e1247e954bb6ba0356c434c39, type: 2}
     - target: {fileID: -7511558181221131132, guid: 668ad13e98ca03847ac16fd339752b42, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: ea73b3506abf72f4ebfbdfd4577d6040, type: 2}
+      objectReference: {fileID: 2100000, guid: af52b8a305373d74790485997e87c69d, type: 2}
     - target: {fileID: 919132149155446097, guid: 668ad13e98ca03847ac16fd339752b42, type: 3}
       propertyPath: m_Name
       value: Roomba
@@ -885,7 +885,7 @@ PrefabInstance:
     - target: {fileID: 7051661108220811732, guid: 668ad13e98ca03847ac16fd339752b42, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: ea73b3506abf72f4ebfbdfd4577d6040, type: 2}
+      objectReference: {fileID: 2100000, guid: 77e0e38e1247e954bb6ba0356c434c39, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 668ad13e98ca03847ac16fd339752b42, type: 3}
 --- !u!1 &939549772 stripped
@@ -1297,7 +1297,7 @@ Light:
   serializedVersion: 10
   m_Type: 1
   m_Shape: 0
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.94735193, b: 0.8443396, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
@@ -1355,14 +1355,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1647006756}
-  m_LocalRotation: {x: -0.8848024, y: -0.34394774, z: -0.19252384, w: -0.24851416}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0.65300006, y: -0.6740956, z: 0.28000626, w: -0.20194703}
+  m_LocalPosition: {x: -21.85, y: 1.55, z: -14.34}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 15
-  m_LocalEulerAnglesHint: {x: 17.899, y: -212.525, z: -587.745}
+  m_LocalEulerAnglesHint: {x: 39.885, y: -173.007, z: -629.281}
 --- !u!114 &1647006759
 MonoBehaviour:
   m_ObjectHideFlags: 0
