@@ -38,3 +38,8 @@ MonoBehaviour:
   spawnAngle: {x: 15, y: 42}
   spawnForce: {x: 1.5, y: 2}
   throwForce: 11
+  maxRandomSpread: 0.23
+  throwChargeWait: 0.35
+  throwChargeSpeed: 0.65
+  maxRatPercentPerThrow: 0.1
+  maxRatsPerThrow: 50

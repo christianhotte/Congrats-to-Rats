@@ -234,7 +234,7 @@ public class RatBoid : MonoBehaviour
 
         //RAT RULES:
         float adjustedDT = deltaTime * timeBalancer;                                                                                    //Get adjusted deltaTime to uncouple acceleration changes from framerate
-        Vector2 leaderFlatPos = MasterRatController.main.flatPos;                                                                       //Get flat position of mama rat
+        Vector2 leaderFlatPos = MasterRatController.main.FlatPos;                                                                       //Get flat position of mama rat
         float leaderSpeedValue = MasterRatController.main.currentSpeed / MasterRatController.main.settings.speed;                       //Get value between 0 and 1 representing main rat's current speed
         float leaderStandingHeight = MasterRatController.main.transform.position.y - MasterRatController.main.settings.collisionRadius; //Approximate height of bottom of leader's sprite
         foreach (RatBoid rat in spawnedRats) //Iterate through every rat in list

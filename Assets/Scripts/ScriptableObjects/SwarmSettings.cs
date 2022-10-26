@@ -27,7 +27,7 @@ public class SwarmSettings : ScriptableObject
     [Min(0), Tooltip("Trail length below which rats will swarm in a blob instead of a trail")]                                                           public float minTrailLength;
     [Min(0), Tooltip("Maximum speed at which follower rats can overtake leader")]                                                                        public float maxOvertakeSpeed;
     [Tooltip("Additional force given to followers when jumping after leader")]                                                                           public float followerJumpBoost;
-    [Header("Curves:")]
+    //[Header("Curves:")]
     //[Tooltip("Use this curve to assign different multipliers for target compression depending on where rats are in trail (allows trail to be tapered)")] public AnimationCurve compressionCurve;
     //[Tooltip("Use this curve to change rat dispersal and leading characteristics depending on how close they are to the center of the trial")]           public AnimationCurve convectionCurve;
     [Header("Rules:")]
