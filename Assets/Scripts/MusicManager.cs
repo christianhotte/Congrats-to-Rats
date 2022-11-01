@@ -15,14 +15,19 @@ public class MusicManager : MonoBehaviour
     [Header("Settings:")]
     [SerializeField, Range(0, 1), Tooltip("Default and master volume setting for music player, also functions as max volume")] private float baseVolume = 1;
     [SerializeField, Min(0), Tooltip("Time taken for system to fade between clips")]                                           private float fadeTime;
+    [SerializeField, Min(0.01f), Tooltip("Interval between fade state updates")]                                               private float fadeInterval = 0.02f;
     [Header("Narration Settings:")]
-    [SerializeField, Range(0, 1), Tooltip("Level music volume drops to when narration is playing")] private float narrationMusicVolume;
+    [SerializeField, Range(0, 1), Tooltip("Default master volume of narration")]                                    private float baseNarrationVolume = 1;
+    [SerializeField, Range(0, 1), Tooltip("Level music volume drops to when narration is playing")]                 private float narrationMusicVolume;
+    [SerializeField, Min(0), Tooltip("Time taken for music to fade to target volume after narration is triggered")] private float narrationMusicFadeTime;
+    [SerializeField, Min(0), Tooltip("Time to wait before playing a triggered narration")]                          private float narrationPlayDelay;
 
     //Runtime Variables:
-    private float currentVolume = 1;   //Current system volume setting
-    private int currentPhase = 0;      //Current phase music is in
-    private bool fadingClip = false;   //Indicates whether or not music is fading into new clip
-    private bool fadingVolume = false; //Indicates whether or not volume is being faded
+    private float currentVolume = 1;       //Current system volume setting
+    private int currentPhase = 0;          //Current phase music is in
+    private bool fadingClip = false;       //Indicates whether or not music is fading into new clip
+    private bool fadingVolume = false;     //Indicates whether or not volume is being faded
+    private bool narrationPlaying = false; //Indicates whether or not a narration is currently playing
 
     //Events & Coroutines:
     /// <summary>
@@ -39,12 +44,12 @@ public class MusicManager : MonoBehaviour
         fadingClip = true;      //Indicate that system is currently fading into new clip
 
         //Crossfade:
-        for (float totalTime = 0; totalTime < fadeTime; totalTime += Time.fixedDeltaTime) //Iterate every fixed update for given number of seconds
+        for (float totalTime = 0; totalTime < fadeTime; totalTime += fadeInterval) //Iterate every interval for given number of seconds
         {
             float volValue = (totalTime / fadeTime) * currentVolume; //Get volume value for fade source based on progression of fade and current volume setting
             fadeSource.volume = volValue;                            //Set rising volume for fade source
             mainSource.volume = 1 - volValue;                        //Set falling volume for main source
-            yield return new WaitForFixedUpdate();                   //Wait for next fixed update
+            yield return new WaitForSeconds(fadeInterval);           //Wait for next interval
         }
 
         //Switch sources:
@@ -60,12 +65,12 @@ public class MusicManager : MonoBehaviour
         yield return null;  //End coroutine
     }
     /// <summary>
-    /// Fades system volume to new volume within given time frame.
+    /// Fades music volume to new target within given time frame.
     /// </summary>
     /// <param name="newVolume">Target volume to fade into (note: will be automatically made relative to Base Volume).</param>
     /// <param name="fadeTime">Time taken to fade to target volume.</param>
     /// <returns></returns>
-    IEnumerator FadeToVolume(float newVolume, float fadeTime)
+    IEnumerator FadeMusicVolume(float newVolume, float fadeTime)
     {
         //Validity checks:
         if (fadingVolume) { Debug.LogError("Music Manager tried to fade volume twice at the same time"); yield return null; } //Cancel fade operation if volume fade is already occurring
@@ -76,16 +81,17 @@ public class MusicManager : MonoBehaviour
         fadingVolume = true;                         //Indicate that volume is now being faded
 
         //Fade:
-        for (float totalTime = 0; totalTime < fadeTime; totalTime += Time.fixedDeltaTime) //Iterate every fixed update for given number of seconds
+        for (float totalTime = 0; totalTime < fadeTime;) //Iterate every interval for given number of seconds
         {
-            float timeValue = totalTime / fadeTime;                        //Get value representing chronological progression through curve
-            ChangeVolume(Mathf.Lerp(prevVolume, targetVolume, timeValue)); //Move volume toward target
-            yield return new WaitForFixedUpdate();                         //Wait for next fixed update
+            float timeValue = totalTime / fadeTime;                               //Get value representing chronological progression through curve
+            ChangeVolume(Mathf.Lerp(prevVolume, targetVolume, timeValue), false); //Move volume toward target
+            yield return new WaitForSeconds(fadeInterval);                        //Wait for next interval
+            totalTime += fadeInterval;                                            //Increase time tracker by interval
         }
 
         //Cleanup:
-        ChangeVolume(targetVolume); //Snap volume to target
-        fadingVolume = false;       //Indicate that volume is no longer being faded
+        ChangeVolume(targetVolume, false); //Snap volume to target (target is already relative to base)
+        fadingVolume = false;              //Indicate that volume is no longer being faded
     }
 
     //RUNTIME METHODS:
@@ -98,14 +104,13 @@ public class MusicManager : MonoBehaviour
         mainSource = gameObject.AddComponent<AudioSource>(); //Create new audiosource component on this object and get reference to it
         mainSource.loop = true;                              //Set source to loop
         mainSource.volume = currentVolume;                   //Set source volume to default max
-        mainSource.name = "MainSource";
 
         fadeSource = gameObject.AddComponent<AudioSource>(); //Create new audiosource component on this object and get reference to it
         fadeSource.loop = true;                              //Set source to loop
         fadeSource.volume = 0;                               //Set fade source volume to zero by default
 
         narrationSource = gameObject.AddComponent<AudioSource>(); //Create new audiosource component on this object and get reference to it
-        narrationSource.volume = currentVolume;                   //Set source volume to default max
+        narrationSource.volume = baseNarrationVolume;             //Set source volume to narration-specific default
     }
     private void Start()
     {
@@ -123,6 +128,13 @@ public class MusicManager : MonoBehaviour
                 StartCoroutine(FadeToClip(mainLoops[1], fadeTime)); //Fade to first main loop
             }
         }
+
+        //Narration end check:
+        if (narrationPlaying && !narrationSource.isPlaying) //Narration has just ended
+        {
+            StartCoroutine(FadeMusicVolume(1, narrationMusicFadeTime)); //Fade music back in now that narration has ended
+            narrationPlaying = false;                                   //Indicate that narration is no longer playing
+        }
     }
 
     //OPERATION METHODS:
@@ -130,17 +142,20 @@ public class MusicManager : MonoBehaviour
     /// Sets new music volume.
     /// </summary>
     /// <param name="newVolume">New volume setting (between 0 and 1).</param>
-    public void ChangeVolume(float newVolume)
+    public void ChangeVolume(float newVolume, bool relativeToBase = true)
     {
-        newVolume = Mathf.Clamp01(newVolume * baseVolume); //Make sure volume is between 0 and 1 (and make relative to base volume)
-        if (!fadingClip) mainSource.volume = newVolume;    //Set new volume for main source, but only if it is not currently being controlled by an active fade coroutine
-        currentVolume = newVolume;                         //Record current volume
+        newVolume = Mathf.Clamp01(newVolume * (relativeToBase ? baseVolume : 1)); //Make sure volume is between 0 and 1 (and make relative to base volume unless designated not to)
+        if (!fadingClip) mainSource.volume = newVolume;                           //Set new volume for main source, but only if it is not currently being controlled by an active fade coroutine
+        currentVolume = newVolume;                                                //Record current volume
     }
     /// <summary>
     /// Plays given clip as a narration (fades out music while playing).
     /// </summary>
     public void PlayNarration(AudioClip narrationClip)
     {
-
+        narrationSource.clip = narrationClip;                                          //Plug given clip into narration-specific audio source
+        narrationSource.PlayDelayed(narrationPlayDelay);                               //Play narration after given delay (giving time for music to fade out)
+        StartCoroutine(FadeMusicVolume(narrationMusicVolume, narrationMusicFadeTime)); //Fade out music
+        narrationPlaying = true;                                                       //Indicate that a narration is currently playing
     }
 }

@@ -343,7 +343,8 @@ GameObject:
   m_Component:
   - component: {fileID: 663177568779797567}
   - component: {fileID: 3567291300166623247}
-  m_Layer: 0
+  - component: {fileID: 1216433272091941898}
+  m_Layer: 11
   m_Name: MusicPlayer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -381,8 +382,26 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 19d4706a69b35764994edb3b89108e10, type: 3}
   - {fileID: 8300000, guid: cf568febfc333e34aab366faaa4adb18, type: 3}
   introMusicVolume: {fileID: 0}
-  baseVolume: 1
+  baseVolume: 0.8
   fadeTime: 2.1
+  fadeInterval: 0.02
+  baseNarrationVolume: 1
+  narrationMusicVolume: 0.1
+  narrationMusicFadeTime: 1.3
+  narrationPlayDelay: 1.6
+--- !u!135 &1216433272091941898
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3853841940703954614}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.17
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &9133118851968788128
 GameObject:
   m_ObjectHideFlags: 0

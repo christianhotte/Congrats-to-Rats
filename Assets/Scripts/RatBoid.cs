@@ -136,7 +136,7 @@ public class RatBoid : MonoBehaviour
                 {
                     newPos = Vector3.MoveTowards(newPos, hit.point + (Vector3.up * adjustedHeight), rat.settings.heightChangeRate * deltaTime);         //Move target position upward according to height of floor
                     rat.billboarder.targetZRot = Vector3.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(hit.normal, Vector3.forward), Vector3.forward); //Twist billboard so rat is flat on surface
-                    rat.GetLightingFromHit(hit, deltaTime);                                                                                             //Update rat lighting based on light properties of hit surface
+                    if (rat.settings.doShadowMatching) rat.GetLightingFromHit(hit, deltaTime);                                                          //Update rat lighting based on light properties of hit surface
                 }
                 else //No floor found
                 {

@@ -26,6 +26,7 @@ public class RatSettings : ScriptableObject
     [Space()]
     [Tooltip("Desired distance this rat keeps between itself and walls/cliffs")] public float obstacleSeparation;
     [Min(0), Tooltip("Tendency for rats to avoid walls and cliffs")]             public float obstacleAvoidanceWeight;
+
     [Header("Visuals:")]
     [Tooltip("Maximum amount of random scale increase or decrease when spawning a new rat")]                    public float sizeVariance;
     [Tooltip("Increase this to prevent rat from flipping back and forth rapidly")]                              public float timeBetweenFlips;
@@ -37,11 +38,13 @@ public class RatSettings : ScriptableObject
     [Tooltip("Curve describing transition between primary and secondary occlusion color depending on crush")]   public AnimationCurve occlusionColorCurve;
     [Tooltip("Curve describing cross-sectional shape of rat pile")]                                             public AnimationCurve pileCurve;
     [Space()]
+    [Tooltip("Sets whether or not rats check for surface shadows (note: performance expensive)")]                         public bool doShadowMatching;
     [Tooltip("Determines how rat coloration reacts to environmental brightness")]                                         public AnimationCurve shadowSensitivityCurve;
     [Min(0), Tooltip("Maximum change in shadow value per second. Increase this to make rat shadow transitions smoother")] public float maxShadowDelta;
     [Space()]
     [Tooltip("Array of coloration schemes for rat fur (Color A is lightest variant, Color B is darkest variant)")] public ColorScheme[] furColorSchemes;
     [Tooltip("Array of coloration schemes for party hat (Color A is base, Color B is stripe)")]                    public ColorScheme[] hatColorSchemes;
+
     [Header("Jumping & Falling:")]
     [Tooltip("Horizontal and vertical power of jumps autonomously made by rats (for navigational purposes)")]                       public Vector2 autoJumpPower;
     [Tooltip("Random percentage up or down (along each individual axis) by which jumps may deviate")]                               public Vector2 jumpRandomness;
