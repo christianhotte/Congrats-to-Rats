@@ -37,6 +37,9 @@ MonoBehaviour:
   spawnArea: {x: 0.16, y: 0.05}
   spawnAngle: {x: 15, y: 42}
   spawnForce: {x: 1.5, y: 2}
+  throwTargetLayers:
+    serializedVersion: 2
+    m_Bits: 961
   throwForce: 11
   maxRandomSpread: 0.23
   throwChargeWait: 0.35

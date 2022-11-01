@@ -174,6 +174,7 @@ public class MasterRatController : MonoBehaviour
     private SpriteRenderer sprite;   //Sprite renderer component for big rat
     private Animator anim;           //Animator controller for big rat
     private Billboarder billboarder; //Component used to manage sprite orientation
+    private AudioSource audioSource; //Audiosource component for mama rat sfx
 
     [Header("Settings:")]
     [Tooltip("Interchangeable data object describing settings of the main rat")]                                                    public BigRatSettings settings;
@@ -566,7 +567,7 @@ public class MasterRatController : MonoBehaviour
     public void OnMousePositionMove(InputAction.CallbackContext context)
     {
         Ray mouseRay = Camera.main.ScreenPointToRay(context.ReadValue<Vector2>());
-        if (Physics.Raycast(mouseRay, out RaycastHit hit)) latestMouseHit = hit;
+        if (Physics.Raycast(mouseRay, out RaycastHit hit, settings.throwTargetLayers)) latestMouseHit = hit;
     }
 
     //FUNCTIONALITY METHODS:

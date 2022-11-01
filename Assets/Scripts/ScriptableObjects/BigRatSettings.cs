@@ -40,6 +40,7 @@ public class BigRatSettings : ScriptableObject
     [MinMaxSlider(0, 5), Tooltip("Force with which rat babies will be launched when spawned")]          public Vector2 spawnForce;
 
     [Header("Throwing:")]
+    [Tooltip("Layers which rat can throw baby rats at")]                                                     public LayerMask throwTargetLayers;
     [Min(0), Tooltip("Force with which rat is able to throw other rats")]                                    public float throwForce;
     [Tooltip("Maximum distance from throw target which random spread can cause")]                            public float maxRandomSpread;
     [Min(0), Tooltip("Number of seconds to wait before throw force/rat count begins charging up")]           public float throwChargeWait;
