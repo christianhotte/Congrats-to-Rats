@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9664b6d69bd8e0046bc327cb715b15cd, type: 3}
+  m_Name: MamaSound_1(doubleStep)
+  m_EditorClassIdentifier: 
+  footsteps:
+  - {fileID: 8300000, guid: 041cd2ffe1ba83148b86a742cdd0b131, type: 3}
+  - {fileID: 8300000, guid: 2fb13be116682a944b72864ff9ad0b6f, type: 3}
+  landings:
+  - {fileID: 8300000, guid: 50b4928c9c46a8145bf184406fa024d9, type: 3}
+  - {fileID: 8300000, guid: c4a267ffc0925e84abf61c48ada9d5db, type: 3}
+  throwWindups:
+  - {fileID: 8300000, guid: 098bf7753a9536c4995868cf88bcff6c, type: 3}
+  throwReleases:
+  - {fileID: 8300000, guid: c1f9eededb25afd4e8a60ef5fa1fd1e6, type: 3}
+  - {fileID: 8300000, guid: b71d6b623cacf6b4ebac146dd5307553, type: 3}
+  - {fileID: 8300000, guid: 1fc72911b81445e4fbbd46f976732bcf, type: 3}
+  - {fileID: 8300000, guid: 6312db69dd2966443a73d13de1f46094, type: 3}

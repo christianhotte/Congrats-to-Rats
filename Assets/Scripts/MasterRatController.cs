@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using Unity.Collections;
 using CustomEnums;
+using UnityEngine.Events;
 
 /// <summary>
 /// Controls the big rat and governs behavior of all the little rats.
@@ -16,14 +17,7 @@ public class MasterRatController : MonoBehaviour
     /// </summary>
     public class TrailPoint
     {
-        //Objects & Components:
-        private AudioSource audioNode; //The audio source component spawned specifically for this TrailPoint
-
         //Data:
-        /// <summary>
-        /// Position of trail point.
-        /// </summary>
-        public Vector2 point;
         /// <summary>
         /// Distance between this trail point and the one behind it (if applicable).
         /// </summary>
@@ -39,13 +33,17 @@ public class MasterRatController : MonoBehaviour
 
         //Utility Variables:
         /// <summary>
+        /// Position of trail point.
+        /// </summary>
+        public Vector2 point;
+        /// <summary>
         /// Whether or not this point is a jump marker.
         /// </summary>
         public bool IsJumpMarker { get { return jumpTokens > 0; } }
         /// <summary>
         /// The current position of this point in the trail (between 0 and 1).
         /// </summary>
-        public float trailValue {
+        public float TrailValue {
             get
             {
                 //Initial checks:
@@ -74,13 +72,6 @@ public class MasterRatController : MonoBehaviour
             //Get data:
             point = _point;                                     //Set point vector
             leaderVel = RatBoid.UnFlattenVector(main.velocity); //Store velocity of leader at time of point creation
-
-            //Audio node instantiation:
-            /*
-            GameObject newNode = new GameObject();           //Instantiate a new gameobject for the node
-            newNode.name = "TrailAudioNode";                 //Name node
-            audioNode = newNode.AddComponent<AudioSource>(); //Add an audioSource component to the node and get a reference to it
-            */
         }
         /// <summary>
         /// Make this trail point a jump marker.
@@ -88,9 +79,9 @@ public class MasterRatController : MonoBehaviour
         /// <param name="jumpVel">Initial velocity of jump</param>
         public void MakeJumpMarker(Vector3 jumpVel)
         {
-            if (main.totalFollowerCount > 0) //Leader must have some followers for a jump marker to be made
+            if (main.TotalFollowerCount > 0) //Leader must have some followers for a jump marker to be made
             {
-                jumpTokens = main.totalFollowerCount; //Add one jump token for each follower
+                jumpTokens = main.TotalFollowerCount; //Add one jump token for each follower
                 leaderVel = jumpVel;                  //Record jump velocity of leader
                 main.currentJumpMarkers++;            //Indicate that a new jump marker has been added
             }
@@ -183,9 +174,11 @@ public class MasterRatController : MonoBehaviour
     private SpriteRenderer sprite;   //Sprite renderer component for big rat
     private Animator anim;           //Animator controller for big rat
     private Billboarder billboarder; //Component used to manage sprite orientation
+    private AudioSource audioSource; //Audiosource component for mama rat sfx
 
-    [Header("Settings:")]
+    [Header("Settings Objects:")]
     [Tooltip("Interchangeable data object describing settings of the main rat")]                                                    public BigRatSettings settings;
+    [Tooltip("Interchangeable data object describing sound settings for this rat")]                                                 public MamaSoundSettings soundSettings;
     [SerializeField, Tooltip("Place any number of swarm settings objects here (make sure they have different Target Rat Numbers)")] private List<SwarmSettings> swarmSettings = new List<SwarmSettings>();
 
     //Runtime Vars:
@@ -198,25 +191,35 @@ public class MasterRatController : MonoBehaviour
     internal int currentJumpMarkers = 0;                           //Current number of jump markers in trail
     private int prevFollowerCount = 0;                             //Total follower count last time follower count-contingent settings were updated
 
-    internal Vector2 velocity;          //Current speed and direction of movement
-    internal Vector3 airVelocity;       //3D velocity used when rat is falling
-    internal Vector2 forward;           //Normalized vector representing which direction big rat was most recently moving
-    internal float currentSpeed;        //Current speed at which rat is moving
-    private Vector2 moveInput;          //Current input direction for movement
-    private bool falling;               //Whether or not rat is currently falling
-    internal bool commanding;           //Whether or not rat is currently deploying rats to a location
-    private bool aiming;                //True when rat is preparing for a throw
-    private Vector3 currentMouseTarget; //Current position in real space which mouse is pointing at
+    internal Vector2 velocity;         //Current speed and direction of movement
+    internal Vector3 airVelocity;      //3D velocity used when rat is falling
+    internal Vector2 forward;          //Normalized vector representing which direction big rat was most recently moving
+    internal float currentSpeed;       //Current speed at which rat is moving
+    private Vector2 moveInput;         //Current input direction for movement
+    private bool falling;              //Whether or not rat is currently falling
+    internal bool commanding;          //Whether or not rat is currently deploying rats to a location
+    private float aimTime = -1;        //The number of seconds rat has been aiming a throw for. Negative if rat is not aiming a throw
+    private RaycastHit latestMouseHit; //Data from last point hit by mouse raycast
 
     //Utility Vars:
     /// <summary>
     /// Quantity of rats currently treated as followers.
     /// </summary>
-    public int totalFollowerCount { get { return followerRats.Count + jumpingFollowers.Count; } }
+    public int TotalFollowerCount { get { return followerRats.Count + jumpingFollowers.Count; } }
     /// <summary>
     /// Current position of this rat projected onto world Y axis.
     /// </summary>
-    public Vector2 flatPos { get { return new Vector2(transform.position.x, transform.position.z); } }
+    public Vector2 FlatPos { get { return new Vector2(transform.position.x, transform.position.z); } }
+    /// <summary>
+    /// Maximum amount of time rat needs to spend aiming to have fully-charged throw.
+    /// </summary>
+    private float MaxThrowChargeTime { get { return (1 / settings.throwChargeSpeed) + settings.throwChargeWait; } }
+
+    //Events & Delegates:
+    /// <summary>
+    /// Event which is triggered after follower count has been changed and other effects have taken place.
+    /// </summary>
+    public UnityAction followerCountChanged;
 
     //RUNTIME METHODS:
     private void Awake()
@@ -230,9 +233,12 @@ public class MasterRatController : MonoBehaviour
         Application.targetFrameRate = 120; //Set target framerate
 
         //Local initialization:
-        trail.Insert(0, new TrailPoint(flatPos)); //Add starting position as first point in trail
+        trail.Insert(0, new TrailPoint(FlatPos)); //Add starting position as first point in trail
         OnFollowerCountChanged();                 //Set up swarm settings and do initial update
         MoveRat(0);                               //Snap rat to floor
+
+        //Event subscriptions:
+        followerCountChanged += OnFollowerCountChanged; //Add official follower count changed method to event
     }
     private void Start()
     {
@@ -240,13 +246,18 @@ public class MasterRatController : MonoBehaviour
         sprite = GetComponentInChildren<SpriteRenderer>();   //Get spriteRenderer component
         anim = GetComponentInChildren<Animator>();           //Get animator controller component
         billboarder = GetComponentInChildren<Billboarder>(); //Get billboarder component
+        audioSource = GetComponent<AudioSource>();           //Get audioSource component
     }
     private void Update()
     {
+        //Update counters:
+        if (aimTime > -1 && aimTime != MaxThrowChargeTime) aimTime = Mathf.Min(aimTime + Time.deltaTime, MaxThrowChargeTime); //Increment aim time if rat is aiming (cap out at max aim time)
+
+        //Perform rat movements:
         MoveRat(Time.deltaTime);                                  //Move the big rat
         RatBoid.UpdateRats(Time.deltaTime, currentSwarmSettings); //Move all the little rats
 
-        //OnFollowerCountChanged(); //TEMP: Keep swarm settings regularly up-to-date for debugging purposes
+        OnFollowerCountChanged(); //TEMP: Keep swarm settings regularly up-to-date for debugging purposes
 
         //Visualize trail:
         if (trail.Count > 1)
@@ -260,6 +271,16 @@ public class MasterRatController : MonoBehaviour
                 //if (trail[i].IsJumpMarker) { print("Marker " + x + "'s trail value is " + trail[i].trailValue); x++; }
             }
         }
+
+        //Footstep sounds:
+        if (!falling && !audioSource.isPlaying && currentSpeed != 0) //Rat is moving (not falling) but audioSource is silent
+        {
+            audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.footsteps)); //Play a random footstep noise
+        }
+    }
+    private void OnDestroy()
+    {
+        //followerCountChanged -= OnFollowerCountChanged; //Unsubscribe from follower count changed event
     }
 
     //UPDATE METHODS:
@@ -303,15 +324,17 @@ public class MasterRatController : MonoBehaviour
                     billboarder.SetZRot(-Vector3.SignedAngle(Vector3.up, hit.normal, Vector3.forward)); //Twist billboard so rat is flat on surface
 
                     //Landing cleanup:
-                    falling = false;            //Indicate that rat is no longer falling
-                    airVelocity = Vector3.zero; //Cancel all air velocity
+                    falling = false;                                                           //Indicate that rat is no longer falling
+                    airVelocity = Vector3.zero;                                                //Cancel all air velocity
+                    anim.SetTrigger("Land");                                                   //Play landing animation
+                    audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.landings)); //Play a random landing sound
                 }
             }
         }
         else //Rat is moving normally along a surface
         {
             //Modify velocity:
-            if (moveInput != Vector2.zero && !aiming) //Player is moving rat in a direction (and not aiming)
+            if (moveInput != Vector2.zero && aimTime < 0) //Player is moving rat in a direction (and not aiming)
             {
                 //Add velocity:
                 Vector2 addVel = moveInput * settings.accel; //Get added velocity based on input this frame
@@ -398,12 +421,12 @@ public class MasterRatController : MonoBehaviour
         }
 
         //Movement cleanup:
-        currentSpeed = Vector2.Distance(flatPos, RatBoid.FlattenVector(newPos)) / deltaTime; //Get actual current speed (after obstructions)
+        currentSpeed = Vector2.Distance(FlatPos, RatBoid.FlattenVector(newPos)) / deltaTime; //Get actual current speed (after obstructions)
         transform.position = newPos;                                                         //Apply new position
         forward = velocity.normalized;                                                       //Update forward direction tracker
 
         //Update trail characteristics:
-        trail.Insert(0, new TrailPoint(flatPos));                                //Add new trailPoint for current position
+        trail.Insert(0, new TrailPoint(FlatPos));                                //Add new trailPoint for current position
         float firstSegLength = Vector2.Distance(trail[0].point, trail[1].point); //Get length of new segment being created
         totalTrailLength += firstSegLength;                                      //Add length of new segment to total length of trail
         if (trail.Count > 1) trail[0].segLength = firstSegLength;                //Store length of new segment if applicable
@@ -427,7 +450,7 @@ public class MasterRatController : MonoBehaviour
             trail[0].segLength = firstSegLength; //Keep first segment in list constantly updated
 
             //Limit trail length:
-            float targetTrailLength = (1 / currentSwarmSettings.trailDensity) * (totalFollowerCount + 0.01f);                 //Get target trail length based off of follower count and settings
+            float targetTrailLength = (1 / currentSwarmSettings.trailDensity) * (TotalFollowerCount + 0.01f);                 //Get target trail length based off of follower count and settings
             targetTrailLength *= Mathf.Lerp(1, currentSwarmSettings.velTrailLengthMultiplier, currentSpeed / settings.speed); //Apply velocity-based length multiplier to target trail length
             while (totalTrailLength > targetTrailLength) //Current trail is longer than target length (and is non-zero)
             {
@@ -499,20 +522,46 @@ public class MasterRatController : MonoBehaviour
     {
         if (context.performed && followerRats.Count > 0) //Throw button has just been pressed (and there is at least one rat to throw)
         {
-            aiming = true;                //Indicate that rat is now aiming
-            anim.SetBool("Aiming", true); //Play aim animation
+            //Cleanup:
+            aimTime = 0;                                                                   //Indicate that rat is now aiming
+            anim.SetBool("Aiming", true);                                                  //Play aim animation
+            audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.throwWindups)); //Play a random windup sound
         }
-        else if (aiming) //Throw button has just been released while aiming
+        else if (aimTime > -1) //Throw button has just been released while aiming
         {
-            aiming = false;                //Indicate that rat is no longer aiming
-            anim.SetBool("Aiming", false); //Play throw animation
-            if (followerRats.Count > 0)
+            if (followerRats.Count > 0) //There is at least one rat to throw
             {
-                RatBoid throwRat = followerRats[0];
-                throwRat.transform.position = transform.position;
-                throwRat.tempBounceMod = -0.7f;
-                throwRat.Launch((currentMouseTarget - transform.position).normalized * settings.throwForce);
+                //Initialize:
+                List<RatBoid> throwRats = new List<RatBoid>();                                                      //Initialize list to store rats which will be thrown
+                float aimValue = GetAimValue();                                                                     //Get aim value (so we don't have to keep re-calculating it)
+                int ratsToThrow = Mathf.RoundToInt(TotalFollowerCount * settings.maxRatPercentPerThrow * aimValue); //Get raw number of rats to throw based on aim value and follower count
+
+                //Find rats to throw:
+                ratsToThrow = Mathf.Clamp(ratsToThrow, 1, settings.maxRatsPerThrow);                            //Clamp throw number to make sure it is at least one and does not exceed hard cap
+                ratsToThrow = Mathf.Min(ratsToThrow, followerRats.Count);                                       //Make sure system is not trying to throw rats which are currently airborne
+                for (int i = 0; i < ratsToThrow && i < followerRats.Count; i++) throwRats.Add(followerRats[i]); //Designate rats from follower list to be thrown
+
+                //Launch rats:
+                float maxPointRand = settings.maxRandomSpread * aimValue; //Use aim value to scale random spread based on how many rats are being thrown
+                foreach (RatBoid rat in throwRats) //Iterate through list of rats being thrown
+                {
+                    //Get throw target:
+                    Vector3 currentTarget = latestMouseHit.point;                                                           //Get exact target from last point hit by mouse raycast
+                    currentTarget += Vector3.ProjectOnPlane(Random.insideUnitSphere * maxPointRand, latestMouseHit.normal); //Apply randomness to target within set radius, and only along normal plane of target point
+
+                    //Throw:
+                    rat.transform.position = transform.position;                                       //Move rat to position of leader
+                    rat.tempBounceMod = -0.7f;                                                         //Temporarily modify rat bounce characteristics
+                    rat.Launch((currentTarget - transform.position).normalized * settings.throwForce); //Apply throwForce to rat relative to given target
+                }
+
+                //Cleanup:
+                audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.throwReleases)); //Play a random release sound
             }
+
+            //Cleanup:
+            aimTime = -1;                  //Indicate that rat is no longer aiming
+            anim.SetBool("Aiming", false); //Play throw animation
         }
     }
     public void OnJumpInput(InputAction.CallbackContext context)
@@ -532,10 +581,7 @@ public class MasterRatController : MonoBehaviour
     public void OnMousePositionMove(InputAction.CallbackContext context)
     {
         Ray mouseRay = Camera.main.ScreenPointToRay(context.ReadValue<Vector2>());
-        if (Physics.Raycast(mouseRay, out RaycastHit hit))
-        {
-            currentMouseTarget = hit.point;
-        }
+        if (Physics.Raycast(mouseRay, out RaycastHit hit, settings.throwTargetLayers)) latestMouseHit = hit;
     }
 
     //FUNCTIONALITY METHODS:
@@ -582,14 +628,16 @@ public class MasterRatController : MonoBehaviour
 
         }
         else if (placeMarker &&            //Jump marker is requested
-                 totalFollowerCount > 0 && //Rat has at least one follower
+                 TotalFollowerCount > 0 && //Rat has at least one follower
                  trail.Count > 1)          //There is a trail to place the jump marker on
         {
             trail[0].MakeJumpMarker(force); //Make a jump marker at first trail point
         }
 
         //Cleanup:
-        falling = true; //Indicate that rat is now falling
+        if (placeMarker) anim.SetTrigger("Jump"); //Play jumping animation
+        else anim.SetTrigger("Fall");             //Play falling animation
+        falling = true;                           //Indicate that rat is now falling
     }
     /// <summary>
     /// Call to add given rat as a follower.
@@ -599,20 +647,20 @@ public class MasterRatController : MonoBehaviour
         //Initialize:
         if (followerRats.Contains(newFollower)) return;      //Ignore if rat is already a follower
         followerRats.Add(newFollower);                       //Add rat to followers list
-        if (totalFollowerCount == prevFollowerCount) return; //Ignore if this addition does not change follower count (likely due to aerial followers)
+        if (TotalFollowerCount == prevFollowerCount) return; //Ignore if this addition does not change follower count (likely due to aerial followers)
 
         //Jump marker maintenance:
         if (currentJumpMarkers > 0) //System has jump markers in place
         {
             for (int i = 0; i < trail.Count; i++) //Iterate through trail (from beginning to end)
             {
-                if (trail[i].trailValue >= newFollower.lastTrailValue) break; //Don't check any points which are behind position at which rat joined
+                if (trail[i].TrailValue >= newFollower.lastTrailValue) break; //Don't check any points which are behind position at which rat joined
                 if (trail[i].IsJumpMarker) trail[i].jumpTokens++;             //Add a jump token to any jump markers ahead of new rat
             }
         }
 
         //Cleanup:
-        OnFollowerCountChanged(); //Perform updates triggered by change in follower count
+        followerCountChanged.Invoke(); //Perform updates triggered by change in follower count
     }
     /// <summary>
     /// Call to remove given rat from follower list.
@@ -622,20 +670,20 @@ public class MasterRatController : MonoBehaviour
         //Initialize:
         if (!followerRats.Contains(oldFollower)) return;     //Ignore if rat is not currently a follower
         followerRats.Remove(oldFollower);                    //Remove rat from followers list
-        if (totalFollowerCount == prevFollowerCount) return; //Ignore if this subtraction does not change follower count (likely due to aerial followers)
+        if (TotalFollowerCount == prevFollowerCount) return; //Ignore if this subtraction does not change follower count (likely due to aerial followers)
 
         //Jump marker maintenance:
         if (currentJumpMarkers > 0) //System has jump markers in place
         {
             for (int i = 0; i < trail.Count; i++) //Iterate through trail (from beginning to end)
             {
-                if (trail[i].trailValue >= oldFollower.lastTrailValue) break; //Don't check any points which are behind position which rat left
+                if (trail[i].TrailValue >= oldFollower.lastTrailValue) break; //Don't check any points which are behind position which rat left
                 trail[i].TryExpendToken();                                    //Remove a token from any trail point ahead of removed rat
             }
         }
 
         //Cleanup:
-        OnFollowerCountChanged(); //Perform updates triggered by change in follower count
+        followerCountChanged.Invoke(); //Perform updates triggered by change in follower count
     }
     /// <summary>
     /// Updates general stuff which depends on current number of follower rats. Works with rat addition and removal.
@@ -643,10 +691,10 @@ public class MasterRatController : MonoBehaviour
     private void OnFollowerCountChanged()
     {
         //Initialize:
-        prevFollowerCount = totalFollowerCount; //Update follower count memory
+        prevFollowerCount = TotalFollowerCount; //Update follower count memory
 
         //Update UI:
-        InterfaceMaster.SetCounter(totalFollowerCount); //Set rat counter
+        InterfaceMaster.SetCounter(TotalFollowerCount); //Set rat counter
 
         //Update swarm settings:
         if (currentSwarmSettings == null) //Swarm settings have not been set up yet
@@ -656,7 +704,7 @@ public class MasterRatController : MonoBehaviour
             else currentSwarmSettings = ScriptableObject.CreateInstance<SwarmSettings>();                                       //Create a temporary object instance for swarm settings as part of normal setup
         }
         if (swarmSettings.Count == 1) return; //Ignore if swarm settings are just a copy of single given settings object
-        int ratNumber = totalFollowerCount; //Get current number of follower rats
+        int ratNumber = TotalFollowerCount; //Get current number of follower rats
         SwarmSettings lerpSettingsA = null; //Initialize container to store lower bound settings
         SwarmSettings lerpSettingsB = null; //Initialize container to store upper bound settings
         foreach (SwarmSettings item in swarmSettings) //Iterate through each given settings item
@@ -777,6 +825,33 @@ public class MasterRatController : MonoBehaviour
         return new TrailPointData(closestPoint, pointRefs.ToArray(), -(pointB - pointA).normalized, trailValue);                                           //Otherwise, return closest point with known direction
     }
     /// <summary>
+    /// Returns point in trail which corresponds to given value.
+    /// </summary>
+    /// <param name="trailValue">Number between 0 and 1 representing position on trail (0 is the leader, 1 is the end).</param>
+    public TrailPointData GetTrailPointFromValue(float trailValue)
+    {
+        //Edge cases:
+        if (trail.Count < 2) return new TrailPointData(FlatPos, trail.ToArray());                                                                                                             //Return position of leader if trail has no segments (return extant trail points for good measure)
+        if (trail.Count == 2) return new TrailPointData(Vector2.Lerp(trail[0].point, trail[1].point, trailValue), trail.ToArray(), (trail[0].point - trail[1].point).normalized, trailValue); //If there is just one segment, simply lerp between its two points
+
+        //Find point:
+        float distanceRemaining = trailValue * totalTrailLength; //Get exact amount of distance which needs to be covered to get to point
+        for (int i = 0; i < trail.Count - 1; i++) //Iterate through trail points with at least one following point
+        {
+            if (trail[i].segLength >= distanceRemaining) //Point is inside this segment
+            {
+                Vector2 point = Vector2.MoveTowards(trail[i].point, trail[i + 1].point, distanceRemaining);          //Find point within current segment based on remaining distance
+                Vector2 direction = (trail[i].point - trail[i + 1].point).normalized;                                //Get direction of trail at this point
+                return new TrailPointData(point, new TrailPoint[] { trail[i], trail[i + 1]}, direction, trailValue); //Return point data
+            }
+            else distanceRemaining -= trail[i].segLength; //Otherwise, subtract segment length from remaining distance and move on to next point
+        }
+
+        //Point could not be found:
+        Debug.LogWarning("GetTrailPointFromValue failed to get point within trail, TotalTrailLength may be inaccurate.");                                  //Post warning
+        return new TrailPointData(trail[^1].point, new TrailPoint[] { trail[^2], trail[^1] }, (trail[^2].point - trail[^1].point).normalized, trailValue); //Assume point is at very end of trail
+    }
+    /// <summary>
     /// Returns distance (in units) between points at given values on trail.
     /// </summary>
     /// <param name="pointValueA">Value between 0 and 1 representing first point in trail.</param>
@@ -804,6 +879,16 @@ public class MasterRatController : MonoBehaviour
         float product = Vector2.Dot(lhs, dir);         //Get dot product of direction and side
         product = Mathf.Clamp(product, 0, lineLength); //Clamp length to make sure projection is on line
         return pointA + (dir * product);               //Do projection to get actual closest point on trail
+    }
+    /// <summary>
+    /// Checks aim time and returns value representing intensity of potential throw.
+    /// </summary>
+    /// <returns>Value between 0 and 1, or -1 if rat is not currently aiming.</returns>
+    private float GetAimValue()
+    {
+        if (aimTime < 0) return -1;                                                                     //Return negative if rat is not aiming
+        if (aimTime < settings.throwChargeWait) return 0;                                               //Return minimum aim value if in waiting phase of aim charge
+        return Mathf.Clamp01(Mathf.InverseLerp(settings.throwChargeWait, MaxThrowChargeTime, aimTime)); //Return value representing strength of charge
     }
 }
 

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9664b6d69bd8e0046bc327cb715b15cd, type: 3}
+  m_Name: MamaSound_1
+  m_EditorClassIdentifier: 
+  footsteps:
+  - {fileID: 8300000, guid: d5fac6d9ecdc46f44b3b44d134a55884, type: 3}
+  - {fileID: 8300000, guid: 82b3cb84157d39a45b74917364d3869c, type: 3}
+  - {fileID: 8300000, guid: 1375b228489c5344c8fad6cbf234f4a0, type: 3}
+  - {fileID: 8300000, guid: b2cae0f86afa7264d9e08098eece8ca0, type: 3}
+  - {fileID: 8300000, guid: a3ce2a378763134419cbd1ed45ea236a, type: 3}
+  - {fileID: 8300000, guid: fb5c7c160ffbf234d88e5b0dc4154c28, type: 3}
+  - {fileID: 8300000, guid: db8069e517633c443a1ec6146f89fe52, type: 3}
+  - {fileID: 8300000, guid: c8290ef127d6fc0429ae5bdc43e65e2d, type: 3}
+  - {fileID: 8300000, guid: 377313a028422eb47807064b8a325b35, type: 3}
+  - {fileID: 8300000, guid: df7451ec70cc7224baf9a0d54a5bda46, type: 3}
+  landings:
+  - {fileID: 8300000, guid: a8141b2eaf5635b469ed88221bc83b70, type: 3}
+  - {fileID: 8300000, guid: f3df959362c83394bb5ae3bb0ef4df6b, type: 3}
+  throwWindups:
+  - {fileID: 8300000, guid: 098bf7753a9536c4995868cf88bcff6c, type: 3}
+  throwReleases:
+  - {fileID: 8300000, guid: c1f9eededb25afd4e8a60ef5fa1fd1e6, type: 3}
+  - {fileID: 8300000, guid: b71d6b623cacf6b4ebac146dd5307553, type: 3}
+  - {fileID: 8300000, guid: 1fc72911b81445e4fbbd46f976732bcf, type: 3}
+  - {fileID: 8300000, guid: 6312db69dd2966443a73d13de1f46094, type: 3}
