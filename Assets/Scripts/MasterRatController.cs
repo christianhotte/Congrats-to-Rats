@@ -273,7 +273,7 @@ public class MasterRatController : MonoBehaviour
         }
 
         //Footstep sounds:
-        if (!audioSource.isPlaying && currentSpeed != 0) //Rat is moving but audioSource is silent
+        if (!falling && !audioSource.isPlaying && currentSpeed != 0) //Rat is moving (not falling) but audioSource is silent
         {
             audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.footsteps)); //Play a random footstep noise
         }
@@ -326,6 +326,7 @@ public class MasterRatController : MonoBehaviour
                     //Landing cleanup:
                     falling = false;                                                           //Indicate that rat is no longer falling
                     airVelocity = Vector3.zero;                                                //Cancel all air velocity
+                    anim.SetTrigger("Land");                                                   //Play landing animation
                     audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.landings)); //Play a random landing sound
                 }
             }
@@ -634,7 +635,9 @@ public class MasterRatController : MonoBehaviour
         }
 
         //Cleanup:
-        falling = true; //Indicate that rat is now falling
+        if (placeMarker) anim.SetTrigger("Jump"); //Play jumping animation
+        else anim.SetTrigger("Fall");             //Play falling animation
+        falling = true;                           //Indicate that rat is now falling
     }
     /// <summary>
     /// Call to add given rat as a follower.
