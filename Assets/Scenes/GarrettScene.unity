@@ -1773,6 +1773,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 402360520200596869, guid: 64d2f0ae5e1f6414ea9f099c696af107, type: 3}
+      propertyPath: m_Materials.Array.data[3]
+      value: 
+      objectReference: {fileID: 2100000, guid: 4bffccaa3ab3fcd4ba81d2f865faf1cc, type: 2}
     - target: {fileID: 1575789408696489706, guid: 64d2f0ae5e1f6414ea9f099c696af107, type: 3}
       propertyPath: m_RootOrder
       value: 4
