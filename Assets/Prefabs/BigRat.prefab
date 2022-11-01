@@ -209,6 +209,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   settings: {fileID: 11400000, guid: 05459abdf753c3d4d9822d0a9ff599ed, type: 2}
+  soundSettings: {fileID: 11400000, guid: ca45e1a22851463419ded4a0cca80110, type: 2}
   swarmSettings:
   - {fileID: 11400000, guid: 16bf19914b8540a41a8fab6ec653430e, type: 2}
   - {fileID: 11400000, guid: 72812ea4b8be10545bc0b43555238642, type: 2}
@@ -249,7 +250,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 0.3
+  m_Volume: 1
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -382,13 +383,13 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 19d4706a69b35764994edb3b89108e10, type: 3}
   - {fileID: 8300000, guid: cf568febfc333e34aab366faaa4adb18, type: 3}
   introMusicVolume: {fileID: 0}
-  baseVolume: 0.8
+  baseVolume: 0.3
   fadeTime: 2.1
   fadeInterval: 0.02
-  baseNarrationVolume: 1
-  narrationMusicVolume: 0.1
-  narrationMusicFadeTime: 1.3
-  narrationPlayDelay: 1.6
+  baseNarrationVolume: 0.5
+  narrationMusicVolume: 0.085
+  narrationMusicFadeTime: 1.5
+  narrationPlayDelay: 2
 --- !u!135 &1216433272091941898
 SphereCollider:
   m_ObjectHideFlags: 0

@@ -44,12 +44,13 @@ public class MusicManager : MonoBehaviour
         fadingClip = true;      //Indicate that system is currently fading into new clip
 
         //Crossfade:
-        for (float totalTime = 0; totalTime < fadeTime; totalTime += fadeInterval) //Iterate every interval for given number of seconds
+        for (float totalTime = 0; totalTime < fadeTime;) //Iterate every interval for given number of seconds
         {
-            float volValue = (totalTime / fadeTime) * currentVolume; //Get volume value for fade source based on progression of fade and current volume setting
+            float volValue = (totalTime / fadeTime) * currentVolume; //Get value for current fade source volume based on progression of time and current volume setting
             fadeSource.volume = volValue;                            //Set rising volume for fade source
-            mainSource.volume = 1 - volValue;                        //Set falling volume for main source
+            mainSource.volume = currentVolume - volValue;            //Set falling volume for main source
             yield return new WaitForSeconds(fadeInterval);           //Wait for next interval
+            totalTime += fadeInterval;                               //Increment time tracker by interval
         }
 
         //Switch sources:

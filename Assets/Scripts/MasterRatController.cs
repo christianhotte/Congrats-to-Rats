@@ -176,8 +176,9 @@ public class MasterRatController : MonoBehaviour
     private Billboarder billboarder; //Component used to manage sprite orientation
     private AudioSource audioSource; //Audiosource component for mama rat sfx
 
-    [Header("Settings:")]
+    [Header("Settings Objects:")]
     [Tooltip("Interchangeable data object describing settings of the main rat")]                                                    public BigRatSettings settings;
+    [Tooltip("Interchangeable data object describing sound settings for this rat")]                                                 public MamaSoundSettings soundSettings;
     [SerializeField, Tooltip("Place any number of swarm settings objects here (make sure they have different Target Rat Numbers)")] private List<SwarmSettings> swarmSettings = new List<SwarmSettings>();
 
     //Runtime Vars:
@@ -245,6 +246,7 @@ public class MasterRatController : MonoBehaviour
         sprite = GetComponentInChildren<SpriteRenderer>();   //Get spriteRenderer component
         anim = GetComponentInChildren<Animator>();           //Get animator controller component
         billboarder = GetComponentInChildren<Billboarder>(); //Get billboarder component
+        audioSource = GetComponent<AudioSource>();           //Get audioSource component
     }
     private void Update()
     {
@@ -268,6 +270,12 @@ public class MasterRatController : MonoBehaviour
                 Debug.DrawLine(p1, p2, trail[i].IsJumpMarker || trail[i - 1].IsJumpMarker ? Color.yellow : Color.blue);
                 //if (trail[i].IsJumpMarker) { print("Marker " + x + "'s trail value is " + trail[i].trailValue); x++; }
             }
+        }
+
+        //Footstep sounds:
+        if (!audioSource.isPlaying && currentSpeed != 0) //Rat is moving but audioSource is silent
+        {
+            audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.footsteps)); //Play a random footstep noise
         }
     }
     private void OnDestroy()
@@ -316,8 +324,9 @@ public class MasterRatController : MonoBehaviour
                     billboarder.SetZRot(-Vector3.SignedAngle(Vector3.up, hit.normal, Vector3.forward)); //Twist billboard so rat is flat on surface
 
                     //Landing cleanup:
-                    falling = false;            //Indicate that rat is no longer falling
-                    airVelocity = Vector3.zero; //Cancel all air velocity
+                    falling = false;                                                           //Indicate that rat is no longer falling
+                    airVelocity = Vector3.zero;                                                //Cancel all air velocity
+                    audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.landings)); //Play a random landing sound
                 }
             }
         }
@@ -513,8 +522,9 @@ public class MasterRatController : MonoBehaviour
         if (context.performed && followerRats.Count > 0) //Throw button has just been pressed (and there is at least one rat to throw)
         {
             //Cleanup:
-            aimTime = 0;                  //Indicate that rat is now aiming
-            anim.SetBool("Aiming", true); //Play aim animation
+            aimTime = 0;                                                                   //Indicate that rat is now aiming
+            anim.SetBool("Aiming", true);                                                  //Play aim animation
+            audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.throwWindups)); //Play a random windup sound
         }
         else if (aimTime > -1) //Throw button has just been released while aiming
         {
@@ -543,6 +553,9 @@ public class MasterRatController : MonoBehaviour
                     rat.tempBounceMod = -0.7f;                                                         //Temporarily modify rat bounce characteristics
                     rat.Launch((currentTarget - transform.position).normalized * settings.throwForce); //Apply throwForce to rat relative to given target
                 }
+
+                //Cleanup:
+                audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.throwReleases)); //Play a random release sound
             }
 
             //Cleanup:

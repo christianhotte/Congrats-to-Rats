@@ -40,7 +40,7 @@ MonoBehaviour:
   throwTargetLayers:
     serializedVersion: 2
     m_Bits: 961
-  throwForce: 11
+  throwForce: 9
   maxRandomSpread: 0.23
   throwChargeWait: 0.35
   throwChargeSpeed: 0.65
