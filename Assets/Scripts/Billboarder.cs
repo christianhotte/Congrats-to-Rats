@@ -7,6 +7,9 @@ using UnityEngine;
 /// </summary>
 public class Billboarder : MonoBehaviour
 {
+    //Static Stuff:
+    private static List<Billboarder> boards = new List<Billboarder>(); //Master list of all active billboards in scene
+
     //Objects & Components:
     private SpriteRenderer r; //Render component for this billboard's sprite
 
@@ -22,10 +25,27 @@ public class Billboarder : MonoBehaviour
 
     private void Awake()
     {
+        //Initialize:
+        if (!boards.Contains(this)) boards.Add(this); //Add this board to master list
+
         //Get objects & components:
         r = GetComponent<SpriteRenderer>(); //Get renderer
     }
-    void Update()
+    private void Update()
+    {
+        if (boards.IndexOf(this) == 0) //Use first billboarder in boards list to perform all updates at once
+        {
+            foreach (Billboarder board in boards) board.UpdateRotation(); //Update rotation of every existing board
+        }
+    }
+    private void OnDestroy()
+    {
+        //Final cleanup:
+        if (boards.Contains(this)) boards.Remove(this); //Remove this board from master list
+    }
+
+    //FUNCTIONALITY METHODS:
+    public void UpdateRotation()
     {
         //Initialize:
         Vector3 camAngles = Camera.main.transform.eulerAngles;             //Get camera orientation
@@ -40,7 +60,7 @@ public class Billboarder : MonoBehaviour
         if (r.material.HasProperty("_LightAngle")) r.material.SetFloat("_LightAngle", currentZRot * (r.flipX ? -1 : 1)); //Set light angle to directly upwards if relevant (flip if sprite is flipped)
     }
 
-    //FUNCTIONALITY METHODS:
+    //OPERATION METHODS:
     /// <summary>
     /// Sets Z rotation of billboard, ignoring smooth approach.
     /// </summary>
