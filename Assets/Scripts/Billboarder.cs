@@ -36,7 +36,7 @@ public class Billboarder : MonoBehaviour
         newRot = Quaternion.AngleAxis(currentZRot, Camera.main.transform.forward) * newRot;                                                                                              //Rotate billboard relative to forward direction of camera
 
         //Cleanup:
-        transform.rotation = newRot;                                                                //Apply new orientation
+        transform.rotation = newRot;                                                                                     //Apply new orientation
         if (r.material.HasProperty("_LightAngle")) r.material.SetFloat("_LightAngle", currentZRot * (r.flipX ? -1 : 1)); //Set light angle to directly upwards if relevant (flip if sprite is flipped)
     }
 
