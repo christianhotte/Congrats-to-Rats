@@ -59,10 +59,10 @@ public class CameraTrigger : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         //Activate camera:
-        cam.enabled = true;                           //Enable camera
-        if (current != null) current.DisableCamera(); //Disable old camera (if applicable)
-        previous = current;                           //Move current script to previous
-        current = this;                               //Make this the current camera trigger
+        cam.enabled = true;                                              //Enable camera
+        if (current != null && current != this) current.DisableCamera(); //Disable old camera (if applicable)
+        previous = current;                                              //Move current script to previous
+        current = this;                                                  //Make this the current camera trigger
     }
 
     //OPERATION METHODS:

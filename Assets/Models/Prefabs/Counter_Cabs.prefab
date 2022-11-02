@@ -11,12 +11,12 @@ GameObject:
   - component: {fileID: 6983701791957652515}
   - component: {fileID: 1952428393453951052}
   - component: {fileID: 4914648167617752933}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: R_Cab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &6983701791957652515
 Transform:
@@ -94,12 +94,13 @@ GameObject:
   - component: {fileID: 4968374321873522542}
   - component: {fileID: 8312780189188653259}
   - component: {fileID: 6104658723654759425}
-  m_Layer: 0
+  - component: {fileID: 5497018151699100931}
+  m_Layer: 7
   m_Name: Counter_Cabs
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &4968374321873522542
 Transform:
@@ -168,6 +169,20 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &5497018151699100931
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5744594984888292820}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 2701331860175958088, guid: 6b63400affae7c644a242904bf4d3c78, type: 3}
 --- !u!1 &5832108873158529664
 GameObject:
   m_ObjectHideFlags: 0
@@ -179,12 +194,12 @@ GameObject:
   - component: {fileID: 4232233522124567112}
   - component: {fileID: 4616291280917927236}
   - component: {fileID: 818002061133675036}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: L_Cab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &4232233522124567112
 Transform:
@@ -262,12 +277,13 @@ GameObject:
   - component: {fileID: 2290746835903303876}
   - component: {fileID: 3470894457006519485}
   - component: {fileID: 5389123712154749259}
-  m_Layer: 0
+  - component: {fileID: 7013495729052634325}
+  m_Layer: 7
   m_Name: R_Cab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &2290746835903303876
 Transform:
@@ -335,6 +351,20 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &7013495729052634325
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6935936131750834191}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -1726527957848124068, guid: 6b63400affae7c644a242904bf4d3c78, type: 3}
 --- !u!1 &6942599469678198159
 GameObject:
   m_ObjectHideFlags: 0
@@ -346,12 +376,13 @@ GameObject:
   - component: {fileID: 3186431302229789594}
   - component: {fileID: 8994058342528274052}
   - component: {fileID: 3645337058422450015}
-  m_Layer: 0
+  - component: {fileID: 7599917459866134476}
+  m_Layer: 7
   m_Name: L_Cab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &3186431302229789594
 Transform:
@@ -419,3 +450,17 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &7599917459866134476
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6942599469678198159}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 2205220705643939129, guid: 6b63400affae7c644a242904bf4d3c78, type: 3}
