@@ -11,12 +11,12 @@ GameObject:
   - component: {fileID: 5447393184353762498}
   - component: {fileID: 1568012104595237602}
   - component: {fileID: 9150121731754345230}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: LightBulb
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &5447393184353762498
 Transform:
@@ -96,12 +96,12 @@ GameObject:
   - component: {fileID: 8977179899059558144}
   - component: {fileID: 6589239903604188106}
   - component: {fileID: 9009344393820051376}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &5420788155550259365
 Transform:

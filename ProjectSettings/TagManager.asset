@@ -17,8 +17,8 @@ TagManager:
   - LeaderObstacle
   - ShadowCaster
   - MusicVolume
-  - 
-  - 
+  - CameraVolume
+  - Interactable
   - 
   - 
   - 

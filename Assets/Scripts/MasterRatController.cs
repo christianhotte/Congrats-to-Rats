@@ -336,9 +336,14 @@ public class MasterRatController : MonoBehaviour
             //Modify velocity:
             if (moveInput != Vector2.zero && aimTime < 0) //Player is moving rat in a direction (and not aiming)
             {
+                //Rotate input:
+                Vector3 rotatedMoveInput = RatBoid.UnFlattenVector(moveInput);                    //Put move input into Vector3 for rotating purposes
+                float camAngle = Vector2.Angle(Vector2.up, CameraTrigger.GetDirectionRef);        //Get angle relative to current camera direction
+                rotatedMoveInput = Quaternion.AngleAxis(camAngle, Vector3.up) * rotatedMoveInput; //Rotate move input vector around Y axis based on camera angle
+
                 //Add velocity:
-                Vector2 addVel = moveInput * settings.accel; //Get added velocity based on input this frame
-                velocity += addVel * deltaTime;              //Add velocity as acceleration over time
+                Vector2 addVel = RatBoid.FlattenVector(rotatedMoveInput) * settings.accel; //Get added velocity based on input this frame
+                velocity += addVel * deltaTime;                                            //Add velocity as acceleration over time
 
                 //Flip sprite:
                 if (moveInput.x != 0) sprite.flipX = settings.flipAll ? moveInput.x < 0 : moveInput.x > 0; //Flip sprite to direction of horizontal move input
