@@ -12,12 +12,12 @@ GameObject:
   - component: {fileID: 3131977055307075529}
   - component: {fileID: 906335957472541443}
   - component: {fileID: 7575079089570140592}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: GiftBag(Blue)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &2078656543482413164
 Transform:

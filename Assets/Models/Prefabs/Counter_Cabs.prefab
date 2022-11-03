@@ -111,7 +111,7 @@ Transform:
   m_GameObject: {fileID: 5744594984888292820}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 45.47104, y: -0.00000029802322, z: 0.0000071525574}
-  m_LocalScale: {x: 0.04, y: 0.04, z: 0.04}
+  m_LocalScale: {x: 0.060887244, y: 0.060887244, z: 0.060887244}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 3186431302229789594}
@@ -154,7 +154,7 @@ MeshRenderer:
   m_StaticBatchRoot: {fileID: 0}
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
+  m_ScaleInLightmap: 0.4
   m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0

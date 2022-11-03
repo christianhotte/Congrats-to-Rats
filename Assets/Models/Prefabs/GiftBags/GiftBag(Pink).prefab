@@ -11,12 +11,13 @@ GameObject:
   - component: {fileID: 1926102260005234367}
   - component: {fileID: 3248564664186923290}
   - component: {fileID: 788639078947986896}
-  m_Layer: 0
+  - component: {fileID: 6639155388480119246}
+  m_Layer: 7
   m_Name: GiftBag(Pink)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &1926102260005234367
 Transform:
@@ -84,3 +85,17 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &6639155388480119246
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1292871057220320261}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -1443376793965759890, guid: 99eafe7f3d5f3844389dd1c0d2133adc, type: 3}
