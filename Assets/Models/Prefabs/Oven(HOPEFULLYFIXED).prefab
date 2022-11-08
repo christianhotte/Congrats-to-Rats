@@ -11,12 +11,12 @@ GameObject:
   - component: {fileID: 8567930665263168733}
   - component: {fileID: 2261505925711940517}
   - component: {fileID: 674008787190292244}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface10
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &8567930665263168733
 Transform:
@@ -94,12 +94,12 @@ GameObject:
   - component: {fileID: 672989699862787008}
   - component: {fileID: 7564807285184845384}
   - component: {fileID: 5270754930049519030}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &672989699862787008
 Transform:
@@ -177,12 +177,12 @@ GameObject:
   - component: {fileID: 4852128491714946591}
   - component: {fileID: 2041869707111884620}
   - component: {fileID: 2155202064071760623}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface15
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &4852128491714946591
 Transform:
@@ -260,12 +260,12 @@ GameObject:
   - component: {fileID: 6011450624320231664}
   - component: {fileID: 4243988988299334820}
   - component: {fileID: 1076485628287936775}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface18
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &6011450624320231664
 Transform:
@@ -343,12 +343,12 @@ GameObject:
   - component: {fileID: 9027257407920433045}
   - component: {fileID: 9111083789352481422}
   - component: {fileID: 9022076815810760118}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &9027257407920433045
 Transform:
@@ -426,12 +426,12 @@ GameObject:
   - component: {fileID: 6803697625269546517}
   - component: {fileID: 9089097082657751018}
   - component: {fileID: 5538355909655835379}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface12
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &6803697625269546517
 Transform:
@@ -509,12 +509,12 @@ GameObject:
   - component: {fileID: 331029657451756051}
   - component: {fileID: 5101916816029538453}
   - component: {fileID: 6923922135624428187}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface7
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &331029657451756051
 Transform:
@@ -590,12 +590,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2485066740072485151}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: Oven(HOPEFULLYFIXED)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &2485066740072485151
 Transform:
@@ -606,7 +606,7 @@ Transform:
   m_GameObject: {fileID: 2969960831520394149}
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -26.5, y: 0, z: -24.04}
-  m_LocalScale: {x: 0.060887244, y: 0.060887244, z: 0.060887244}
+  m_LocalScale: {x: 0.062271997, y: 0.062271997, z: 0.062271997}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 7291283947359620429}
@@ -624,12 +624,12 @@ GameObject:
   - component: {fileID: 169823756131559169}
   - component: {fileID: 3485161839093733942}
   - component: {fileID: 6525325241032537631}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &169823756131559169
 Transform:
@@ -708,12 +708,12 @@ GameObject:
   - component: {fileID: 5188900015326111023}
   - component: {fileID: 6727087527013067992}
   - component: {fileID: 5029882059297486341}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: Oven
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &7291283947359620429
 Transform:
@@ -786,7 +786,7 @@ MeshRenderer:
   m_StaticBatchRoot: {fileID: 0}
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 0.7
+  m_ScaleInLightmap: 1
   m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
@@ -826,12 +826,12 @@ GameObject:
   - component: {fileID: 8680143234400963473}
   - component: {fileID: 8772196102462573056}
   - component: {fileID: 6802680103396224490}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface20
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &8680143234400963473
 Transform:
@@ -908,12 +908,12 @@ GameObject:
   m_Component:
   - component: {fileID: 3440686501385712776}
   - component: {fileID: 5165859308556361167}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &3440686501385712776
 Transform:
@@ -924,7 +924,7 @@ Transform:
   m_GameObject: {fileID: 4609509936865661138}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.09999275, y: 97.628876, z: 0.4500389}
-  m_LocalScale: {x: 101.4878, y: 4.74225, z: 60.9155}
+  m_LocalScale: {x: 98.915985, y: 4.74225, z: 60.9155}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7291283947359620429}
@@ -954,12 +954,12 @@ GameObject:
   - component: {fileID: 3856115519961254141}
   - component: {fileID: 2139240982747976794}
   - component: {fileID: 4063128479890901487}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &3856115519961254141
 Transform:
@@ -1037,12 +1037,12 @@ GameObject:
   - component: {fileID: 8718656090596906943}
   - component: {fileID: 1644692536422408884}
   - component: {fileID: 3864538481789859797}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface13
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &8718656090596906943
 Transform:
@@ -1120,12 +1120,12 @@ GameObject:
   - component: {fileID: 6169748920192605412}
   - component: {fileID: 2616676524540536887}
   - component: {fileID: 1123510943027690925}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &6169748920192605412
 Transform:
@@ -1203,12 +1203,12 @@ GameObject:
   - component: {fileID: 706135631032389961}
   - component: {fileID: 2030983807450301441}
   - component: {fileID: 1902419208453768523}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface16
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &706135631032389961
 Transform:
@@ -1286,12 +1286,12 @@ GameObject:
   - component: {fileID: 6755153418598468569}
   - component: {fileID: 2495630575024440451}
   - component: {fileID: 4814348933606230565}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &6755153418598468569
 Transform:
@@ -1369,12 +1369,12 @@ GameObject:
   - component: {fileID: 8649402340510364046}
   - component: {fileID: 1445665432350397557}
   - component: {fileID: 4202829915607036755}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface14
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &8649402340510364046
 Transform:
@@ -1452,12 +1452,12 @@ GameObject:
   - component: {fileID: 203537681065721632}
   - component: {fileID: 7167725903868570820}
   - component: {fileID: 3570963944590281405}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface17
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &203537681065721632
 Transform:
@@ -1535,12 +1535,12 @@ GameObject:
   - component: {fileID: 4608532399902430770}
   - component: {fileID: 3373824897250625033}
   - component: {fileID: 5959695308476327208}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface9
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &4608532399902430770
 Transform:
@@ -1618,12 +1618,12 @@ GameObject:
   - component: {fileID: 5487884964243156134}
   - component: {fileID: 8580669023077816065}
   - component: {fileID: 505783340675019195}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface19
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &5487884964243156134
 Transform:
@@ -1701,12 +1701,12 @@ GameObject:
   - component: {fileID: 1824885623422959220}
   - component: {fileID: 1585276410875140618}
   - component: {fileID: 2890867702595808306}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface21
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &1824885623422959220
 Transform:
@@ -1784,12 +1784,12 @@ GameObject:
   - component: {fileID: 567767158090344952}
   - component: {fileID: 1828014859064734814}
   - component: {fileID: 2829706768583004064}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: polySurface8
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &567767158090344952
 Transform:
