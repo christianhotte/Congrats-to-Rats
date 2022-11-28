@@ -17,7 +17,9 @@ public class RatBoid : MonoBehaviour
     /// List of rats not currently targeting any particular object (such as leader).
     /// </summary>
     public static List<RatBoid> freeRats = new List<RatBoid>();
-    public static readonly float timeBalancer = 100; //Value applied to all acceleration applications (so that settings aren't messed up by adding deltaTime)
+
+    public static readonly float timeBalancer = 100;          //Value applied to all acceleration applications (so that settings aren't messed up by adding deltaTime)
+    private static readonly LayerMask effectZoneMask = 16384; //Layermask for effect zones (result of LayerMask.GetMask(new string[] { "EffectZone" }))
 
     //Objects & Components:
     private SpriteRenderer r;         //Render component for this rat's sprite
@@ -40,6 +42,7 @@ public class RatBoid : MonoBehaviour
 
     internal List<RatBoid> currentNeighbors = new List<RatBoid>();  //Other rats which are currently close to this rat
     internal List<RatBoid> currentSeparators = new List<RatBoid>(); //Other rats which are currently too close to this rat
+    private List<EffectZone> currentZones = new List<EffectZone>(); //Effect zones this rat is currently inside
     internal float lastTrailValue = -1;                             //Latest value of target on trail (should be reset whenever rat loses target)
     internal float sizeFactor = 1;                                  //Factor used to change certain properties of rat based on scale variance
     internal Vector3 airVelocity;                                   //3D velocity used when rat is falling
@@ -124,19 +127,26 @@ public class RatBoid : MonoBehaviour
                 if (rat.behavior == RatBehavior.TrailFollower) floorCheckHeight += MasterRatController.main.settings.fallHeight; //Use leader's fall height if applicable
                 else floorCheckHeight += rat.settings.fallHeight;                                                                //Otherwise, use rat's natural fall height
 
-                //Check obstacles & floor:
+                //Check obstacles:
                 if (Physics.Linecast(rat.transform.position, newPos, out RaycastHit hit, rat.settings.obstructionLayers)) //Rat is obstructed
                 {
                     Vector3 idealPos = newPos;                                       //Get position rat would move to if not obstructed
                     newPos = hit.point + (0.001f * hit.normal);                      //Move rat to hit location (and scooch away slightly so that it is able to re-collide)
                     newPos += Vector3.ProjectOnPlane(idealPos - newPos, hit.normal); //Add remainder of velocity by projecting change in position onto plane defined by hit normal
                 }
+
+                //Check floor:
                 Vector3 fallPoint = newPos + (Vector3.down * floorCheckHeight); //Get point used to check whether or not rat is falling
                 if (Physics.Linecast(newPos, fallPoint, out hit, rat.settings.obstructionLayers)) //Floor under rat can be found
                 {
                     newPos = Vector3.MoveTowards(newPos, hit.point + (Vector3.up * adjustedHeight), rat.settings.heightChangeRate * deltaTime);         //Move target position upward according to height of floor
                     rat.billboarder.targetZRot = Vector3.SignedAngle(Vector3.up, Vector3.ProjectOnPlane(hit.normal, Vector3.forward), Vector3.forward); //Twist billboard so rat is flat on surface
                     if (rat.settings.doShadowMatching) rat.GetLightingFromHit(hit, deltaTime);                                                          //Update rat lighting based on light properties of hit surface
+                    if (hit.collider.TryGetComponent(out Rigidbody floorBody))                                                                          //Floor is physics-enabled (apply rat weight to floor)
+                    {
+                        Vector3 weightForce = rat.settings.mass * rat.settings.gravity * Vector3.down; //Get force induced by rat's weight on floor
+                        floorBody.AddForceAtPosition(weightForce, hit.point, ForceMode.Force);         //Apply force to floor based on rat weight
+                    }
                 }
                 else //No floor found
                 {
@@ -185,6 +195,15 @@ public class RatBoid : MonoBehaviour
                     rat.billboarder.SetZRot(billboardRot);                                                                                 //Set rotation of rat billboard
                 }
             }
+
+            //Check zones:
+            Vector3 moveDir = newPos - rat.transform.position;                                                               //Get non-normalized vector representing rat's direction and distance of travel
+            float moveDist = moveDir.magnitude; moveDir = moveDir.normalized;                                                //Get distance rat has moved as separate variable, then normalize move direction vector
+            RaycastHit[] zoneHits = Physics.RaycastAll(rat.transform.position, moveDir, moveDist, effectZoneMask);           //Check to see if rat has entered any zones
+            foreach (RaycastHit hit in zoneHits) if (hit.collider.TryGetComponent(out EffectZone zone)) rat.AddToZone(zone); //Add rat to lists of each zone which it has entered
+
+            zoneHits = Physics.RaycastAll(newPos, -moveDir, moveDist, effectZoneMask);                                            //Check to see if rat has left any zones
+            foreach (RaycastHit hit in zoneHits) if (hit.collider.TryGetComponent(out EffectZone zone)) rat.RemoveFromZone(zone); //Remove rat from any zones it has left
 
             //Cleanup:
             rat.flatPos.x = newPos.x; rat.flatPos.y = newPos.z; //Update flat position tracker
@@ -571,6 +590,22 @@ public class RatBoid : MonoBehaviour
         //Cleanup:
         tempBounceMod = 0;          //Reset bounce modifier
         airVelocity = Vector3.zero; //Clear air velocity (but keep momentum by retaining flat velocity)
+    }
+    /// <summary>
+    /// Indicates that this rat is now within given effector zone.
+    /// </summary>
+    public void AddToZone(EffectZone zone)
+    {
+        if (!currentZones.Contains(zone)) currentZones.Add(zone); //Add zone to rat's local zone list
+        zone.AddRat(this);                                        //Add this rat to zone
+    }
+    /// <summary>
+    /// Indicates that this rat has left given effector zone.
+    /// </summary>
+    public void RemoveFromZone(EffectZone zone)
+    {
+        if (currentZones.Contains(zone)) currentZones.Remove(zone); //Remove zone from rat's local zone list
+        zone.RemoveRat(this);                                       //Remove this rat from zone
     }
 
     //UTILITY METHODS:
