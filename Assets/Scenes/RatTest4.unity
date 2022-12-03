@@ -8744,7 +8744,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 96.60127, y: 52.0651, z: 212.89444}
   m_Center: {x: 0, y: 19.66557, z: 106.44714}
---- !u!114 &1905409539
+--- !u!114 &1905409542
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8753,38 +8753,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1905409534}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70fc9b0514ca0ff48a98a4ccca6f453b, type: 3}
+  m_Script: {fileID: 11500000, guid: 30643e0c7e9465d45a7bc7e1063d7034, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  disablesPath: 0
-  bufferDepth: 0.05
-  bufferCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 1
-      outSlope: 1
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 1
-      outSlope: 1
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  strength: 16
-  direction: {x: -0.35, y: 0, z: 1}
   checkObstruction: 1
+  deltaTemp: -10
 --- !u!1 &1937629829 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2760126436428266735, guid: 01f3e6a7a45eae044a2fbdec313b5231, type: 3}
@@ -9220,7 +9193,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62ca95ee743a88647a98412c63762a91, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bounceValue: 1
+  bounceValue: 1.2
   bounceDirection: {x: 0, y: 0, z: 0}
   maxBounceAngle: 180
   bounceVel: 1

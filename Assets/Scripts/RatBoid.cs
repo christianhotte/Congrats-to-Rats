@@ -46,11 +46,35 @@ public class RatBoid : MonoBehaviour
     internal float lastTrailValue = -1;                             //Latest value of target on trail (should be reset whenever rat loses target)
     internal float sizeFactor = 1;                                  //Factor used to change certain properties of rat based on scale variance
     internal Vector3 airVelocity;                                   //3D velocity used when rat is falling
+    internal float temperature = 68;                                //Current temperature of rat (in degrees)
 
     private float timeUntilFlip;   //Time before this rat is able to flip its sprite orientation (prevents jiggling)
     internal float neighborCrush;  //Represents how many neighbors this rat has and how close they are
     internal float pileHeight = 0; //Additional height added to rat due to piling
     internal bool thrown;          //Indicates whether currently-airborne rat was thrown (resets when rat lands or hits a wall)
+
+    //UTILITY VARS:
+    /// <summary>
+    /// Current max speed of rat, accounting for environmental factors
+    /// </summary>
+    internal float EffectiveMaxSpeed
+    {
+        get
+        {
+            //Initialization:
+            float value = settings.maxSpeed; //Set base speed value to modify
+
+            //Environmental factors:
+            if (temperature < settings.coldTempRange.y) value *= settings.coldSpeedCurve.Evaluate(ChillValue); //Evaluate chill percentage to get multiplier for max speed (if rat is too cold)
+
+            //Cleanup:
+            return value; //Return modified max speed value
+        }
+    }
+    /// <summary>
+    /// Percentage value representing how close to freezing rat is.
+    /// </summary>
+    private float ChillValue { get { return Mathf.Clamp01(Mathf.InverseLerp(settings.coldTempRange.y, settings.coldTempRange.x, temperature)); } }
 
     //RUNTIME METHODS:
     private void Awake()
@@ -300,7 +324,7 @@ public class RatBoid : MonoBehaviour
                 Vector2 localCenterMass = GetCenterMass(rat.currentNeighbors.ToArray());                 //Find center mass of this rat's current neighborhood
                 Vector2 cohesionVel = localCenterMass - rat.flatPos;                                     //Get velocity vector representing direction and magnitude of rat separation from center mass
                 cohesionVel = (cohesionVel / 100) * settings.cohesionWeight;                             //Apply weight and balancing values to cohesion velocity
-                rat.velocity += Vector2.ClampMagnitude(cohesionVel, rat.settings.maxSpeed) * adjustedDT; //Apply clamped velocity to rat
+                rat.velocity += Vector2.ClampMagnitude(cohesionVel, rat.EffectiveMaxSpeed) * adjustedDT; //Apply clamped velocity to rat
 
                 //RULE - Conformity: (rats tend to match the velocity of nearby rats)
                 Vector2 conformVel = Vector2.zero; //Initialize container to store gross conformance-induced velocity
@@ -314,11 +338,11 @@ public class RatBoid : MonoBehaviour
                 {
                     conformVel *= Mathf.Lerp(settings.stillConformMultiplier, 1, leaderSpeedValue); //Apply a multiplier to conformity value which scales inversely to leader speed
                 }
-                rat.velocity += Vector2.ClampMagnitude(conformVel, rat.settings.maxSpeed) * adjustedDT; //Apply clamped velocity to rat
+                rat.velocity += Vector2.ClampMagnitude(conformVel, rat.EffectiveMaxSpeed) * adjustedDT; //Apply clamped velocity to rat
             }
 
             //RULE - Velocity Clamping: (rats cannot go faster than their max speed)
-            rat.velocity = Vector2.ClampMagnitude(rat.velocity, rat.settings.maxSpeed); //Clamp rat velocity to maximum speed
+            rat.velocity = Vector2.ClampMagnitude(rat.velocity, rat.EffectiveMaxSpeed); //Clamp rat velocity to maximum speed
 
             //RULE - Separation: (rats maintain a small distance from each other)
             if (rat.currentSeparators.Count != 0) //Only do separation if rat has separators
@@ -505,6 +529,13 @@ public class RatBoid : MonoBehaviour
             {
                 rat.r.material.SetFloat("_OcclusionIntensity", 0); //Ensure rat is not occluded
                 rat.pileHeight = 0;                                //Set pile height to zero
+            }
+
+            //Status upkeep:
+            if (rat.temperature != 68) //Rat is not at room temperature
+            {
+                rat.temperature = Mathf.MoveTowards(rat.temperature, 68, rat.settings.tempMaintain * deltaTime); //Have rats attempt to maintain their comfortable temperature
+                rat.billboarder.r.material.SetFloat("_TempValue", -rat.ChillValue);                              //TEMP: update rat sprite color depending on temperature
             }
         }
     }

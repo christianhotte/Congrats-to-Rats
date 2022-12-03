@@ -630,10 +630,6 @@ public class MasterRatController : MonoBehaviour
     /// <param name="force">Direction and power with which rat will be launched.</param>
     public void Launch(Vector3 force, bool placeMarker = true)
     {
-        //Modify velocity:
-        velocity = Vector2.zero; //Erase conventional velocity
-        airVelocity = force;     //Apply force to airborne velocity
-
         //Place jump marker:
         if (force.normalized == Vector3.up) //Vertical jump
         {
@@ -643,8 +639,19 @@ public class MasterRatController : MonoBehaviour
                  TotalFollowerCount > 0 && //Rat has at least one follower
                  trail.Count > 1)          //There is a trail to place the jump marker on
         {
-            trail[0].MakeJumpMarker(force); //Make a jump marker at first trail point
+            Vector3 offsetPos = transform.position; offsetPos.y += settings.jumpValidationOffset.y;                            //Get position with vertical validation offset applied
+            Vector3 jumpValPos = offsetPos + (RatBoid.UnFlattenVector(velocity).normalized * settings.jumpValidationOffset.x); //Predict position to check for jump validity with
+            Debug.DrawLine(offsetPos, jumpValPos, Color.red, 5);
+            if (!Physics.Linecast(offsetPos, jumpValPos, settings.blockingLayers)) //Jump is predicted to be valid
+            {
+                trail[0].MakeJumpMarker(force); //Make a jump marker at first trail point
+            }
+            
         }
+
+        //Modify velocity:
+        velocity = Vector2.zero; //Erase conventional velocity
+        airVelocity = force;     //Apply force to airborne velocity
 
         //Cleanup:
         if (placeMarker) anim.SetTrigger("Jump"); //Play jumping animation

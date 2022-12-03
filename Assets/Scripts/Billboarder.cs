@@ -11,7 +11,7 @@ public class Billboarder : MonoBehaviour
     private static List<Billboarder> boards = new List<Billboarder>(); //Master list of all active billboards in scene
 
     //Objects & Components:
-    private SpriteRenderer r; //Render component for this billboard's sprite
+    internal SpriteRenderer r; //Render component for this billboard's sprite
 
     //Settings:
     [Header("Settings:")]

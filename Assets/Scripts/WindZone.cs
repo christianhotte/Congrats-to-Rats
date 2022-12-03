@@ -8,7 +8,6 @@ public class WindZone : EffectZone
     [Header("Wind Settings:")]
     [SerializeField, Min(0), Tooltip("How powerful the wind effect is")]                                   private float strength;
     [SerializeField, Tooltip("Direction of wind force (relative to local forward orientation of object)")] private Vector3 direction;
-    [SerializeField, Tooltip("Prevents wind from affecting rats which are obstructed")]                    private bool checkObstruction = true;
 
     //FUNCTIONALITY METHODS:
     /// <summary>

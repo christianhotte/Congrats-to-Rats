@@ -58,6 +58,13 @@ public class RatSettings : ScriptableObject
     [Range(0, 180), Tooltip("Angle between bounce exit velocity and leader direction at which rat will bounce back toward leader")] public float returnBounceAngle;
     [Min(0), Tooltip("Upward force applied to trajectory when bouncing toward leader")]                                             public float leaderBounceLift;
 
+    [Header("Status Effects:")]
+    [Min(0), Tooltip("Rate (in degrees per second) at which rat will try to maintain base temperature (counteracted by temperature zones)")]                        public float tempMaintain;
+    [Min(0), Tooltip("Describe how maximum speed of rat decreases as it reaches its freezing temperature")]                                                         public AnimationCurve coldSpeedCurve;
+    [Tooltip("Color rat turns when it gets cold")]                                                                                                                  public Color coldColor;
+    [MinMaxSlider(-30, 150), Tooltip("Upper value is temperature at which rat will begin to freeze, lower value is temperature at which rat will die of exposure")] public Vector2 coldTempRange;
+    [MinMaxSlider(-30, 150), Tooltip("Lower value is temperature at which rat will begin to cook, upper value is temperature at which rat suffer heat stroke")]     public Vector2 hotTempRange;
+
     //FUNCTIONALITY METHODS:
     /// <summary>
     /// Returns random fur color based on presets.
