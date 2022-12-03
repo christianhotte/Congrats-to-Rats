@@ -165,26 +165,37 @@ public class RatBoid : MonoBehaviour
                 newPos.y += rat.airVelocity.y * deltaTime; //Add vertical velocity to position calculation (because it was skipped in init because of flat velocity)
                 if (Physics.Linecast(rat.transform.position, newPos, out RaycastHit hit, rat.settings.obstructionLayers)) //Rat's trajectory is obstructed
                 {
-                    float surfaceAngle = Vector3.Angle(hit.normal, Vector3.up); //Get angle of surface relative to flat floor
-                    if (surfaceAngle > MasterRatController.main.settings.maxWalkAngle) //Surface is too steep for rat to land on
+                    //Check for bouncy object:
+                    if (hit.collider.TryGetComponent(out RatBouncer bouncer)) //Rat has collided with a bouncy object
                     {
-                        //Apply force:
-                        if (hit.collider.TryGetComponent(out Rigidbody hitBody)) //Hit object has an attached rigidbody
-                        {
-                            hitBody.AddForceAtPosition(rat.airVelocity * rat.settings.mass, hit.point, ForceMode.Impulse);
-                        }
-
                         //Bounce rat:
-                        rat.airVelocity = Vector3.Reflect(rat.airVelocity, hit.normal); //Reflect velocity of rat against surface
-                        rat.airVelocity *= rat.settings.bounciness + rat.tempBounceMod; //Retain percentage of velocity depending on setting
-                        newPos = hit.point + (-rat.airVelocity.normalized * 0.001f);    //Move rat to position close to wall but not inside it
+                        rat.airVelocity = bouncer.GetBounceVelocity(rat.airVelocity, hit.normal); //Get new rat velocity from bouncer object
+                        newPos = hit.point + (-rat.airVelocity.normalized * 0.001f);              //Move rat to position close to wall but not inside it
                     }
-                    else //Surface is flat enough for rat to land on
+                    else //Rat is not colliding with a bouncy object
                     {
-                        //Land rat:
-                        newPos = hit.point + (hit.normal * adjustedHeight);                                     //Set landing position
-                        rat.billboarder.SetZRot(-Vector3.SignedAngle(Vector3.up, hit.normal, Vector3.forward)); //Twist billboard so rat is flat on surface
-                        rat.Land();                                                                             //Indicate that rat has landed
+                        //Check for landing:
+                        float surfaceAngle = Vector3.Angle(hit.normal, Vector3.up); //Get angle of surface relative to flat floor
+                        if (surfaceAngle > MasterRatController.main.settings.maxWalkAngle) //Surface is too steep for rat to land on
+                        {
+                            //Apply force:
+                            if (hit.collider.TryGetComponent(out Rigidbody hitBody)) //Hit object has an attached rigidbody
+                            {
+                                hitBody.AddForceAtPosition(rat.airVelocity * rat.settings.mass, hit.point, ForceMode.Impulse);
+                            }
+
+                            //Bounce rat:
+                            rat.airVelocity = Vector3.Reflect(rat.airVelocity, hit.normal); //Reflect velocity of rat against surface
+                            rat.airVelocity *= rat.settings.bounciness + rat.tempBounceMod; //Retain percentage of velocity depending on setting
+                            newPos = hit.point + (-rat.airVelocity.normalized * 0.001f);    //Move rat to position close to wall but not inside it
+                        }
+                        else //Surface is flat enough for rat to land on
+                        {
+                            //Land rat:
+                            newPos = hit.point + (hit.normal * adjustedHeight);                                     //Set landing position
+                            rat.billboarder.SetZRot(-Vector3.SignedAngle(Vector3.up, hit.normal, Vector3.forward)); //Twist billboard so rat is flat on surface
+                            rat.Land();                                                                             //Indicate that rat has landed
+                        }
                     }
                 }
                 else //Rat is flying freely
