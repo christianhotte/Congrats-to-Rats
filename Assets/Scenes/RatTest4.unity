@@ -2973,6 +2973,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 637304260}
     m_Modifications:
+    - target: {fileID: 551662348581725772, guid: 37971ca98632801499dffe66d8cc6264, type: 3}
+      propertyPath: m_Layer
+      value: 13
+      objectReference: {fileID: 0}
     - target: {fileID: 1640808793064973325, guid: 37971ca98632801499dffe66d8cc6264, type: 3}
       propertyPath: m_RootOrder
       value: 1
@@ -9216,9 +9220,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62ca95ee743a88647a98412c63762a91, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bounceForce: 1.35
+  bounceValue: 1
   bounceDirection: {x: 0, y: 0, z: 0}
   maxBounceAngle: 180
+  bounceVel: 1
 --- !u!1 &2141113941
 GameObject:
   m_ObjectHideFlags: 0

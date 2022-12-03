@@ -257,7 +257,7 @@ public class MasterRatController : MonoBehaviour
         MoveRat(Time.deltaTime);                                  //Move the big rat
         RatBoid.UpdateRats(Time.deltaTime, currentSwarmSettings); //Move all the little rats
 
-        OnFollowerCountChanged(); //TEMP: Keep swarm settings regularly up-to-date for debugging purposes
+        //OnFollowerCountChanged(); //TEMP: Keep swarm settings regularly up-to-date for debugging purposes
 
         //Visualize trail:
         if (trail.Count > 1)
@@ -309,7 +309,14 @@ public class MasterRatController : MonoBehaviour
             if (Physics.SphereCast(transform.position, settings.collisionRadius, (newPos - transform.position).normalized, out RaycastHit hit, airSpeed, settings.blockingLayers)) //Fall is obstructed
             {
                 float surfaceAngle = Vector3.Angle(hit.normal, Vector3.up); //Get angle of surface relative to flat floor
-                if (surfaceAngle > settings.maxWalkAngle) //Surface is too steep for rat to land on
+                if (hit.collider.TryGetComponent(out RatBouncer bouncer)) //Rat has collided with a bouncy object
+                {
+                    //Bounce (with object settings):
+                    airVelocity = bouncer.GetBounceVelocity(airVelocity, hit.normal);                                  //Get new velocity from bouncer object
+                    if (airVelocity.magnitude < settings.wallRepulse) airVelocity = hit.normal * settings.wallRepulse; //Make sure bounce has at least a little velocity so rat doesn't get stuck
+                    newPos = transform.position;                                                                       //Do not allow rat to move into wall
+                }
+                else if (surfaceAngle > settings.maxWalkAngle) //Surface is too steep for rat to land on
                 {
                     //Bounce:
                     airVelocity = Vector3.Reflect(airVelocity, hit.normal);                                            //Reflect velocity of rat against surface
@@ -556,7 +563,7 @@ public class MasterRatController : MonoBehaviour
 
                     //Throw:
                     rat.transform.position = transform.position;                                       //Move rat to position of leader
-                    rat.tempBounceMod = -0.7f;                                                         //Temporarily modify rat bounce characteristics
+                    rat.thrown = true;                                                                 //Indicate that rat has been thrown
                     rat.Launch((currentTarget - transform.position).normalized * settings.throwForce); //Apply throwForce to rat relative to given target
                 }
 

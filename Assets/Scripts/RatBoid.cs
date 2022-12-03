@@ -47,10 +47,10 @@ public class RatBoid : MonoBehaviour
     internal float sizeFactor = 1;                                  //Factor used to change certain properties of rat based on scale variance
     internal Vector3 airVelocity;                                   //3D velocity used when rat is falling
 
-    private float timeUntilFlip;      //Time before this rat is able to flip its sprite orientation (prevents jiggling)
-    internal float neighborCrush;     //Represents how many neighbors this rat has and how close they are
-    internal float pileHeight = 0;    //Additional height added to rat due to piling
-    internal float tempBounceMod = 0; //Modifier added to bounciness upon launch, erased upon landing
+    private float timeUntilFlip;   //Time before this rat is able to flip its sprite orientation (prevents jiggling)
+    internal float neighborCrush;  //Represents how many neighbors this rat has and how close they are
+    internal float pileHeight = 0; //Additional height added to rat due to piling
+    internal bool thrown;          //Indicates whether currently-airborne rat was thrown (resets when rat lands or hits a wall)
 
     //RUNTIME METHODS:
     private void Awake()
@@ -165,36 +165,44 @@ public class RatBoid : MonoBehaviour
                 newPos.y += rat.airVelocity.y * deltaTime; //Add vertical velocity to position calculation (because it was skipped in init because of flat velocity)
                 if (Physics.Linecast(rat.transform.position, newPos, out RaycastHit hit, rat.settings.obstructionLayers)) //Rat's trajectory is obstructed
                 {
-                    //Check for bouncy object:
+                    //Check for landing:
+                    float surfaceAngle = Vector3.Angle(hit.normal, Vector3.up); //Get angle of surface relative to flat floor
                     if (hit.collider.TryGetComponent(out RatBouncer bouncer)) //Rat has collided with a bouncy object
                     {
-                        //Bounce rat:
+                        //Bounce rat (with bouncer settings):
                         rat.airVelocity = bouncer.GetBounceVelocity(rat.airVelocity, hit.normal); //Get new rat velocity from bouncer object
                         newPos = hit.point + (-rat.airVelocity.normalized * 0.001f);              //Move rat to position close to wall but not inside it
                     }
-                    else //Rat is not colliding with a bouncy object
+                    else if (surfaceAngle > MasterRatController.main.settings.maxWalkAngle) //Surface is too steep for rat to land on
                     {
-                        //Check for landing:
-                        float surfaceAngle = Vector3.Angle(hit.normal, Vector3.up); //Get angle of surface relative to flat floor
-                        if (surfaceAngle > MasterRatController.main.settings.maxWalkAngle) //Surface is too steep for rat to land on
+                        //Apply force:
+                        if (hit.collider.TryGetComponent(out Rigidbody hitBody)) //Hit object has an attached rigidbody
                         {
-                            //Apply force:
-                            if (hit.collider.TryGetComponent(out Rigidbody hitBody)) //Hit object has an attached rigidbody
-                            {
-                                hitBody.AddForceAtPosition(rat.airVelocity * rat.settings.mass, hit.point, ForceMode.Impulse);
-                            }
-
-                            //Bounce rat:
-                            rat.airVelocity = Vector3.Reflect(rat.airVelocity, hit.normal); //Reflect velocity of rat against surface
-                            rat.airVelocity *= rat.settings.bounciness + rat.tempBounceMod; //Retain percentage of velocity depending on setting
-                            newPos = hit.point + (-rat.airVelocity.normalized * 0.001f);    //Move rat to position close to wall but not inside it
+                            hitBody.AddForceAtPosition(rat.airVelocity * rat.settings.mass, hit.point, ForceMode.Impulse);
                         }
-                        else //Surface is flat enough for rat to land on
+
+                        //Bounce rat:
+                        rat.airVelocity = Vector3.Reflect(rat.airVelocity, hit.normal); //Reflect velocity of rat against surface
+                        rat.airVelocity *= rat.settings.bounciness;                     //Retain percentage of velocity depending on setting
+                        newPos = hit.point + (-rat.airVelocity.normalized * 0.001f);    //Move rat to position close to wall but not inside it
+                    }
+                    else //Surface is flat enough for rat to land on
+                    {
+                        //Land rat:
+                        newPos = hit.point + (hit.normal * adjustedHeight);                                     //Set landing position
+                        rat.billboarder.SetZRot(-Vector3.SignedAngle(Vector3.up, hit.normal, Vector3.forward)); //Twist billboard so rat is flat on surface
+                        rat.Land();                                                                             //Indicate that rat has landed
+                    }
+
+                    //Throw bounce damping:
+                    if (rat.thrown) //Rat was thrown and has just bounced
+                    {
+                        rat.airVelocity *= rat.settings.thrownBounciness;                                                            //Apply bounce damping to thrown rat
+                        Vector3 leaderDirection = (MasterRatController.main.transform.position - rat.transform.position).normalized; //Get vector which points toward leader relative to rat
+                        if (Vector3.Angle(rat.airVelocity, leaderDirection) < rat.settings.returnBounceAngle)                        //Rat is being bounced generally toward leader
                         {
-                            //Land rat:
-                            newPos = hit.point + (hit.normal * adjustedHeight);                                     //Set landing position
-                            rat.billboarder.SetZRot(-Vector3.SignedAngle(Vector3.up, hit.normal, Vector3.forward)); //Twist billboard so rat is flat on surface
-                            rat.Land();                                                                             //Indicate that rat has landed
+                            rat.airVelocity = leaderDirection * rat.airVelocity.magnitude; //Make rat travel directly toward leader
+                            rat.airVelocity.y += rat.settings.leaderBounceLift;            //Apply lift to give rat a more pleasing trajectory
                         }
                     }
                 }
@@ -599,7 +607,7 @@ public class RatBoid : MonoBehaviour
         }
 
         //Cleanup:
-        tempBounceMod = 0;          //Reset bounce modifier
+        thrown = false;             //Reset throw modifier
         airVelocity = Vector3.zero; //Clear air velocity (but keep momentum by retaining flat velocity)
     }
     /// <summary>

@@ -50,10 +50,13 @@ public class RatSettings : ScriptableObject
     [Tooltip("Random percentage up or down (along each individual axis) by which jumps may deviate")]                               public Vector2 jumpRandomness;
     [Range(0, 1), Tooltip("How close a rat has to get to a ledge before it is willing to hop off (in order to follow the leader)")] public float ledgeHopFear;
     [Space()]
-    [Tooltip("Force of gravity acting on velocity of airborne rats")]                                         public float gravity;
-    [Tooltip("Force of air resistance acting on airborne rats")]                                              public float drag;
-    [Range(0, 1), Tooltip("Percentage of velocity which is retained each time rat bounces off of a wall")]    public float bounciness;
-    [Min(0.001f), Tooltip("Determines how much force will be imparted on an object when this rat hits it")]   public float mass;
+    [Tooltip("Force of gravity acting on velocity of airborne rats")]                                                               public float gravity;
+    [Tooltip("Force of air resistance acting on airborne rats")]                                                                    public float drag;
+    [Min(0.001f), Tooltip("Determines how much force will be imparted on an object when this rat hits it")]                         public float mass;
+    [Range(0, 1), Tooltip("Percentage of velocity which is retained each time rat bounces off of a wall")]                          public float bounciness;
+    [Range(0, 1), Tooltip("Percentage of velocity which is retained each time rat bounces off of a wall after being thrown")]       public float thrownBounciness;
+    [Range(0, 180), Tooltip("Angle between bounce exit velocity and leader direction at which rat will bounce back toward leader")] public float returnBounceAngle;
+    [Min(0), Tooltip("Upward force applied to trajectory when bouncing toward leader")]                                             public float leaderBounceLift;
 
     //FUNCTIONALITY METHODS:
     /// <summary>
