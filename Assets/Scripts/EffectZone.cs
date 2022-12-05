@@ -16,6 +16,7 @@ public class EffectZone : MonoBehaviour
 
     //Runtime Variables:
     internal List<RatBoid> zoneRats = new List<RatBoid>(); //List of rats which are currently within this zone
+    public bool bigRatInZone = false;                    //True if mama rat is also in this zone
 
     //RUNTIME METHODS:
     private void Awake()

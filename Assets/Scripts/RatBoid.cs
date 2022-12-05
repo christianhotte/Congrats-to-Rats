@@ -18,8 +18,8 @@ public class RatBoid : MonoBehaviour
     /// </summary>
     public static List<RatBoid> freeRats = new List<RatBoid>();
 
-    public static readonly float timeBalancer = 100;          //Value applied to all acceleration applications (so that settings aren't messed up by adding deltaTime)
-    private static readonly LayerMask effectZoneMask = 16384; //Layermask for effect zones (result of LayerMask.GetMask(new string[] { "EffectZone" }))
+    public static readonly float timeBalancer = 100;         //Value applied to all acceleration applications (so that settings aren't messed up by adding deltaTime)
+    public static readonly LayerMask effectZoneMask = 16384; //Layermask for effect zones (result of LayerMask.GetMask(new string[] { "EffectZone" }))
 
     //Objects & Components:
     private SpriteRenderer r;         //Render component for this rat's sprite
@@ -51,6 +51,7 @@ public class RatBoid : MonoBehaviour
     private float timeUntilFlip;   //Time before this rat is able to flip its sprite orientation (prevents jiggling)
     internal float neighborCrush;  //Represents how many neighbors this rat has and how close they are
     internal float pileHeight = 0; //Additional height added to rat due to piling
+    internal bool stasis;          //If rat is in stasis, it will still exist but it will not move or check for anything in its environment
     internal bool thrown;          //Indicates whether currently-airborne rat was thrown (resets when rat lands or hits a wall)
     internal bool dieOnImpact;     //If true, airborne rat will be destroyed next time it touches something
 

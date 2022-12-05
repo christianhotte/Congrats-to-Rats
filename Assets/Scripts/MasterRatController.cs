@@ -437,6 +437,15 @@ public class MasterRatController : MonoBehaviour
         transform.position = newPos;                                                         //Apply new position
         forward = velocity.normalized;                                                       //Update forward direction tracker
 
+        //Check zones:
+        Vector3 moveDir = newPos - transform.position;                                                                        //Get non-normalized vector representing rat's direction and distance of travel
+        float moveDist = moveDir.magnitude; moveDir = moveDir.normalized;                                                     //Get distance rat has moved as separate variable, then normalize move direction vector
+        RaycastHit[] zoneHits = Physics.RaycastAll(transform.position, moveDir, moveDist, RatBoid.effectZoneMask);            //Check to see if rat has entered any zones
+        foreach (RaycastHit hit in zoneHits) if (hit.collider.TryGetComponent(out EffectZone zone)) zone.bigRatInZone = true; //Indicate that mama rat is now in each of these zones
+
+        zoneHits = Physics.RaycastAll(newPos, -moveDir, moveDist, RatBoid.effectZoneMask);                                     //Check to see if rat has left any zones
+        foreach (RaycastHit hit in zoneHits) if (hit.collider.TryGetComponent(out EffectZone zone)) zone.bigRatInZone = false; //Indicate that big rat is not in these zones
+
         //Update trail characteristics:
         trail.Insert(0, new TrailPoint(FlatPos));                                //Add new trailPoint for current position
         float firstSegLength = Vector2.Distance(trail[0].point, trail[1].point); //Get length of new segment being created
