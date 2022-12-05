@@ -101,9 +101,10 @@ public class RatBoid : MonoBehaviour
     private void OnDestroy()
     {
         //List cleanup:
-        ReleaseTarget();          //Release rat from any lists it may be in
-        freeRats.Remove(this);    //Remove rat from freerange list it has just been placed in
-        spawnedRats.Remove(this); //Remove this rat from master list of spawned rats
+        ReleaseTarget();                                                //Release rat from any lists it may be in
+        freeRats.Remove(this);                                          //Remove rat from freerange list it has just been placed in
+        spawnedRats.Remove(this);                                       //Remove this rat from master list of spawned rats
+        while (currentZones.Count > 0) RemoveFromZone(currentZones[0]); //Remove rat from all zones it is in
     }
     private void Update()
     {
@@ -455,7 +456,9 @@ public class RatBoid : MonoBehaviour
                         }
 
                         //RULE - Max Follow Speed: (rats cannot move too fast relative to their leader)
-                        rat.velocity = Vector2.ClampMagnitude(rat.velocity, MasterRatController.main.currentSpeed + settings.maxOvertakeSpeed); //Clamp rat velocity to effective max speed
+                        float maxFollowSpeed = (MasterRatController.main.currentSpeed + settings.maxOvertakeSpeed); //Get base value for max follow speed based on leader velocity
+                        maxFollowSpeed *= rat.settings.coldSpeedCurve.Evaluate(rat.ChillValue);                     //Modify max follow speed based on how cold rat is
+                        rat.velocity = Vector2.ClampMagnitude(rat.velocity, maxFollowSpeed);                        //Clamp rat velocity to effective max speed
                     }
                 }
                 else //Rat is outside influence radius of leader

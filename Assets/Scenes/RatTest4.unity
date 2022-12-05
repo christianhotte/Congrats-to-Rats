@@ -8757,7 +8757,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   checkObstruction: 1
-  deltaTemp: -10
+  deltaTemp: -40
 --- !u!1 &1937629829 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2760126436428266735, guid: 01f3e6a7a45eae044a2fbdec313b5231, type: 3}

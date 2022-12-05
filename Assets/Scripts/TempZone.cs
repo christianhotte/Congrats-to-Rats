@@ -19,8 +19,22 @@ public class TempZone : EffectZone
     {
         if (!checkObstruction || !RatObstructed(rat)) //Apply temperature if rat is unobstructed or if obstructions don't matter
         {
-            rat.temperature += (deltaTemp + (rat.settings.tempMaintain * Mathf.Sign(deltaTemp))) * deltaTime;          //Apply temperature change to rat based on time value (relative to rat's tempMaintain value)
+            //Set temperature:
+            rat.temperature += (deltaTemp + (rat.settings.tempMaintain * Mathf.Sign(deltaTemp))) * deltaTime; //Apply temperature change to rat based on time value (relative to rat's tempMaintain value)
             rat.temperature = Mathf.Clamp(rat.temperature, rat.settings.coldTempRange.x, rat.settings.hotTempRange.y); //Clamp rat temperature to lower and upper bounds of survivability
+
+            //Death states:
+            if (rat.temperature <= rat.settings.coldTempRange.x) //Rat is dying of cold
+            {
+                Destroy(rat.gameObject);
+                return;
+            }
+            if (rat.temperature >= rat.settings.hotTempRange.y) //Rat is dying of heat
+            {
+                Destroy(rat.gameObject);
+                return;
+            }
+            
         }
     }
 }
