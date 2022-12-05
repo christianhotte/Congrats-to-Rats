@@ -15,7 +15,7 @@ public class EffectZone : MonoBehaviour
     [SerializeField, Tooltip("Prevents zone effect from being applied to rats which are not visible by zone object (NOTE: Will check along FORWARD direction of zone)")] private protected bool checkObstruction;
 
     //Runtime Variables:
-    private List<RatBoid> zoneRats = new List<RatBoid>(); //List of rats which are currently within this zone
+    internal List<RatBoid> zoneRats = new List<RatBoid>(); //List of rats which are currently within this zone
 
     //RUNTIME METHODS:
     private void Awake()

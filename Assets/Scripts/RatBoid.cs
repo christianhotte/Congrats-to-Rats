@@ -52,6 +52,7 @@ public class RatBoid : MonoBehaviour
     internal float neighborCrush;  //Represents how many neighbors this rat has and how close they are
     internal float pileHeight = 0; //Additional height added to rat due to piling
     internal bool thrown;          //Indicates whether currently-airborne rat was thrown (resets when rat lands or hits a wall)
+    internal bool dieOnImpact;     //If true, airborne rat will be destroyed next time it touches something
 
     //UTILITY VARS:
     /// <summary>
@@ -190,6 +191,9 @@ public class RatBoid : MonoBehaviour
                 newPos.y += rat.airVelocity.y * deltaTime; //Add vertical velocity to position calculation (because it was skipped in init because of flat velocity)
                 if (Physics.Linecast(rat.transform.position, newPos, out RaycastHit hit, rat.settings.obstructionLayers)) //Rat's trajectory is obstructed
                 {
+                    //Special cases:
+                    if (rat.dieOnImpact) { Destroy(rat.gameObject); continue; } //Kill rat if it is set to die on impact
+
                     //Check for landing:
                     float surfaceAngle = Vector3.Angle(hit.normal, Vector3.up); //Get angle of surface relative to flat floor
                     if (hit.collider.TryGetComponent(out RatBouncer bouncer)) //Rat has collided with a bouncy object
