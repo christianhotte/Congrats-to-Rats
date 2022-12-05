@@ -163,7 +163,7 @@ MonoBehaviour:
   jumpRandomness: {x: 0.1, y: 0.1}
   ledgeHopFear: 0.15
   gravity: 9.5
-  drag: 0
+  drag: 0.05
   mass: 0.05
   bounciness: 0.8
   thrownBounciness: 0.367
@@ -203,5 +203,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  coldColor: {r: 0, g: 0, b: 0, a: 0}
   coldTempRange: {x: -18.053097, y: 50.268894}
   hotTempRange: {x: 83.684135, y: 150}
