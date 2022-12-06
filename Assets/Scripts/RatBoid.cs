@@ -209,7 +209,8 @@ public class RatBoid : MonoBehaviour
                 if (Physics.Linecast(rat.transform.position, newPos, out RaycastHit hit, rat.settings.obstructionLayers)) //Rat's trajectory is obstructed
                 {
                     //Special cases:
-                    if (rat.dieOnImpact) { Destroy(rat.gameObject); continue; } //Kill rat if it is set to die on impact
+                    if (rat.dieOnImpact) { Destroy(rat.gameObject); continue; }                                          //Kill rat if it is set to die on impact
+                    if (hit.collider.TryGetComponent(out ToasterController toaster)) { toaster.LoadRat(rat); continue; } //Add rat to toaster if applicable
 
                     //Check for landing:
                     float surfaceAngle = Vector3.Angle(hit.normal, Vector3.up); //Get angle of surface relative to flat floor

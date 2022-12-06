@@ -331,6 +331,11 @@ public class MasterRatController : MonoBehaviour
                     if (airVelocity.magnitude < settings.wallRepulse) airVelocity = hit.normal * settings.wallRepulse; //Make sure bounce has at least a little velocity so rat doesn't get stuck
                     newPos = transform.position;                                                                       //Do not allow rat to move into wall
                 }
+                else if (hit.collider.TryGetComponent(out ToasterController toaster)) //Rat has collided with a toaster
+                {
+                    toaster.LoadRat(); //Load mama rat into toaster
+                    return;            //SKip everything else
+                }
                 else if (surfaceAngle > settings.maxWalkAngle) //Surface is too steep for rat to land on
                 {
                     //Bounce:
