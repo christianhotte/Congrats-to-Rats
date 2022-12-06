@@ -538,7 +538,7 @@ public class RatBoid : MonoBehaviour
                         rat.velocity += avoidanceVel * adjustedDT;                         //Apply unclamped velocity to rat
                         //rat.neighborCrush *= 1 - distanceValue;                          //Prevent rats from piling up against a ledge
                     }
-                }
+                }.
             }
 
             //Crush effects:
