@@ -25,6 +25,7 @@ MonoBehaviour:
   airDrag: 0.05
   bounciness: 0.4
   wallRepulse: 0.18
+  jumpValidationOffset: {x: 0.2, y: -0.07}
   blockingLayers:
     serializedVersion: 2
     m_Bits: 640
@@ -32,7 +33,7 @@ MonoBehaviour:
   maxWalkAngle: 45
   maxObstacleCollisions: 3
   basicRatPrefab: {fileID: 4272964666275407885, guid: 16e94108f81788e4c9ded77f0823772f, type: 3}
-  influenceRadius: 1
+  influenceRadius: 100
   spawnOffset: {x: 0, y: 0.05, z: -0.1}
   spawnArea: {x: 0.16, y: 0.05}
   spawnAngle: {x: 15, y: 42}
