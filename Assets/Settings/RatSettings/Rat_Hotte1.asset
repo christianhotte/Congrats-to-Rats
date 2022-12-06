@@ -101,6 +101,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  doShadowMatching: 0
   shadowSensitivityCurve:
     serializedVersion: 2
     m_Curve:
@@ -162,6 +163,46 @@ MonoBehaviour:
   jumpRandomness: {x: 0.1, y: 0.1}
   ledgeHopFear: 0.15
   gravity: 9.5
-  drag: 0
-  bounciness: 0.9
+  drag: 0.05
   mass: 0.05
+  bounciness: 0.8
+  thrownBounciness: 0.367
+  returnBounceAngle: 136.5
+  leaderBounceLift: 2.23
+  tempMaintain: 30
+  coldSpeedCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: -2.1452198
+      outSlope: -2.1452198
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.019454885
+    - serializedVersion: 3
+      time: 0.9292725
+      value: 0
+      inSlope: 0.010019257
+      outSlope: 0
+      tangentMode: 65
+      weightedMode: 0
+      inWeight: 0.04743427
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  coldColor: {r: 0, g: 0, b: 0, a: 0}
+  coldTempRange: {x: -18.053097, y: 50.268894}
+  hotTempRange: {x: 83.684135, y: 150}

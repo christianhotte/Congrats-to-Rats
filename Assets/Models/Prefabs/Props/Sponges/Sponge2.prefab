@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 6891737975724204522}
   - component: {fileID: 8665110835377247520}
   - component: {fileID: 8034771126266497446}
-  m_Layer: 0
+  - component: {fileID: 3458198316465562800}
+  m_Layer: 7
   m_Name: Sponge2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -98,3 +99,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -3275037702536960935, guid: 4e688ac8be29f6a48ae9bf34d8a7c859, type: 3}
+--- !u!114 &3458198316465562800
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7151808657781634293}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62ca95ee743a88647a98412c63762a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bounceValue: 1
+  bounceDirection: {x: 0, y: 1, z: -0.075}
+  maxBounceAngle: 80
+  bounceVel: 11

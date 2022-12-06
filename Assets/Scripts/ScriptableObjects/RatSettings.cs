@@ -50,10 +50,20 @@ public class RatSettings : ScriptableObject
     [Tooltip("Random percentage up or down (along each individual axis) by which jumps may deviate")]                               public Vector2 jumpRandomness;
     [Range(0, 1), Tooltip("How close a rat has to get to a ledge before it is willing to hop off (in order to follow the leader)")] public float ledgeHopFear;
     [Space()]
-    [Tooltip("Force of gravity acting on velocity of airborne rats")]                                         public float gravity;
-    [Tooltip("Force of air resistance acting on airborne rats")]                                              public float drag;
-    [Range(0, 1), Tooltip("Percentage of velocity which is retained each time rat bounces off of a wall")]    public float bounciness;
-    [Min(0.001f), Tooltip("Determines how much force will be imparted on an object when this rat hits it")]   public float mass;
+    [Tooltip("Force of gravity acting on velocity of airborne rats")]                                                               public float gravity;
+    [Tooltip("Force of air resistance acting on airborne rats")]                                                                    public float drag;
+    [Min(0.001f), Tooltip("Determines how much force will be imparted on an object when this rat hits it")]                         public float mass;
+    [Range(0, 1), Tooltip("Percentage of velocity which is retained each time rat bounces off of a wall")]                          public float bounciness;
+    [Range(0, 1), Tooltip("Percentage of velocity which is retained each time rat bounces off of a wall after being thrown")]       public float thrownBounciness;
+    [Range(0, 180), Tooltip("Angle between bounce exit velocity and leader direction at which rat will bounce back toward leader")] public float returnBounceAngle;
+    [Min(0), Tooltip("Upward force applied to trajectory when bouncing toward leader")]                                             public float leaderBounceLift;
+
+    [Header("Status Effects:")]
+    [Min(0), Tooltip("Rate (in degrees per second) at which rat will try to maintain base temperature (counteracted by temperature zones)")]                        public float tempMaintain;
+    [Min(0), Tooltip("Describe how maximum speed of rat decreases as it reaches its freezing temperature")]                                                         public AnimationCurve coldSpeedCurve;
+    [Tooltip("Color rat turns when it gets cold")]                                                                                                                  public Color coldColor;
+    [MinMaxSlider(-30, 150), Tooltip("Upper value is temperature at which rat will begin to freeze, lower value is temperature at which rat will die of exposure")] public Vector2 coldTempRange;
+    [MinMaxSlider(-30, 150), Tooltip("Lower value is temperature at which rat will begin to cook, upper value is temperature at which rat suffer heat stroke")]     public Vector2 hotTempRange;
 
     //FUNCTIONALITY METHODS:
     /// <summary>
