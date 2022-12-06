@@ -11,8 +11,9 @@ GameObject:
   - component: {fileID: 341041529752503967}
   - component: {fileID: 3680642539976837434}
   - component: {fileID: 1508903419213135344}
-  - component: {fileID: 2423343297733201420}
-  m_Layer: 0
+  - component: {fileID: 5893221297297286194}
+  - component: {fileID: 1590890639305489046}
+  m_Layer: 14
   m_Name: GlueTrap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -85,8 +86,8 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &2423343297733201420
-MeshCollider:
+--- !u!65 &5893221297297286194
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -95,7 +96,21 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 4
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -8763810915339719488, guid: e81ddc7e9ccf0da43bae1c8642865dcd, type: 3}
+  serializedVersion: 2
+  m_Size: {x: 84.18822, y: 44.85034, z: 100.000084}
+  m_Center: {x: 0, y: 22.42517, z: 0}
+--- !u!114 &1590890639305489046
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1148505704718244901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9dd14fb766036274f82b7f74d6175698, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  checkObstruction: 0
+  bigRatInZone: 0
+  slowFactor: 0.35

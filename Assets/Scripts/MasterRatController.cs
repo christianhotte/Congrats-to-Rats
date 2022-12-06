@@ -182,14 +182,16 @@ public class MasterRatController : MonoBehaviour
     [SerializeField, Tooltip("Place any number of swarm settings objects here (make sure they have different Target Rat Numbers)")] private List<SwarmSettings> swarmSettings = new List<SwarmSettings>();
 
     //Runtime Vars:
-    private SwarmSettings currentSwarmSettings;                    //Instance of swarmSettings object used to interpolate between rat behaviors
-    internal List<RatBoid> followerRats = new List<RatBoid>();     //List of all rats currently following this controller
-    internal List<RatBoid> jumpingFollowers = new List<RatBoid>(); //List of follower rats which are currently jumping (and therefore still counted toward total)
-    internal List<RatBoid> deployedRats = new List<RatBoid>();     //List of all rats currently deployed by player
-    internal List<TrailPoint> trail = new List<TrailPoint>();      //List of points in current trail (used to assemble ratswarm behind main rat)
-    internal float totalTrailLength = 0;                           //Current length of trail (in units)
-    internal int currentJumpMarkers = 0;                           //Current number of jump markers in trail
-    private int prevFollowerCount = 0;                             //Total follower count last time follower count-contingent settings were updated
+    private SwarmSettings currentSwarmSettings;                     //Instance of swarmSettings object used to interpolate between rat behaviors
+    internal List<RatBoid> followerRats = new List<RatBoid>();      //List of all rats currently following this controller
+    internal List<RatBoid> jumpingFollowers = new List<RatBoid>();  //List of follower rats which are currently jumping (and therefore still counted toward total)
+    internal List<RatBoid> deployedRats = new List<RatBoid>();      //List of all rats currently deployed by player
+    internal List<TrailPoint> trail = new List<TrailPoint>();       //List of points in current trail (used to assemble ratswarm behind main rat)
+    private List<EffectZone> currentZones = new List<EffectZone>(); //List of zones rat is currently in
+    internal float totalTrailLength = 0;                            //Current length of trail (in units)
+    internal int currentJumpMarkers = 0;                            //Current number of jump markers in trail
+    private int prevFollowerCount = 0;                              //Total follower count last time follower count-contingent settings were updated
+    private SlowZone currentGlue = null;                            //Glue zone rat is currently in (if any)
 
     internal Vector2 velocity;         //Current speed and direction of movement
     internal Vector3 airVelocity;      //3D velocity used when rat is falling
@@ -377,13 +379,15 @@ public class MasterRatController : MonoBehaviour
             }
 
             //Cap velocity:
-            currentSpeed = velocity.magnitude; //Get current speed of main rat
-            if (currentSpeed > settings.speed) //Check if current speed is faster than target speed
+            currentSpeed = velocity.magnitude;                                    //Get current speed of main rat
+            float effectiveMaxSpeed = settings.speed;                             //Initialize value for max speed
+            if (currentGlue != null) effectiveMaxSpeed *= currentGlue.slowFactor; //Apply glue factor if applicable
+            if (currentSpeed > effectiveMaxSpeed) //Check if current speed is faster than target speed
             {
-                velocity = Vector2.ClampMagnitude(velocity, settings.speed); //Clamp velocity to target speed
-                currentSpeed = settings.speed;                               //Update current speed value
+                velocity = Vector2.ClampMagnitude(velocity, effectiveMaxSpeed); //Clamp velocity to target speed
+                currentSpeed = effectiveMaxSpeed;                               //Update current speed value
             }
-            if (anim != null) anim.SetFloat("Speed", currentSpeed / settings.speed); //Send speed value to animator
+            if (anim != null) anim.SetFloat("Speed", currentSpeed / effectiveMaxSpeed); //Send speed value to animator
 
             //Get new position:
             if (velocity != Vector2.zero) //Only update position if player has velocity
@@ -448,19 +452,35 @@ public class MasterRatController : MonoBehaviour
             }
         }
 
+        //Check zones:
+        if (newPos != transform.position) //Only do zone check while rat is moving
+        {
+            //Look for new zones:
+            Vector3 moveDir = newPos - transform.position;                                                                                          //Get non-normalized vector representing rat's direction and distance of travel
+            float moveDist = moveDir.magnitude; moveDir = moveDir.normalized;                                                                       //Get distance rat has moved as separate variable, then normalize move direction vector
+            RaycastHit[] zoneHits = Physics.SphereCastAll(transform.position, settings.collisionRadius, moveDir, moveDist, RatBoid.effectZoneMask); //Check to see if rat has entered any zones
+            
+            //Update zone lists:
+            foreach (EffectZone zone in currentZones) zone.bigRatInZone = false; //Clear rat from existing zones
+            currentZones.Clear(); currentGlue = null;                            //Reset zone memory
+            foreach (RaycastHit hit in zoneHits) //Iterate through each detected zone
+            {
+                if (hit.collider.TryGetComponent(out EffectZone zone)) //Make sure object has EffectZone component
+                {
+                    //Cleanup:
+                    zone.bigRatInZone = true; //Indicate that rat is in zone
+                    currentZones.Add(zone);   //Add zone to list of occupied zones
+
+                    //Other checks
+                    if (hit.collider.TryGetComponent(out SlowZone slowZone)) currentGlue = slowZone; //Get slowZone component if applicable
+                }
+            }
+        }
+
         //Movement cleanup:
         currentSpeed = Vector2.Distance(FlatPos, RatBoid.FlattenVector(newPos)) / deltaTime; //Get actual current speed (after obstructions)
         transform.position = newPos;                                                         //Apply new position
         forward = velocity.normalized;                                                       //Update forward direction tracker
-
-        //Check zones:
-        Vector3 moveDir = newPos - transform.position;                                                                        //Get non-normalized vector representing rat's direction and distance of travel
-        float moveDist = moveDir.magnitude; moveDir = moveDir.normalized;                                                     //Get distance rat has moved as separate variable, then normalize move direction vector
-        RaycastHit[] zoneHits = Physics.RaycastAll(transform.position, moveDir, moveDist, RatBoid.effectZoneMask);            //Check to see if rat has entered any zones
-        foreach (RaycastHit hit in zoneHits) if (hit.collider.TryGetComponent(out EffectZone zone)) zone.bigRatInZone = true; //Indicate that mama rat is now in each of these zones
-
-        zoneHits = Physics.RaycastAll(newPos, -moveDir, moveDist, RatBoid.effectZoneMask);                                     //Check to see if rat has left any zones
-        foreach (RaycastHit hit in zoneHits) if (hit.collider.TryGetComponent(out EffectZone zone)) zone.bigRatInZone = false; //Indicate that big rat is not in these zones
 
         //Update trail characteristics:
         trail.Insert(0, new TrailPoint(FlatPos));                                //Add new trailPoint for current position
@@ -609,7 +629,7 @@ public class MasterRatController : MonoBehaviour
     {
         if (context.performed) //Jump button has just been pressed
         {
-            if (!falling) //Player can only jump while they are not in the air
+            if (!falling && currentGlue == null) //Player can only jump while they are not in the air (and not stuck to glue)
             {
                 //Perform jump:
                 Vector3 jumpforce = RotatedMoveInput.normalized * settings.jumpPower.x;             //Get horizontal jump power

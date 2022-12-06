@@ -41,7 +41,7 @@ public class TrapController : MonoBehaviour
     private void Update()
     {
         //Check trip status:
-        if (!sprung) if (triggerZone.zoneRats.Count > 0) Trip(); //Activate trap when a rat enters trigger zone
+        if (!sprung) if (triggerZone.zoneRats.Count > 0 || triggerZone.bigRatInZone) Trip(); //Activate trap when a rat enters trigger zone
 
         //Debug:
         if (debugSpring) { debugSpring = false; Trip(); } //Check for manual trap activation

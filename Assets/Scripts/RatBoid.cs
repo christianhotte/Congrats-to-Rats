@@ -54,6 +54,7 @@ public class RatBoid : MonoBehaviour
     internal bool stasis;          //If rat is in stasis, it will still exist but it will not move or check for anything in its environment
     internal bool thrown;          //Indicates whether currently-airborne rat was thrown (resets when rat lands or hits a wall)
     internal bool dieOnImpact;     //If true, airborne rat will be destroyed next time it touches something
+    internal float glueFactor = 0; //Cumulative slowness factor applied by any glue zones rat is currently in
 
     //UTILITY VARS:
     /// <summary>
@@ -68,6 +69,7 @@ public class RatBoid : MonoBehaviour
 
             //Environmental factors:
             if (temperature < settings.coldTempRange.y) value *= settings.coldSpeedCurve.Evaluate(ChillValue); //Evaluate chill percentage to get multiplier for max speed (if rat is too cold)
+            value *= 1 - glueFactor;                                                                           //Apply glue factor to potential speed value
 
             //Cleanup:
             return value; //Return modified max speed value
@@ -632,6 +634,9 @@ public class RatBoid : MonoBehaviour
     /// <param name="keepFollower">If true, follower will be kept in a separate list until landing and counted towards follower total.</param>
     public void Launch(Vector3 force, bool keepFollower = false)
     {
+        //Checks:
+        if (glueFactor > 0) return; //Do not launch rat if it is stuck in glue
+
         //Behavior maintenance:
         if (behavior == RatBehavior.TrailFollower && keepFollower) //Rat is going to be kept on a separate list of aerial followers
         {
@@ -676,14 +681,23 @@ public class RatBoid : MonoBehaviour
     /// </summary>
     public void AddToZone(EffectZone zone)
     {
+        //Initialization:
         if (!currentZones.Contains(zone)) currentZones.Add(zone); //Add zone to rat's local zone list
         zone.AddRat(this);                                        //Add this rat to zone
+
+        //Immediate zone effects:
+        if (zone.gameObject.TryGetComponent(out SlowZone slowZone)) glueFactor = 1 - slowZone.slowFactor; //Get glue factor from slow zones
     }
     /// <summary>
     /// Indicates that this rat has left given effector zone.
     /// </summary>
     public void RemoveFromZone(EffectZone zone)
     {
+        //Initial checks:
+        if (zone == null) { currentZones.Remove(zone); return; }                    //Skip null zones
+        if (zone.gameObject.TryGetComponent(out SlowZone slowZone)) glueFactor = 0; //Clear glue factor when leaving slowZones
+
+        //Cleanup:
         if (currentZones.Contains(zone)) currentZones.Remove(zone); //Remove zone from rat's local zone list
         zone.RemoveRat(this);                                       //Remove this rat from zone
     }
