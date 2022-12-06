@@ -77,6 +77,18 @@ public class RatBoid : MonoBehaviour
     /// Percentage value representing how close to freezing rat is.
     /// </summary>
     private float ChillValue { get { return Mathf.Clamp01(Mathf.InverseLerp(settings.coldTempRange.y, settings.coldTempRange.x, temperature)); } }
+    /// <summary>
+    /// Returns velocity relative to current camera orientation.
+    /// </summary>
+    private Vector3 RotatedVelocity
+    {
+        get
+        {
+            Vector3 vel = UnFlattenVector(velocity);                                         //Put velocity into Vector3 for rotating purposes
+            float camAngle = Vector2.SignedAngle(Vector2.up, CameraTrigger.GetDirectionRef); //Get angle relative to current camera direction
+            return Quaternion.AngleAxis(-camAngle, Vector3.up) * vel;                        //Rotate velocity vector around Y axis based on camera angle
+        }
+    }
 
     //RUNTIME METHODS:
     private void Awake()
@@ -111,6 +123,7 @@ public class RatBoid : MonoBehaviour
     private void Update()
     {
         //Update flip timer (TEMP):
+        Vector3 rotVel = RotatedVelocity;
         if (timeUntilFlip > 0)
         {
             timeUntilFlip = Mathf.Max(0, timeUntilFlip - Time.deltaTime); //Update flip timer if necessary
@@ -122,7 +135,7 @@ public class RatBoid : MonoBehaviour
                 if (prevFlip != r.flipX) timeUntilFlip = settings.timeBetweenFlips;
             }
         }
-        else if (velocity.x < 0 && r.flipX != MasterRatController.main.settings.flipAll || velocity.x > 0 && r.flipX == MasterRatController.main.settings.flipAll)
+        else if (rotVel.x < 0 && r.flipX != MasterRatController.main.settings.flipAll || rotVel.x > 0 && r.flipX == MasterRatController.main.settings.flipAll)
         {
             r.flipX = !r.flipX;
             timeUntilFlip = settings.timeBetweenFlips;
@@ -139,6 +152,9 @@ public class RatBoid : MonoBehaviour
         //Update rat position:
         foreach (RatBoid rat in spawnedRats) //Iterate through every rat in list
         {
+            //Pre-flight check:
+            if (rat.stasis) continue; //Skip rat if it is in stasis
+
             //Initialize:
             Vector3 newPos = rat.transform.position;                         //Get current position of rat
             newPos.x += rat.velocity.x * deltaTime;                          //Add X velocity
@@ -269,6 +285,7 @@ public class RatBoid : MonoBehaviour
             {
                 //Initialize:
                 RatBoid rat = spawnedRats[r];                         //Get current rat controller
+                if (rat.stasis) continue;                             //Skip rat if it is in stasis
                 if (rat.behavior == RatBehavior.Projectile) continue; //Skip rat if it is a projectile
 
                 //Look for neighbors:
@@ -276,6 +293,7 @@ public class RatBoid : MonoBehaviour
                 {
                     //Initialize:
                     RatBoid otherRat = spawnedRats[o];                         //Get other rat controller
+                    if (otherRat.stasis) continue;                             //Skip rat if it is in stasis
                     if (otherRat.behavior == RatBehavior.Projectile) continue; //Skip rat if it is a projectile
                     
                     //Check distance:
@@ -307,6 +325,9 @@ public class RatBoid : MonoBehaviour
         float leaderStandingHeight = MasterRatController.main.transform.position.y - MasterRatController.main.settings.collisionRadius; //Approximate height of bottom of leader's sprite
         foreach (RatBoid rat in spawnedRats) //Iterate through every rat in list
         {
+            //Pre-flight check:
+            if (rat.stasis) continue; //Skip rat if it is in stasis
+
             //PROJECTILE RULES:
             if (rat.behavior == RatBehavior.Projectile) //Rat is currently behaving as a projectile
             {

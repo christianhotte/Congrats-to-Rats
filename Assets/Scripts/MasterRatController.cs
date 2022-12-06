@@ -195,11 +195,14 @@ public class MasterRatController : MonoBehaviour
     internal Vector3 airVelocity;      //3D velocity used when rat is falling
     internal Vector2 forward;          //Normalized vector representing which direction big rat was most recently moving
     internal float currentSpeed;       //Current speed at which rat is moving
-    private Vector2 moveInput;         //Current input direction for movement
+    private Vector2 rawMoveInput;      //Current input direction for movement (without modifiers)
     private bool falling;              //Whether or not rat is currently falling
     internal bool commanding;          //Whether or not rat is currently deploying rats to a location
     private float aimTime = -1;        //The number of seconds rat has been aiming a throw for. Negative if rat is not aiming a throw
     private RaycastHit latestMouseHit; //Data from last point hit by mouse raycast
+
+    internal bool stasis;    //When true, this rat will not update or move
+    internal bool noControl; //When true, inputs for this rat will not read as motion and will activate nothing
 
     //Utility Vars:
     /// <summary>
@@ -214,6 +217,18 @@ public class MasterRatController : MonoBehaviour
     /// Maximum amount of time rat needs to spend aiming to have fully-charged throw.
     /// </summary>
     private float MaxThrowChargeTime { get { return (1 / settings.throwChargeSpeed) + settings.throwChargeWait; } }
+    /// <summary>
+    /// Move input vector in the context of the current camera (and current camera blend state, if applicable).
+    /// </summary>
+    private Vector3 RotatedMoveInput
+    {
+        get
+        {
+            Vector3 moveInput = RatBoid.UnFlattenVector(rawMoveInput);                       //Put move input into Vector3 for rotating purposes
+            float camAngle = Vector2.SignedAngle(Vector2.up, CameraTrigger.GetDirectionRef); //Get angle relative to current camera direction
+            return Quaternion.AngleAxis(-camAngle, Vector3.up) * moveInput;                  //Rotate move input vector around Y axis based on camera angle
+        }
+    }
 
     //Events & Delegates:
     /// <summary>
@@ -251,10 +266,10 @@ public class MasterRatController : MonoBehaviour
     private void Update()
     {
         //Update counters:
-        if (aimTime > -1 && aimTime != MaxThrowChargeTime) aimTime = Mathf.Min(aimTime + Time.deltaTime, MaxThrowChargeTime); //Increment aim time if rat is aiming (cap out at max aim time)
+        if (!stasis && aimTime > -1 && aimTime != MaxThrowChargeTime) aimTime = Mathf.Min(aimTime + Time.deltaTime, MaxThrowChargeTime); //Increment aim time if rat is aiming (cap out at max aim time)
 
         //Perform rat movements:
-        MoveRat(Time.deltaTime);                                  //Move the big rat
+        if (!stasis) MoveRat(Time.deltaTime);                     //Move the big rat
         RatBoid.UpdateRats(Time.deltaTime, currentSwarmSettings); //Move all the little rats
 
         //OnFollowerCountChanged(); //TEMP: Keep swarm settings regularly up-to-date for debugging purposes
@@ -273,7 +288,7 @@ public class MasterRatController : MonoBehaviour
         }
 
         //Footstep sounds:
-        if (!falling && !audioSource.isPlaying && currentSpeed != 0) //Rat is moving (not falling) but audioSource is silent
+        if (!stasis && !falling && !audioSource.isPlaying && currentSpeed != 0) //Rat is moving (not falling) but audioSource is silent
         {
             audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.footsteps)); //Play a random footstep noise
         }
@@ -296,12 +311,12 @@ public class MasterRatController : MonoBehaviour
         if (falling) //Rat is currently falling through the air
         {
             //Modify velocity:
-            Vector3 addVel = new Vector3();                                                      //Initialize vector to store acceleration
-            addVel += settings.accel * settings.airControl * RatBoid.UnFlattenVector(moveInput); //Get acceleration due to input
-            addVel += Vector3.down * settings.gravity;                                           //Get acceleration due to gravity
-            addVel += -airVelocity.normalized * settings.airDrag;                                //Get deceleration due to drag
-            airVelocity += addVel * deltaTime;                                                   //Apply change in velocity
-            velocity = RatBoid.FlattenVector(airVelocity);                                       //Update flat velocity to match air velocity
+            Vector3 addVel = new Vector3();                                    //Initialize vector to store acceleration
+            addVel += settings.accel * settings.airControl * RotatedMoveInput; //Get acceleration due to input
+            addVel += Vector3.down * settings.gravity;                         //Get acceleration due to gravity
+            addVel += -airVelocity.normalized * settings.airDrag;              //Get deceleration due to drag
+            airVelocity += addVel * deltaTime;                                 //Apply change in velocity
+            velocity = RatBoid.FlattenVector(airVelocity);                     //Update flat velocity to match air velocity
 
             //Get new position:
             newPos += airVelocity * deltaTime; //Get target position based on velocity over time
@@ -341,19 +356,15 @@ public class MasterRatController : MonoBehaviour
         else //Rat is moving normally along a surface
         {
             //Modify velocity:
-            if (moveInput != Vector2.zero && aimTime < 0) //Player is moving rat in a direction (and not aiming)
+            if (rawMoveInput != Vector2.zero && aimTime < 0) //Player is moving rat in a direction (and not aiming)
             {
-                //Rotate input:
-                Vector3 rotatedMoveInput = RatBoid.UnFlattenVector(moveInput);                    //Put move input into Vector3 for rotating purposes
-                float camAngle = Vector2.Angle(Vector2.up, CameraTrigger.GetDirectionRef);        //Get angle relative to current camera direction
-                rotatedMoveInput = Quaternion.AngleAxis(camAngle, Vector3.up) * rotatedMoveInput; //Rotate move input vector around Y axis based on camera angle
-
                 //Add velocity:
-                Vector2 addVel = RatBoid.FlattenVector(rotatedMoveInput) * settings.accel; //Get added velocity based on input this frame
-                velocity += addVel * deltaTime;                                            //Add velocity as acceleration over time
+                Vector3 input = RotatedMoveInput;                               //Store contextual move input vector
+                Vector2 addVel = RatBoid.FlattenVector(input) * settings.accel; //Get added velocity based on input this frame
+                velocity += addVel * deltaTime;                                 //Add velocity as acceleration over time
 
                 //Flip sprite:
-                if (moveInput.x != 0) sprite.flipX = settings.flipAll ? moveInput.x < 0 : moveInput.x > 0; //Flip sprite to direction of horizontal move input
+                if (input.x != 0) sprite.flipX = settings.flipAll ? input.x < 0 : input.x > 0; //Flip sprite to direction of horizontal move input
             }
             else if (velocity != Vector2.zero) //No input is given but rat is still moving
             {
@@ -515,7 +526,11 @@ public class MasterRatController : MonoBehaviour
     //INPUT METHODS:
     public void OnMoveInput(InputAction.CallbackContext context)
     {
-        moveInput = context.ReadValue<Vector2>(); //Store input value
+        rawMoveInput = context.ReadValue<Vector2>(); //Store input value
+
+        //Animator effects:
+        if (rawMoveInput == Vector2.zero) anim.SetBool("MoveInput", false); //Indicate to animator when no move input is being given
+        else anim.SetBool("MoveInput", true);                               //Indicate to animator when move input is being given
     }
     public void OnScrollSpawn(InputAction.CallbackContext context)
     {
@@ -592,10 +607,10 @@ public class MasterRatController : MonoBehaviour
             if (!falling) //Player can only jump while they are not in the air
             {
                 //Perform jump:
-                Vector3 jumpforce = RatBoid.UnFlattenVector(moveInput).normalized * settings.jumpPower.x; //Get horizontal jump power
-                jumpforce.y = settings.jumpPower.y;                                                       //Get vertical jump power
-                if (moveInput == Vector2.zero) jumpforce.y *= settings.stationaryJumpMultiplier;          //Apply multiplier to vertical jump if rat is stationary
-                Launch(jumpforce);                                                                        //Launch rat using jump force
+                Vector3 jumpforce = RotatedMoveInput.normalized * settings.jumpPower.x;             //Get horizontal jump power
+                jumpforce.y = settings.jumpPower.y;                                                 //Get vertical jump power
+                if (rawMoveInput == Vector2.zero) jumpforce.y *= settings.stationaryJumpMultiplier; //Apply multiplier to vertical jump if rat is stationary
+                Launch(jumpforce);                                                                  //Launch rat using jump force
             }
         }
     }
