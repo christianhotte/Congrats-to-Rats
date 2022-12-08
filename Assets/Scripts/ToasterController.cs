@@ -121,7 +121,7 @@ public class ToasterController : MonoBehaviour
         //Move pusher:
         Vector3 newPusherPos = pusher.localPosition; //Initialize value for new pusher position
         newPusherPos.y = pusherStartPos;             //Get starting Y value of pusher position
-        pusher.position = newPusherPos;              //Move pusher back to starting position
+        pusher.localPosition = newPusherPos;         //Move pusher back to starting position
 
         //Launch mama rat:
         MasterRatController.main.stasis = false;                                   //Take mama rat out of stasis
