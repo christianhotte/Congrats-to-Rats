@@ -48,13 +48,14 @@ public class RatBoid : MonoBehaviour
     internal Vector3 airVelocity;                                   //3D velocity used when rat is falling
     internal float temperature = 68;                                //Current temperature of rat (in degrees)
 
-    private float timeUntilFlip;   //Time before this rat is able to flip its sprite orientation (prevents jiggling)
-    internal float neighborCrush;  //Represents how many neighbors this rat has and how close they are
-    internal float pileHeight = 0; //Additional height added to rat due to piling
-    internal bool stasis;          //If rat is in stasis, it will still exist but it will not move or check for anything in its environment
-    internal bool thrown;          //Indicates whether currently-airborne rat was thrown (resets when rat lands or hits a wall)
-    internal bool dieOnImpact;     //If true, airborne rat will be destroyed next time it touches something
-    internal float glueFactor = 0; //Cumulative slowness factor applied by any glue zones rat is currently in
+    private float timeUntilFlip;     //Time before this rat is able to flip its sprite orientation (prevents jiggling)
+    internal float neighborCrush;    //Represents how many neighbors this rat has and how close they are
+    internal float pileHeight = 0;   //Additional height added to rat due to piling
+    internal bool stasis;            //If rat is in stasis, it will still exist but it will not move or check for anything in its environment
+    internal bool thrown;            //Indicates whether currently-airborne rat was thrown (resets when rat lands or hits a wall)
+    internal bool dieOnImpact;       //If true, airborne rat will be destroyed next time it touches something
+    internal bool tempUseLeaderPhys; //If true, this rat will use leader physics until it hits a surface
+    internal float glueFactor = 0;   //Cumulative slowness factor applied by any glue zones rat is currently in
 
     //UTILITY VARS:
     /// <summary>
@@ -220,6 +221,7 @@ public class RatBoid : MonoBehaviour
                     {
                         //Bounce rat (with bouncer settings):
                         rat.airVelocity = bouncer.GetBounceVelocity(rat.airVelocity, hit.normal); //Get new rat velocity from bouncer object
+                        rat.tempUseLeaderPhys = bouncer.IsDirectional;                            //If bouncer is directional, use leader physics so that rat follows same arc as leader.
                         newPos = hit.point + (-rat.airVelocity.normalized * 0.001f);              //Move rat to position close to wall but not inside it
                     }
                     else if (surfaceAngle > MasterRatController.main.settings.maxWalkAngle) //Surface is too steep for rat to land on
@@ -335,12 +337,16 @@ public class RatBoid : MonoBehaviour
             if (rat.behavior == RatBehavior.Projectile) //Rat is currently behaving as a projectile
             {
                 //RULE - Gravity: (rats fall downward)
-                Vector3 gravVel = Vector3.down * rat.settings.gravity; //Get acceleration due to gravity
-                rat.airVelocity += gravVel * deltaTime;                //Apply velocity to rat
+                Vector3 gravVel = Vector3.down;                                                  //Get initial value for gravitational acceleration
+                if (rat.tempUseLeaderPhys) gravVel *= MasterRatController.main.settings.gravity; //Use leader gravity setting in special case
+                else gravVel *= rat.settings.gravity;                                            //Normally, use local gravity setting
+                rat.airVelocity += gravVel * deltaTime;                                          //Apply velocity to rat
 
                 //RULE - Drag: (the air resists motion)
-                Vector3 dragVel = -rat.airVelocity.normalized * rat.settings.drag; //Get deceleration due to drag
-                rat.airVelocity += dragVel * deltaTime;                            //Apply velocity to rat
+                Vector3 dragVel = -rat.airVelocity.normalized;                                   //Get initial value for deceleration due to drag
+                if (rat.tempUseLeaderPhys) dragVel *= MasterRatController.main.settings.airDrag; //Use leader drag setting in special case
+                else dragVel *= rat.settings.drag;                                               //Normally, use local drag setting
+                rat.airVelocity += dragVel * deltaTime;                                          //Apply velocity to rat
 
                 //Cleanup:
                 rat.velocity = FlattenVector(rat.airVelocity); //Update flat velocity to match air velocity
@@ -538,7 +544,7 @@ public class RatBoid : MonoBehaviour
                         rat.velocity += avoidanceVel * adjustedDT;                         //Apply unclamped velocity to rat
                         //rat.neighborCrush *= 1 - distanceValue;                          //Prevent rats from piling up against a ledge
                     }
-                }.
+                }
             }
 
             //Crush effects:
@@ -674,6 +680,7 @@ public class RatBoid : MonoBehaviour
 
         //Cleanup:
         thrown = false;             //Reset throw modifier
+        tempUseLeaderPhys = false;  //Reset physics modifier
         airVelocity = Vector3.zero; //Clear air velocity (but keep momentum by retaining flat velocity)
     }
     /// <summary>

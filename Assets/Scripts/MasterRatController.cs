@@ -629,7 +629,11 @@ public class MasterRatController : MonoBehaviour
     {
         if (context.performed) //Jump button has just been pressed
         {
-            if (!falling && currentGlue == null) //Player can only jump while they are not in the air (and not stuck to glue)
+            if (stasis && ToasterController.main.bigRatContained) //Use jump to launch from toaster
+            {
+                ToasterController.main.LaunchRats(); //Launch all contained rats from toaster
+            }
+            else if (!falling && currentGlue == null) //Player can only jump while they are not in the air (and not stuck to glue)
             {
                 //Perform jump:
                 Vector3 jumpforce = RotatedMoveInput.normalized * settings.jumpPower.x;             //Get horizontal jump power

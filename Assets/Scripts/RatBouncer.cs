@@ -4,9 +4,6 @@ using UnityEngine;
 
 public class RatBouncer : MonoBehaviour
 {
-    //Classes, Enums & Structs:
-    public enum BouncerType { Magnifier, Targeter }
-
     //Settings:
     [Header("Settings:")]
     [SerializeField, Tooltip("Rat velocity multiplier applied when bouncing")] private float bounceValue = 1;
@@ -14,6 +11,12 @@ public class RatBouncer : MonoBehaviour
     [SerializeField, Tooltip("If set to anything other than zero, this is the direction rats will always be bounced at when they touch this object")]              private Vector3 bounceDirection = Vector3.zero;
     [SerializeField, Tooltip("When using deterministic bounce method, this angle determines which rat bounces are valid and which aren't (relative to world.up)")] private float maxBounceAngle = 180;
     [SerializeField, Tooltip("Velocity at which rat is launched when being bounced deterministically")]                                                            private float bounceVel = 1;
+
+    //UTILITY VARIABLES:
+    /// <summary>
+    /// Returns true if bouncer bounces rats at a specific direction.
+    /// </summary>
+    public bool IsDirectional { get { return bounceDirection != Vector3.zero; } }
 
     //FUNCTIONALITY METHODS:
     /// <summary>
