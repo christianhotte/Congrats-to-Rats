@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 /// <summary>
 /// Base class for objects which have some effect on rat behavior.
@@ -18,16 +19,36 @@ public class EffectZone : MonoBehaviour
     internal List<RatBoid> zoneRats = new List<RatBoid>(); //List of rats which are currently within this zone
     internal bool bigRatInZone = false;                    //True if mama rat is also in this zone
 
+    //Events & Coroutines:
+    /// <summary>
+    /// Event called when big rat enters this zone.
+    /// </summary>
+    public UnityAction OnBigRatEnter;
+    /// <summary>
+    /// Event called when big rat leaves this zone.
+    /// </summary>
+    public UnityAction OnBigRatLeave;
+
     //RUNTIME METHODS:
     private void Awake()
     {
         //Get objects & components:
         coll = GetComponent<BoxCollider>(); //Get box collider from local object
+
+        //Event subscriptions:
+        OnBigRatEnter += EmptyMethod; //Add event to empty method to prevent errors when not in use
+        OnBigRatLeave += EmptyMethod; //Add event to empty method to prevent errors when not in use
     }
     private void Update()
     {
         //Affect rats:
         foreach (RatBoid rat in zoneRats) AffectRat(rat, Time.deltaTime); //Apply effect to every rat in zone
+    }
+    private void OnDestroy()
+    {
+        //Event unsubscriptions:
+        OnBigRatEnter -= EmptyMethod; //Unsubscribe on destruction
+        OnBigRatLeave -= EmptyMethod; //Unsubscribe on destruction
     }
 
     //FUNCTIONALITY METHODS:
@@ -58,6 +79,7 @@ public class EffectZone : MonoBehaviour
         if (Physics.Linecast(rat.transform.position, pointOnSource, rat.settings.obstructionLayers)) return true; //Indicate that obstruction is present
         return false;                                                                                             //Return false no obstructions could be found
     }
+    private void EmptyMethod() { }
 }
 
 //BONEYARD:

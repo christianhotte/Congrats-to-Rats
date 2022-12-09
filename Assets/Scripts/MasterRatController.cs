@@ -461,20 +461,31 @@ public class MasterRatController : MonoBehaviour
             RaycastHit[] zoneHits = Physics.SphereCastAll(transform.position, settings.collisionRadius, moveDir, moveDist, RatBoid.effectZoneMask); //Check to see if rat has entered any zones
             
             //Update zone lists:
-            foreach (EffectZone zone in currentZones) zone.bigRatInZone = false; //Clear rat from existing zones
-            currentZones.Clear(); currentGlue = null;                            //Reset zone memory
+            List<EffectZone> newZones = new List<EffectZone>();                  //Create a temporary list to store new effect zones
+            currentGlue = null;                                                  //Reset sticky zone memory
             foreach (RaycastHit hit in zoneHits) //Iterate through each detected zone
             {
                 if (hit.collider.TryGetComponent(out EffectZone zone)) //Make sure object has EffectZone component
                 {
-                    //Cleanup:
-                    zone.bigRatInZone = true; //Indicate that rat is in zone
-                    currentZones.Add(zone);   //Add zone to list of occupied zones
+                    //Mark zone as current:
+                    newZones.Add(zone); //Add zone to new list of occupied zones
+                    if (!currentZones.Contains(zone)) //Zone did not previously contain mama rat
+                    {
+                        zone.bigRatInZone = true; //Indicate that rat is now in zone
+                        zone.OnBigRatEnter();     //Call big rat entry event
+                    }
+                    else currentZones.Remove(zone); //Use currentZones list to get zones which rat has left
 
-                    //Other checks
+                    //Other checks:
                     if (hit.collider.TryGetComponent(out SlowZone slowZone)) currentGlue = slowZone; //Get slowZone component if applicable
                 }
             }
+            foreach (EffectZone zone in currentZones) //Iterate through zones which rat is no longer in
+            {
+                zone.bigRatInZone = false; //Indicate that rat is no longer in zone
+                zone.OnBigRatLeave();      //Indicate that rat has left zone
+            }
+            currentZones = newZones; //Save new list of zones
         }
 
         //Movement cleanup:
