@@ -20,21 +20,34 @@ public class TempZone : EffectZone
         if (!checkObstruction || !RatObstructed(rat)) //Apply temperature if rat is unobstructed or if obstructions don't matter
         {
             //Set temperature:
-            rat.temperature += (deltaTemp + (rat.settings.tempMaintain * Mathf.Sign(deltaTemp))) * deltaTime; //Apply temperature change to rat based on time value (relative to rat's tempMaintain value)
+            float prevTemp = rat.temperature;                                                                          //Record rat's previous temperature
+            rat.temperature += (deltaTemp + (rat.settings.tempMaintain * Mathf.Sign(deltaTemp))) * deltaTime;          //Apply temperature change to rat based on time value (relative to rat's tempMaintain value)
             rat.temperature = Mathf.Clamp(rat.temperature, rat.settings.coldTempRange.x, rat.settings.hotTempRange.y); //Clamp rat temperature to lower and upper bounds of survivability
 
-            //Death states:
-            if (rat.temperature <= rat.settings.coldTempRange.x) //Rat is dying of cold
+            //State changes:
+            if (rat.temperature <= rat.settings.coldTempRange.y) //Rat is cold
             {
-                Destroy(rat.gameObject);
-                return;
+                if (rat.temperature <= rat.settings.coldTempRange.x) //Rat is dying of cold
+                {
+                    rat.Freeze(); //Kill rat (with special freezing sequence)
+                }
+                else if (prevTemp > rat.settings.coldTempRange.y) //Rat has just become cold
+                {
+                    
+                }
             }
-            if (rat.temperature >= rat.settings.hotTempRange.y) //Rat is dying of heat
+            else if (rat.temperature >= rat.settings.hotTempRange.x) //Rat is hot
             {
-                Destroy(rat.gameObject);
-                return;
+                if (rat.temperature >= rat.settings.hotTempRange.y) //Rat is dying of heat
+                {
+                    Destroy(rat.gameObject); //Kill rat
+                    return;
+                }
+                else if (prevTemp < rat.settings.hotTempRange.x) //Rat has just become hot
+                {
+                    
+                }
             }
-            
         }
     }
 }
