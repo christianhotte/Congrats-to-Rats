@@ -62,6 +62,13 @@ public class Billboarder : MonoBehaviour
 
     //OPERATION METHODS:
     /// <summary>
+    /// Sets visibility of object being billboarded.
+    /// </summary>
+    public void SetVisibility(float opacity)
+    {
+
+    }
+    /// <summary>
     /// Sets Z rotation of billboard, ignoring smooth approach.
     /// </summary>
     public void SetZRot(float rot)

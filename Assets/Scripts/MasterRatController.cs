@@ -238,6 +238,15 @@ public class MasterRatController : MonoBehaviour
     /// </summary>
     public UnityAction followerCountChanged;
 
+    //Coroutines:
+    /// <summary>
+    /// Sequence which follows after main rat is killed.
+    /// </summary>
+    IEnumerator DeathSequence()
+    {
+        yield return new WaitForSeconds(1); //TEMP
+    }
+
     //RUNTIME METHODS:
     private void Awake()
     {
@@ -656,8 +665,8 @@ public class MasterRatController : MonoBehaviour
     }
     public void OnMousePositionMove(InputAction.CallbackContext context)
     {
-        Ray mouseRay = Camera.main.ScreenPointToRay(context.ReadValue<Vector2>());
-        if (Physics.Raycast(mouseRay, out RaycastHit hit, settings.throwTargetLayers)) latestMouseHit = hit;
+        Ray mouseRay = Camera.main.ScreenPointToRay(context.ReadValue<Vector2>());                                      //Create a ray which shoots out of the camera
+        if (Physics.Raycast(mouseRay, out RaycastHit hit, 10000, settings.throwTargetLayers)) { latestMouseHit = hit; } //Use mouseray to check for walls we can throw rats at
     }
 
     //FUNCTIONALITY METHODS:
@@ -767,6 +776,17 @@ public class MasterRatController : MonoBehaviour
 
         //Cleanup:
         followerCountChanged.Invoke(); //Perform updates triggered by change in follower count
+    }
+    /// <summary>
+    /// Causes main rat to die and respawn at current spawnpoint.
+    /// </summary>
+    public void Kill()
+    {
+        
+        stasis = true; //Put rat in stasis (instead of destroying it)
+
+        //Cleanup:
+        StartCoroutine(DeathSequence()); //Begin death sequence
     }
     /// <summary>
     /// Updates general stuff which depends on current number of follower rats. Works with rat addition and removal.
