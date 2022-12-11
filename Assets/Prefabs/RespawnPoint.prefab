@@ -108,6 +108,7 @@ GameObject:
   m_Component:
   - component: {fileID: 793194538747447787}
   - component: {fileID: 5999327767771952189}
+  - component: {fileID: 8072003256193554542}
   m_Layer: 0
   m_Name: RespawnPoint
   m_TagString: Untagged
@@ -146,6 +147,30 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startPoint: 0
+  boidSpawnArea: {x: 0.4, y: 0.5}
+  boidLaunchPower: {x: 2, y: 2}
+  secondsPerRat: 0.01
+  baseDoorSpeed: 1.5
+--- !u!95 &8072003256193554542
+Animator:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5880139220031463148}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: e552b8eb1298bea4db54e43fff1510db, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &7281118410544387165
 GameObject:
   m_ObjectHideFlags: 0
@@ -203,8 +228,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 0.8352653, z: 3.4673824}
-  m_Center: {x: 0, y: 0.08236736, z: 1.4698896}
+  m_Size: {x: 0.83223915, y: 0.8352653, z: 1.716238}
+  m_Center: {x: -0.002465248, y: 0.08236736, z: 0.59431744}
 --- !u!1 &8377513458156909930
 GameObject:
   m_ObjectHideFlags: 0
@@ -229,7 +254,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8377513458156909930}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.166, z: 0.068}
+  m_LocalPosition: {x: 0, y: -0.166, z: 0.213}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

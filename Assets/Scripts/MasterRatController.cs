@@ -171,15 +171,17 @@ public class MasterRatController : MonoBehaviour
     public static MasterRatController main;
 
     //Objects & Components:
-    private SpriteRenderer sprite;   //Sprite renderer component for big rat
-    private Animator anim;           //Animator controller for big rat
-    private Billboarder billboarder; //Component used to manage sprite orientation
-    private AudioSource audioSource; //Audiosource component for mama rat sfx
+    private SpriteRenderer sprite;    //Sprite renderer component for big rat
+    private Animator anim;            //Animator controller for big rat
+    internal Billboarder billboarder; //Component used to manage sprite orientation
+    private AudioSource audioSource;  //Audiosource component for mama rat sfx
 
     [Header("Settings Objects:")]
     [Tooltip("Interchangeable data object describing settings of the main rat")]                                                    public BigRatSettings settings;
     [Tooltip("Interchangeable data object describing sound settings for this rat")]                                                 public MamaSoundSettings soundSettings;
     [SerializeField, Tooltip("Place any number of swarm settings objects here (make sure they have different Target Rat Numbers)")] private List<SwarmSettings> swarmSettings = new List<SwarmSettings>();
+    [Header("Debug Options:")]
+    [SerializeField, Tooltip("Kills big rat")] private bool debugKill;
 
     //Runtime Vars:
     private SwarmSettings currentSwarmSettings;                     //Instance of swarmSettings object used to interpolate between rat behaviors
@@ -202,6 +204,7 @@ public class MasterRatController : MonoBehaviour
     internal bool commanding;          //Whether or not rat is currently deploying rats to a location
     private float aimTime = -1;        //The number of seconds rat has been aiming a throw for. Negative if rat is not aiming a throw
     private RaycastHit latestMouseHit; //Data from last point hit by mouse raycast
+    private bool jumpButtonPressed;    //Indicates whether or not jump button is currently pressed
 
     internal bool stasis;    //When true, this rat will not update or move
     internal bool noControl; //When true, inputs for this rat will not read as motion and will activate nothing
@@ -244,7 +247,16 @@ public class MasterRatController : MonoBehaviour
     /// </summary>
     IEnumerator DeathSequence()
     {
-        yield return new WaitForSeconds(1); //TEMP
+        //Initial grace period:
+        yield return new WaitForSeconds(settings.deadTime); //Wait a brief period
+
+        //Reposition to spawnpoint:
+        transform.position = Respawner.currentSpawnPoint.spawnPosition.position; //Move rat to position of spawnpoint
+        ResetTrail();                                                            //Reset trail state
+        yield return new WaitForSeconds(settings.respawnTransTime);              //Give camera time to move to new position
+
+        //Pass to respawn system:
+        Respawner.Respawn(); //Trigger respawn sequence in respawner system
     }
 
     //RUNTIME METHODS:
@@ -297,6 +309,9 @@ public class MasterRatController : MonoBehaviour
                 //if (trail[i].IsJumpMarker) { print("Marker " + x + "'s trail value is " + trail[i].trailValue); x++; }
             }
         }
+
+        //Debug functions:
+        if (debugKill) { Kill(); debugKill = false; } //Trigger death on debug kill command
 
         //Footstep sounds:
         if (!stasis && !falling && !audioSource.isPlaying && currentSpeed != 0) //Rat is moving (not falling) but audioSource is silent
@@ -579,7 +594,7 @@ public class MasterRatController : MonoBehaviour
     }
     public void OnScrollSpawn(InputAction.CallbackContext context)
     {
-        if (context.started) //Scroll wheel has just been moved one tick
+        if (context.started & !noControl) //Scroll wheel has just been moved one tick and player has control over rat
         {
             if (context.ReadValue<float>() > 0) SpawnRat(settings.basicRatPrefab); //Spawn rats when wheel is scrolled up
             else if (followerRats.Count > 0) Destroy(followerRats[^1].gameObject); //Despawn rats when wheel is scrolled down
@@ -587,7 +602,7 @@ public class MasterRatController : MonoBehaviour
     }
     public void OnCommandInput(InputAction.CallbackContext context)
     {
-        if (context.performed) //Command button has been pressed
+        if (context.performed && !noControl) //Command button has been pressed and player has control over rat
         {
             commanding = true;              //Indicate that rat is now in command mode
             anim.SetBool("Pointing", true); //Execute pointing animation
@@ -601,6 +616,7 @@ public class MasterRatController : MonoBehaviour
     }
     public void OnThrowInput(InputAction.CallbackContext context)
     {
+        if (noControl) return;                           //Ignore if player has no control over rat
         if (context.performed && followerRats.Count > 0) //Throw button has just been pressed (and there is at least one rat to throw)
         {
             //Cleanup:
@@ -647,7 +663,7 @@ public class MasterRatController : MonoBehaviour
     }
     public void OnJumpInput(InputAction.CallbackContext context)
     {
-        if (context.performed) //Jump button has just been pressed
+        if (context.performed && !noControl) //Jump button has just been pressed (and player has control over rat)
         {
             if (stasis && ToasterController.main.bigRatContained) //Use jump to launch from toaster
             {
@@ -661,6 +677,11 @@ public class MasterRatController : MonoBehaviour
                 if (rawMoveInput == Vector2.zero) jumpforce.y *= settings.stationaryJumpMultiplier; //Apply multiplier to vertical jump if rat is stationary
                 Launch(jumpforce);                                                                  //Launch rat using jump force
             }
+            jumpButtonPressed = true; //Indictate that jump button is now pressed
+        }
+        else if (context.canceled) //Jump button has just been released
+        {
+            jumpButtonPressed = false; //Indicate that jump button is no longer pressed
         }
     }
     public void OnMousePositionMove(InputAction.CallbackContext context)
@@ -673,7 +694,7 @@ public class MasterRatController : MonoBehaviour
     /// <summary>
     /// Spawns a new rat and adds it to the swarm.
     /// </summary>
-    public void SpawnRat(GameObject prefab)
+    public RatBoid SpawnRat(GameObject prefab)
     {
         //Initialize:
         Transform newRat = Instantiate(prefab).transform;       //Spawn new rat
@@ -696,6 +717,7 @@ public class MasterRatController : MonoBehaviour
         newRat.position = spawnPoint;                              //Set rat position to spawnpoint
         ratController.flatPos = RatBoid.FlattenVector(spawnPoint); //Update flat position tracker of spawned rat
         ratController.Launch(launchVel);                           //Launch spawned rat
+        return ratController;                                      //Return control script of launched rat
     }
     /// <summary>
     /// Launches rat into the air.
@@ -760,9 +782,8 @@ public class MasterRatController : MonoBehaviour
     public void RemoveRatAsFollower(RatBoid oldFollower)
     {
         //Initialize:
-        if (!followerRats.Contains(oldFollower)) return;     //Ignore if rat is not currently a follower
-        followerRats.Remove(oldFollower);                    //Remove rat from followers list
-        if (TotalFollowerCount == prevFollowerCount) return; //Ignore if this subtraction does not change follower count (likely due to aerial followers)
+        if (followerRats.Contains(oldFollower)) followerRats.Remove(oldFollower); //Remove rat from follower list if applicable
+        if (TotalFollowerCount == prevFollowerCount) return;                      //Ignore if this subtraction does not change follower count (likely due to aerial followers)
 
         //Jump marker maintenance:
         if (currentJumpMarkers > 0) //System has jump markers in place
@@ -782,10 +803,16 @@ public class MasterRatController : MonoBehaviour
     /// </summary>
     public void Kill()
     {
-        
-        stasis = true; //Put rat in stasis (instead of destroying it)
+        //Destroy all rats:
+        RatBoid.DestroyAll(); //Destroy all spawned rats
+
+        //Simulate rat destruction:
+        stasis = true;                //Remove rat from player control
+        billboarder.SetVisibility(0); //Make rat invisible
 
         //Cleanup:
+        velocity = Vector2.zero;         //Zero-out velocity
+        airVelocity = Vector2.zero;      //Zero-out air velocity
         StartCoroutine(DeathSequence()); //Begin death sequence
     }
     /// <summary>
@@ -992,6 +1019,15 @@ public class MasterRatController : MonoBehaviour
         if (aimTime < 0) return -1;                                                                     //Return negative if rat is not aiming
         if (aimTime < settings.throwChargeWait) return 0;                                               //Return minimum aim value if in waiting phase of aim charge
         return Mathf.Clamp01(Mathf.InverseLerp(settings.throwChargeWait, MaxThrowChargeTime, aimTime)); //Return value representing strength of charge
+    }
+    /// <summary>
+    /// Resets trail state and erases existing trail.
+    /// </summary>
+    private void ResetTrail()
+    {
+        trail.Clear();                            //Clear trail list
+        trail.Insert(0, new TrailPoint(FlatPos)); //Add new trailPoint for current position
+        totalTrailLength = 0;                     //Reset trail length tracker
     }
 }
 

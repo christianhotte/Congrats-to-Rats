@@ -775,4 +775,11 @@ public class RatBoid : MonoBehaviour
             Debug.LogWarning("Failed to reference directional lightmap at index" + mr.lightmapIndex + ", make sure baked lightmaps are manually set to Read/Write"); //Post warning indicating problem
         }*/
     }
+    /// <summary>
+    /// Destroys all RatBoids in scene.
+    /// </summary>
+    public static void DestroyAll()
+    {
+        for (; spawnedRats.Count > 0;) { DestroyImmediate(spawnedRats[0].gameObject); } //Use DestroyImmediate to prevent any errors while destroying total rat population
+    }
 }

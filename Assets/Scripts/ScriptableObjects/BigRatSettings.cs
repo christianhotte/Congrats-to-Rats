@@ -40,6 +40,11 @@ public class BigRatSettings : ScriptableObject
     [MinMaxSlider(0, 90), Tooltip("Range of angles at which rat babies will be launched when spawned")] public Vector2 spawnAngle;
     [MinMaxSlider(0, 5), Tooltip("Force with which rat babies will be launched when spawned")]          public Vector2 spawnForce;
 
+    [Header("Death & Respawn Sequence:")]
+    [Min(0), Tooltip("Time rat spends dead before respawning")]                                                             public float deadTime;
+    [Min(0), Tooltip("Time given for camera to pan to respawn position")]                                                   public float respawnTransTime;
+    [Min(0), Tooltip("Power with which rat is launched forward upon respawning (x is horizontal component, y is vertical")] public Vector2 respawnLaunchPower;
+
     [Header("Throwing:")]
     [Tooltip("Layers which rat can throw baby rats at")]                                                     public LayerMask throwTargetLayers;
     [Min(0), Tooltip("Force with which rat is able to throw other rats")]                                    public float throwForce;
