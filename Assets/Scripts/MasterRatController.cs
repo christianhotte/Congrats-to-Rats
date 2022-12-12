@@ -172,7 +172,7 @@ public class MasterRatController : MonoBehaviour
 
     //Objects & Components:
     private SpriteRenderer sprite;    //Sprite renderer component for big rat
-    private Animator anim;            //Animator controller for big rat
+    internal Animator anim;           //Animator controller for big rat
     internal Billboarder billboarder; //Component used to manage sprite orientation
     private AudioSource audioSource;  //Audiosource component for mama rat sfx
 
@@ -184,16 +184,16 @@ public class MasterRatController : MonoBehaviour
     [SerializeField, Tooltip("Kills big rat")] private bool debugKill;
 
     //Runtime Vars:
-    private SwarmSettings currentSwarmSettings;                     //Instance of swarmSettings object used to interpolate between rat behaviors
-    internal List<RatBoid> followerRats = new List<RatBoid>();      //List of all rats currently following this controller
-    internal List<RatBoid> jumpingFollowers = new List<RatBoid>();  //List of follower rats which are currently jumping (and therefore still counted toward total)
-    internal List<RatBoid> deployedRats = new List<RatBoid>();      //List of all rats currently deployed by player
-    internal List<TrailPoint> trail = new List<TrailPoint>();       //List of points in current trail (used to assemble ratswarm behind main rat)
-    private List<EffectZone> currentZones = new List<EffectZone>(); //List of zones rat is currently in
-    internal float totalTrailLength = 0;                            //Current length of trail (in units)
-    internal int currentJumpMarkers = 0;                            //Current number of jump markers in trail
-    private int prevFollowerCount = 0;                              //Total follower count last time follower count-contingent settings were updated
-    private SlowZone currentGlue = null;                            //Glue zone rat is currently in (if any)
+    private SwarmSettings currentSwarmSettings;                      //Instance of swarmSettings object used to interpolate between rat behaviors
+    internal List<RatBoid> followerRats = new List<RatBoid>();       //List of all rats currently following this controller
+    internal List<RatBoid> jumpingFollowers = new List<RatBoid>();   //List of follower rats which are currently jumping (and therefore still counted toward total)
+    internal List<RatBoid> deployedRats = new List<RatBoid>();       //List of all rats currently deployed by player
+    internal List<TrailPoint> trail = new List<TrailPoint>();        //List of points in current trail (used to assemble ratswarm behind main rat)
+    internal List<EffectZone> currentZones = new List<EffectZone>(); //List of zones rat is currently in
+    internal float totalTrailLength = 0;                             //Current length of trail (in units)
+    internal int currentJumpMarkers = 0;                             //Current number of jump markers in trail
+    private int prevFollowerCount = 0;                               //Total follower count last time follower count-contingent settings were updated
+    private SlowZone currentGlue = null;                             //Glue zone rat is currently in (if any)
 
     internal Vector2 velocity;         //Current speed and direction of movement
     internal Vector3 airVelocity;      //3D velocity used when rat is falling
@@ -257,6 +257,18 @@ public class MasterRatController : MonoBehaviour
 
         //Pass to respawn system:
         Respawner.Respawn(); //Trigger respawn sequence in respawner system
+    }
+    /// <summary>
+    /// Spawns given number of rats over given amount of time.
+    /// </summary>
+    public IEnumerator SpawnRatsOverTime(int rats, float time)
+    {
+        float secsPerRat = time / rats; //Get number of seconds to wait between rat spawns
+        for (int i = 0; i < rats; i++) //Iterate for given number of rats
+        {
+            SpawnRat();                                  //Spawn a rat
+            yield return new WaitForSeconds(secsPerRat); //Wait for designated time before spawning next rat
+        }
     }
 
     //RUNTIME METHODS:
@@ -337,12 +349,12 @@ public class MasterRatController : MonoBehaviour
         if (falling) //Rat is currently falling through the air
         {
             //Modify velocity:
-            Vector3 addVel = new Vector3();                                    //Initialize vector to store acceleration
-            addVel += settings.accel * settings.airControl * RotatedMoveInput; //Get acceleration due to input
-            addVel += Vector3.down * settings.gravity;                         //Get acceleration due to gravity
-            addVel += -airVelocity.normalized * settings.airDrag;              //Get deceleration due to drag
-            airVelocity += addVel * deltaTime;                                 //Apply change in velocity
-            velocity = RatBoid.FlattenVector(airVelocity);                     //Update flat velocity to match air velocity
+            Vector3 addVel = new Vector3();                                                                   //Initialize vector to store acceleration
+            if (!noControl && !commanding) addVel += settings.accel * settings.airControl * RotatedMoveInput; //Get acceleration due to input
+            addVel += Vector3.down * settings.gravity;                                                        //Get acceleration due to gravity
+            addVel += -airVelocity.normalized * settings.airDrag;                                             //Get deceleration due to drag
+            airVelocity += addVel * deltaTime;                                                                //Apply change in velocity
+            velocity = RatBoid.FlattenVector(airVelocity);                                                    //Update flat velocity to match air velocity
 
             //Get new position:
             newPos += airVelocity * deltaTime; //Get target position based on velocity over time
@@ -379,7 +391,7 @@ public class MasterRatController : MonoBehaviour
                     //Landing cleanup:
                     falling = false;                                                           //Indicate that rat is no longer falling
                     airVelocity = Vector3.zero;                                                //Cancel all air velocity
-                    anim.SetTrigger("Land");                                                   //Play landing animation
+                    if (!noControl) anim.SetTrigger("Land");                                   //Play landing animation
                     audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.landings)); //Play a random landing sound
                 }
             }
@@ -387,7 +399,7 @@ public class MasterRatController : MonoBehaviour
         else //Rat is moving normally along a surface
         {
             //Modify velocity:
-            if (rawMoveInput != Vector2.zero && aimTime < 0) //Player is moving rat in a direction (and not aiming)
+            if (!noControl && !commanding && rawMoveInput != Vector2.zero && aimTime < 0) //Player is moving rat in a direction (and not aiming) (and is in control)
             {
                 //Add velocity:
                 Vector3 input = RotatedMoveInput;                               //Store contextual move input vector
@@ -491,6 +503,9 @@ public class MasterRatController : MonoBehaviour
             {
                 if (hit.collider.TryGetComponent(out EffectZone zone)) //Make sure object has EffectZone component
                 {
+                    //Checks:
+                    if (zone.deactivated) continue; //Skip zone if it is deactivated
+
                     //Mark zone as current:
                     newZones.Add(zone); //Add zone to new list of occupied zones
                     if (!currentZones.Contains(zone)) //Zone did not previously contain mama rat
@@ -506,8 +521,9 @@ public class MasterRatController : MonoBehaviour
             }
             foreach (EffectZone zone in currentZones) //Iterate through zones which rat is no longer in
             {
-                zone.bigRatInZone = false; //Indicate that rat is no longer in zone
-                zone.OnBigRatLeave();      //Indicate that rat has left zone
+                if (zone == null) continue;                  //Skip destroyed zones
+                zone.bigRatInZone = false;                   //Indicate that rat is no longer in zone
+                if (!zone.deactivated) zone.OnBigRatLeave(); //Indicate that rat has left zone
             }
             currentZones = newZones; //Save new list of zones
         }
@@ -596,13 +612,13 @@ public class MasterRatController : MonoBehaviour
     {
         if (context.started & !noControl) //Scroll wheel has just been moved one tick and player has control over rat
         {
-            if (context.ReadValue<float>() > 0) SpawnRat(settings.basicRatPrefab); //Spawn rats when wheel is scrolled up
+            if (context.ReadValue<float>() > 0) SpawnRat();                        //Spawn rats when wheel is scrolled up
             else if (followerRats.Count > 0) Destroy(followerRats[^1].gameObject); //Despawn rats when wheel is scrolled down
         }
     }
     public void OnCommandInput(InputAction.CallbackContext context)
     {
-        if (context.performed && !noControl) //Command button has been pressed and player has control over rat
+        if (context.performed && !noControl && !falling) //Command button has been pressed and player has control over rat
         {
             commanding = true;              //Indicate that rat is now in command mode
             anim.SetBool("Pointing", true); //Execute pointing animation
@@ -616,7 +632,7 @@ public class MasterRatController : MonoBehaviour
     }
     public void OnThrowInput(InputAction.CallbackContext context)
     {
-        if (noControl) return;                           //Ignore if player has no control over rat
+        if (noControl || commanding) return;             //Ignore if player has no control over rat
         if (context.performed && followerRats.Count > 0) //Throw button has just been pressed (and there is at least one rat to throw)
         {
             //Cleanup:
@@ -663,7 +679,7 @@ public class MasterRatController : MonoBehaviour
     }
     public void OnJumpInput(InputAction.CallbackContext context)
     {
-        if (context.performed && !noControl) //Jump button has just been pressed (and player has control over rat)
+        if (context.performed && !noControl && !commanding) //Jump button has just been pressed (and player has control over rat)
         {
             if (stasis && ToasterController.main.bigRatContained) //Use jump to launch from toaster
             {
@@ -694,11 +710,11 @@ public class MasterRatController : MonoBehaviour
     /// <summary>
     /// Spawns a new rat and adds it to the swarm.
     /// </summary>
-    public RatBoid SpawnRat(GameObject prefab)
+    public RatBoid SpawnRat()
     {
         //Initialize:
-        Transform newRat = Instantiate(prefab).transform;       //Spawn new rat
-        RatBoid ratController = newRat.GetComponent<RatBoid>(); //Get controller from spawned rat
+        Transform newRat = Instantiate(settings.basicRatPrefab).transform; //Spawn new rat
+        RatBoid ratController = newRat.GetComponent<RatBoid>();            //Get controller from spawned rat
 
         //Get spawn position:
         Vector3 spawnDirection = new Vector3(Random.Range(-settings.spawnArea.x / 2, settings.spawnArea.x / 2), 0, //Get vector which moves spawnpoint away from center by a random amount

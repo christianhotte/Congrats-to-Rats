@@ -41,13 +41,13 @@ public class RatBoid : MonoBehaviour
     /// </summary>
     internal RatBehavior behavior = RatBehavior.Free;
 
-    internal List<RatBoid> currentNeighbors = new List<RatBoid>();  //Other rats which are currently close to this rat
-    internal List<RatBoid> currentSeparators = new List<RatBoid>(); //Other rats which are currently too close to this rat
-    private List<EffectZone> currentZones = new List<EffectZone>(); //Effect zones this rat is currently inside
-    internal float lastTrailValue = -1;                             //Latest value of target on trail (should be reset whenever rat loses target)
-    internal float sizeFactor = 1;                                  //Factor used to change certain properties of rat based on scale variance
-    internal Vector3 airVelocity;                                   //3D velocity used when rat is falling
-    internal float temperature = 68;                                //Current temperature of rat (in degrees)
+    internal List<RatBoid> currentNeighbors = new List<RatBoid>();   //Other rats which are currently close to this rat
+    internal List<RatBoid> currentSeparators = new List<RatBoid>();  //Other rats which are currently too close to this rat
+    internal List<EffectZone> currentZones = new List<EffectZone>(); //Effect zones this rat is currently inside
+    internal float lastTrailValue = -1;                              //Latest value of target on trail (should be reset whenever rat loses target)
+    internal float sizeFactor = 1;                                   //Factor used to change certain properties of rat based on scale variance
+    internal Vector3 airVelocity;                                    //3D velocity used when rat is falling
+    internal float temperature = 68;                                 //Current temperature of rat (in degrees)
 
     private float timeUntilFlip;        //Time before this rat is able to flip its sprite orientation (prevents jiggling)
     internal float neighborCrush;       //Represents how many neighbors this rat has and how close they are
@@ -274,11 +274,17 @@ public class RatBoid : MonoBehaviour
             }
 
             //Check zones:
-            Vector3 moveDir = newPos - rat.transform.position;                                                               //Get non-normalized vector representing rat's direction and distance of travel
-            float moveDist = moveDir.magnitude; moveDir = moveDir.normalized;                                                //Get distance rat has moved as separate variable, then normalize move direction vector
-            RaycastHit[] zoneHits = Physics.RaycastAll(rat.transform.position, moveDir, moveDist, effectZoneMask);           //Check to see if rat has entered any zones
-            foreach (RaycastHit hit in zoneHits) if (hit.collider.TryGetComponent(out EffectZone zone)) rat.AddToZone(zone); //Add rat to lists of each zone which it has entered
-
+            Vector3 moveDir = newPos - rat.transform.position;                                                     //Get non-normalized vector representing rat's direction and distance of travel
+            float moveDist = moveDir.magnitude; moveDir = moveDir.normalized;                                      //Get distance rat has moved as separate variable, then normalize move direction vector
+            RaycastHit[] zoneHits = Physics.RaycastAll(rat.transform.position, moveDir, moveDist, effectZoneMask); //Check to see if rat has entered any zones
+            foreach (RaycastHit hit in zoneHits) //Iterate through list of potential zones
+            {
+                if (hit.collider.TryGetComponent(out EffectZone zone)) //Hit object is an effector zone
+                {
+                    if (zone.deactivated) continue; //Skip zone if it is deactivated
+                    rat.AddToZone(zone);            //Add rat to lists of each zone which it has entered
+                }
+            }
             zoneHits = Physics.RaycastAll(newPos, -moveDir, moveDist, effectZoneMask);                                            //Check to see if rat has left any zones
             foreach (RaycastHit hit in zoneHits) if (hit.collider.TryGetComponent(out EffectZone zone)) rat.RemoveFromZone(zone); //Remove rat from any zones it has left
 

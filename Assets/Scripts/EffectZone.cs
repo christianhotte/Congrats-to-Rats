@@ -18,6 +18,7 @@ public class EffectZone : MonoBehaviour
     //Runtime Variables:
     internal List<RatBoid> zoneRats = new List<RatBoid>(); //List of rats which are currently within this zone
     internal bool bigRatInZone = false;                    //True if mama rat is also in this zone
+    internal bool deactivated = false;                     //If true, rats should disregard this zone
 
     //Events & Coroutines:
     /// <summary>
@@ -49,6 +50,9 @@ public class EffectZone : MonoBehaviour
         //Event unsubscriptions:
         OnBigRatEnter -= EmptyMethod; //Unsubscribe on destruction
         OnBigRatLeave -= EmptyMethod; //Unsubscribe on destruction
+
+        //Cleanup:
+        Clear(); //Clear rats in zone
     }
 
     //FUNCTIONALITY METHODS:
@@ -78,6 +82,20 @@ public class EffectZone : MonoBehaviour
         pointOnSource += Vector3.Project(transform.position, transform.forward);                                  //Move point to actual world space of source object
         if (Physics.Linecast(rat.transform.position, pointOnSource, rat.settings.obstructionLayers)) return true; //Indicate that obstruction is present
         return false;                                                                                             //Return false no obstructions could be found
+    }
+    /// <summary>
+    /// Disables all zone functionality and clears currentZone lists of all creatures within zone.
+    /// </summary>
+    private protected void Clear()
+    {
+        //Clear rat lists:
+        if (bigRatInZone) MasterRatController.main.currentZones.Remove(this); //Remove this zone from big rat's list (if applicable)
+        foreach (RatBoid rat in zoneRats) rat.currentZones.Remove(this);      //Remove this zone from memory of each contained rat
+
+        //Cleanup:
+        deactivated = true;   //Indicate that zone is deactivated
+        bigRatInZone = false; //Clear memory of big rat
+        zoneRats.Clear();     //Clear memory of ratboids
     }
     private void EmptyMethod() { }
 }
