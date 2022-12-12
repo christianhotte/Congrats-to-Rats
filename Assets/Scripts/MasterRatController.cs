@@ -171,7 +171,7 @@ public class MasterRatController : MonoBehaviour
     public static MasterRatController main;
 
     //Objects & Components:
-    private SpriteRenderer sprite;    //Sprite renderer component for big rat
+    internal SpriteRenderer sprite;   //Sprite renderer component for big rat
     internal Animator anim;           //Animator controller for big rat
     internal Billboarder billboarder; //Component used to manage sprite orientation
     private AudioSource audioSource;  //Audiosource component for mama rat sfx
@@ -715,18 +715,21 @@ public class MasterRatController : MonoBehaviour
         //Initialize:
         Transform newRat = Instantiate(settings.basicRatPrefab).transform; //Spawn new rat
         RatBoid ratController = newRat.GetComponent<RatBoid>();            //Get controller from spawned rat
+        float rotationOffset = CameraTrigger.GetRotationOffset;            //Get current rotation offset from camera
 
         //Get spawn position:
         Vector3 spawnDirection = new Vector3(Random.Range(-settings.spawnArea.x / 2, settings.spawnArea.x / 2), 0, //Get vector which moves spawnpoint away from center by a random amount
                                              Random.Range(-settings.spawnArea.y / 2, settings.spawnArea.y / 2));   //Add random amount to depth separately
-        Vector3 spawnPoint = transform.position + settings.spawnOffset + spawnDirection;                           //Use position of mama rat plus offset and random bias as basis for spawnpoint
+        Vector3 spawnPoint = settings.spawnOffset + spawnDirection;                                                //Initialize spawnpoint at world zero with offset and random bias as basis
+        spawnPoint = Quaternion.AngleAxis(-rotationOffset, Vector3.up) * spawnPoint;                               //Rotate spawnpoint around center to correct for current camera rotation
+        spawnPoint += transform.position;                                                                          //Add position to get final spawnpoint
 
         //Get launch characteristics:
         Vector3 launchVel = Vector3.up * Random.Range(settings.spawnForce.x, settings.spawnForce.y); //Initialize force vector for launching rat (with random force value)
         float launchAngle = Random.Range(settings.spawnAngle.x, settings.spawnAngle.y);              //Randomize angle at which rat is launched
         float spawnAngle = Vector2.SignedAngle(Vector2.down, RatBoid.FlattenVector(spawnDirection)); //Get angle between spawnpoint and mother rat position
         launchVel = Quaternion.AngleAxis(launchAngle, Vector3.right) * launchVel;                    //Rotate launch vector forward by launch angle
-        launchVel = Quaternion.AngleAxis(spawnAngle, Vector3.up) * launchVel;                        //Rotate launch vector around mother rat by spawn angle
+        launchVel = Quaternion.AngleAxis(spawnAngle - rotationOffset, Vector3.up) * launchVel;       //Rotate launch vector around mother rat by spawn angle (also correct for camera rotation)
         launchVel += RatBoid.UnFlattenVector(velocity);                                              //Add current velocity of mother rat to launch velocity of child
 
         //Cleanup:

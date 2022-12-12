@@ -78,6 +78,7 @@ public class FoodPickup : EffectZone
     {
         //Initialize micro-cutscene:
         transform.parent = MasterRatController.main.transform;      //Child food to big rat transform
+        MasterRatController.main.sprite.flipX = true;               //Make sure sprite is aligned properly
         MasterRatController.main.noControl = true;                  //Take control away from player
         MasterRatController.main.anim.SetBool("HoldingFood", true); //Begin food animation
 

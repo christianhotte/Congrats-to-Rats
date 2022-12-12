@@ -39,6 +39,10 @@ public class CameraTrigger : MonoBehaviour
             }
         }
     }
+    /// <summary>
+    /// Returns a rotation which may be applied to correct for current camera direction.
+    /// </summary>
+    public static float GetRotationOffset { get { return Vector2.SignedAngle(Vector2.up, GetDirectionRef); } }
     private static CinemachineBrain brain; //Single CinemachineBrain object in scene, used to govern blends
 
     //Objects & Components:
