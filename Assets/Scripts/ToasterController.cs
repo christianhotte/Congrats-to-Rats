@@ -131,8 +131,10 @@ public class ToasterController : MonoBehaviour
         MasterRatController.main.Launch(launchDirection.normalized * launchPower); //Launch mama rat
 
         //Cleanup:
-        bigRatContained = false;             //Indicate toaster no longer contains big rat
-        launching = true;                    //Indicate toaster is now launching rats
-        StartCoroutine(EjectRatsOverTime()); //Begin ejecting baby rats
+        bigRatContained = false;                          //Indicate toaster no longer contains big rat
+        MasterRatController.main.noControl = true;        //Take away control from mama rat
+        MasterRatController.main.unControlledFall = true; //Pass control back to mama rat when it lands
+        launching = true;                                 //Indicate toaster is now launching rats
+        StartCoroutine(EjectRatsOverTime());              //Begin ejecting baby rats
     }
 }

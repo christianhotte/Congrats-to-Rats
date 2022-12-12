@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5893221297297286194}
   - component: {fileID: 1590890639305489046}
   m_Layer: 14
-  m_Name: GlueTrap
+  m_Name: GlueTrapFinal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

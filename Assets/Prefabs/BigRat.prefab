@@ -428,13 +428,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mainLoops:
   - {fileID: 8300000, guid: 19d4706a69b35764994edb3b89108e10, type: 3}
-  - {fileID: 8300000, guid: cf568febfc333e34aab366faaa4adb18, type: 3}
+  - {fileID: 8300000, guid: 09808f90dec5cd64a92293896ca9996b, type: 3}
+  - {fileID: 8300000, guid: ad59fef8cc6d1e44388850f7eba2c4a7, type: 3}
+  - {fileID: 8300000, guid: 4728f9f41dfb0264aaa91d10e8331ce9, type: 3}
   introMusicVolume: {fileID: 0}
   baseVolume: 0.3
   fadeTime: 2.1
   fadeInterval: 0.02
   baseNarrationVolume: 0.5
-  narrationMusicVolume: 0.085
+  narrationMusicVolume: 0.1
   narrationMusicFadeTime: 1.5
   narrationPlayDelay: 1.6
 --- !u!135 &1216433272091941898

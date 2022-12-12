@@ -103,6 +103,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Sponge
       objectReference: {fileID: 0}
+    - target: {fileID: 7767316989744835381, guid: cc7199636cb3f4e47a3657d07bbf4f00, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cc7199636cb3f4e47a3657d07bbf4f00, type: 3}
 --- !u!4 &4515185735956714647 stripped

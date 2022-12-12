@@ -11,13 +11,13 @@ GameObject:
   - component: {fileID: 792217342123442232}
   - component: {fileID: 4418417081027071901}
   - component: {fileID: 1924630941942414167}
-  - component: {fileID: 969465811168225233}
-  m_Layer: 0
+  - component: {fileID: 950901259572636428}
+  m_Layer: 7
   m_Name: SideWall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &792217342123442232
 Transform:
@@ -84,8 +84,8 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &969465811168225233
-MeshCollider:
+--- !u!65 &950901259572636428
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -94,7 +94,6 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 4
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -8873902276086374132, guid: e1435bb2ce965cd4085cfddf2ab4e66f, type: 3}
+  serializedVersion: 2
+  m_Size: {x: 44.206192, y: 500, z: 600}
+  m_Center: {x: 22.102594, y: 0, z: 0}

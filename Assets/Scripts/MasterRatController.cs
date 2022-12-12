@@ -181,7 +181,8 @@ public class MasterRatController : MonoBehaviour
     [Tooltip("Interchangeable data object describing sound settings for this rat")]                                                 public MamaSoundSettings soundSettings;
     [SerializeField, Tooltip("Place any number of swarm settings objects here (make sure they have different Target Rat Numbers)")] private List<SwarmSettings> swarmSettings = new List<SwarmSettings>();
     [Header("Debug Options:")]
-    [SerializeField, Tooltip("Kills big rat")] private bool debugKill;
+    [SerializeField, Tooltip("Kills big rat")]        private bool debugKill;
+    [SerializeField, Tooltip("Advances music phase")] private bool debugAdvanceMusic;
 
     //Runtime Vars:
     private SwarmSettings currentSwarmSettings;                      //Instance of swarmSettings object used to interpolate between rat behaviors
@@ -206,8 +207,9 @@ public class MasterRatController : MonoBehaviour
     private RaycastHit latestMouseHit; //Data from last point hit by mouse raycast
     private bool jumpButtonPressed;    //Indicates whether or not jump button is currently pressed
 
-    internal bool stasis;    //When true, this rat will not update or move
-    internal bool noControl; //When true, inputs for this rat will not read as motion and will activate nothing
+    internal bool stasis;           //When true, this rat will not update or move
+    internal bool noControl;        //When true, inputs for this rat will not read as motion and will activate nothing
+    internal bool unControlledFall; //When true, inputs for this rat will be ignored until rat lands
 
     //Utility Vars:
     /// <summary>
@@ -323,7 +325,8 @@ public class MasterRatController : MonoBehaviour
         }
 
         //Debug functions:
-        if (debugKill) { Kill(); debugKill = false; } //Trigger death on debug kill command
+        if (debugKill) { Kill(); debugKill = false; }                                           //Trigger death on debug kill command
+        if (debugAdvanceMusic) { MusicManager.main.AdvancePhase(); debugAdvanceMusic = false; } //Trigger music phase advancement
 
         //Footstep sounds:
         if (!stasis && !falling && !audioSource.isPlaying && currentSpeed != 0) //Rat is moving (not falling) but audioSource is silent
@@ -390,6 +393,7 @@ public class MasterRatController : MonoBehaviour
 
                     //Landing cleanup:
                     falling = false;                                                           //Indicate that rat is no longer falling
+                    if (unControlledFall) { unControlledFall = false; noControl = false; }     //End uncontrolled fall if applicable
                     airVelocity = Vector3.zero;                                                //Cancel all air velocity
                     if (!noControl) anim.SetTrigger("Land");                                   //Play landing animation
                     audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.landings)); //Play a random landing sound

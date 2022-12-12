@@ -5,6 +5,7 @@ using UnityEngine;
 public class MusicManager : MonoBehaviour
 {
     //Objects & Components:
+    public static MusicManager main;     //Singleton instance of this manager in scene
     private AudioSource mainSource;      //Main audiosource component used to play sound with this system
     private AudioSource fadeSource;      //Secondary audiosource component used to fade in tracks
     private AudioSource narrationSource; //Tertiary audiosource used to play verbal narration
@@ -99,7 +100,8 @@ public class MusicManager : MonoBehaviour
     private void Awake()
     {
         //Initialize:
-        currentVolume = baseVolume; //Set current volume based on initial setting
+        if (main == null) main = this; else Destroy(this); //Singleton-ize this script
+        currentVolume = baseVolume;                        //Set current volume based on initial setting
 
         //Generate audio sources:
         mainSource = gameObject.AddComponent<AudioSource>(); //Create new audiosource component on this object and get reference to it
@@ -159,4 +161,22 @@ public class MusicManager : MonoBehaviour
         StartCoroutine(FadeMusicVolume(narrationMusicVolume, narrationMusicFadeTime)); //Fade out music
         narrationPlaying = true;                                                       //Indicate that a narration is currently playing
     }
+    /// <summary>
+    /// Advances to designated music phase.
+    /// </summary>
+    public void AdvanceToPhase(int phase)
+    {
+        //Checks:
+        phase = Mathf.Clamp(phase, 1, 3);  //Clamp range of given number to actual phase range
+        if (phase <= currentPhase) return; //Ignore command if phase is already active or is old
+
+        //Advance phase:
+        StartCoroutine(FadeToClip(mainLoops[phase], fadeTime)); //Begin coroutine which fades between music clips
+        fadeSource.time = mainSource.time;                      //Align clip times so music syncs up
+        currentPhase = phase;                                   //Indicate new phase
+    }
+    /// <summary>
+    /// Advances to next musical phase.
+    /// </summary>
+    public void AdvancePhase() { AdvanceToPhase(currentPhase + 1); }
 }
