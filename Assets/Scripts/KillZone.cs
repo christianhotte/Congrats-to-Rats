@@ -2,17 +2,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class KillZone : MonoBehaviour
+public class KillZone : EffectZone
 {
-    // Start is called before the first frame update
-    void Start()
+    private void Awake()
     {
-        
+        OnBigRatEnter += KillBigRat;
     }
-
-    // Update is called once per frame
-    void Update()
+    private void OnDestroy()
     {
-        
+        OnBigRatEnter -= KillBigRat;
+    }
+    public void KillBigRat()
+    {
+        if (MasterRatController.main.falling) MasterRatController.main.anim.SetTrigger("Land");
+        MasterRatController.main.Kill();
+    }
+    public override void AffectRat(RatBoid rat, float deltaTime)
+    {
+        Destroy(rat.gameObject);
     }
 }

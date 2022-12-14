@@ -38,7 +38,6 @@ public class EffectZone : MonoBehaviour
 
         //Event subscriptions:
         OnBigRatEnter += EmptyMethod; //Add event to empty method to prevent errors when not in use
-        OnBigRatLeave += EmptyMethod; //Add event to empty method to prevent errors when not in use
     }
     private void Update()
     {
@@ -49,7 +48,6 @@ public class EffectZone : MonoBehaviour
     {
         //Event unsubscriptions:
         OnBigRatEnter -= EmptyMethod; //Unsubscribe on destruction
-        OnBigRatLeave -= EmptyMethod; //Unsubscribe on destruction
 
         //Cleanup:
         Clear(); //Clear rats in zone

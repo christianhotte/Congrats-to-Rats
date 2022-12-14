@@ -174,7 +174,7 @@ public class MasterRatController : MonoBehaviour
     internal SpriteRenderer sprite;   //Sprite renderer component for big rat
     internal Animator anim;           //Animator controller for big rat
     internal Billboarder billboarder; //Component used to manage sprite orientation
-    private AudioSource audioSource;  //Audiosource component for mama rat sfx
+    internal AudioSource audioSource; //Audiosource component for mama rat sfx
 
     [Header("Settings Objects:")]
     [Tooltip("Interchangeable data object describing settings of the main rat")]                                                    public BigRatSettings settings;
@@ -201,7 +201,7 @@ public class MasterRatController : MonoBehaviour
     internal Vector2 forward;          //Normalized vector representing which direction big rat was most recently moving
     internal float currentSpeed;       //Current speed at which rat is moving
     private Vector2 rawMoveInput;      //Current input direction for movement (without modifiers)
-    private bool falling;              //Whether or not rat is currently falling
+    internal bool falling;             //Whether or not rat is currently falling
     internal bool commanding;          //Whether or not rat is currently deploying rats to a location
     private float aimTime = -1;        //The number of seconds rat has been aiming a throw for. Negative if rat is not aiming a throw
     private RaycastHit latestMouseHit; //Data from last point hit by mouse raycast
@@ -371,6 +371,7 @@ public class MasterRatController : MonoBehaviour
                     airVelocity = bouncer.GetBounceVelocity(airVelocity, hit.normal);                                  //Get new velocity from bouncer object
                     if (airVelocity.magnitude < settings.wallRepulse) airVelocity = hit.normal * settings.wallRepulse; //Make sure bounce has at least a little velocity so rat doesn't get stuck
                     newPos = transform.position;                                                                       //Do not allow rat to move into wall
+                    audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.bounceSounds));                     //Play random bounce sound
                 }
                 else if (hit.collider.TryGetComponent(out ToasterController toaster)) //Rat has collided with a toaster
                 {
@@ -486,7 +487,8 @@ public class MasterRatController : MonoBehaviour
                     }
                     if (!Physics.Raycast(transform.position, Vector3.down, settings.fallHeight + settings.collisionRadius, settings.blockingLayers)) //Check for floor directly below rat
                     {
-                        Launch(new Vector3(velocity.x, settings.cliffHop, velocity.y), false); //Bump rat off cliff
+                        Launch(new Vector3(velocity.x, settings.cliffHop, velocity.y), false);       //Bump rat off cliff
+                        audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.fallSounds)); //Play a random fall sound
                     }
                 }
             }
@@ -527,7 +529,6 @@ public class MasterRatController : MonoBehaviour
             {
                 if (zone == null) continue;                  //Skip destroyed zones
                 zone.bigRatInZone = false;                   //Indicate that rat is no longer in zone
-                if (!zone.deactivated) zone.OnBigRatLeave(); //Indicate that rat has left zone
             }
             currentZones = newZones; //Save new list of zones
         }
@@ -624,8 +625,9 @@ public class MasterRatController : MonoBehaviour
     {
         if (context.performed && !noControl && !falling) //Command button has been pressed and player has control over rat
         {
-            commanding = true;              //Indicate that rat is now in command mode
-            anim.SetBool("Pointing", true); //Execute pointing animation
+            commanding = true;                                  //Indicate that rat is now in command mode
+            anim.SetBool("Pointing", true);                     //Execute pointing animation
+            audioSource.PlayOneShot(soundSettings.deploySound); //Play deploy sound
         }
         else //Command button has been released
         {
@@ -695,6 +697,7 @@ public class MasterRatController : MonoBehaviour
                 Vector3 jumpforce = RotatedMoveInput.normalized * settings.jumpPower.x;             //Get horizontal jump power
                 jumpforce.y = settings.jumpPower.y;                                                 //Get vertical jump power
                 if (rawMoveInput == Vector2.zero) jumpforce.y *= settings.stationaryJumpMultiplier; //Apply multiplier to vertical jump if rat is stationary
+                audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.jumpSounds));        //Play a random jump sound
                 Launch(jumpforce);                                                                  //Launch rat using jump force
             }
             jumpButtonPressed = true; //Indictate that jump button is now pressed
@@ -737,10 +740,11 @@ public class MasterRatController : MonoBehaviour
         launchVel += RatBoid.UnFlattenVector(velocity);                                              //Add current velocity of mother rat to launch velocity of child
 
         //Cleanup:
-        newRat.position = spawnPoint;                              //Set rat position to spawnpoint
-        ratController.flatPos = RatBoid.FlattenVector(spawnPoint); //Update flat position tracker of spawned rat
-        ratController.Launch(launchVel);                           //Launch spawned rat
-        return ratController;                                      //Return control script of launched rat
+        newRat.position = spawnPoint;                                                 //Set rat position to spawnpoint
+        ratController.flatPos = RatBoid.FlattenVector(spawnPoint);                    //Update flat position tracker of spawned rat
+        ratController.Launch(launchVel);                                              //Launch spawned rat
+        audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.spawnSounds)); //Play a random spawn sound
+        return ratController;                                                         //Return control script of launched rat
     }
     /// <summary>
     /// Launches rat into the air.
@@ -832,6 +836,7 @@ public class MasterRatController : MonoBehaviour
         //Simulate rat destruction:
         stasis = true;                //Remove rat from player control
         billboarder.SetVisibility(0); //Make rat invisible
+        audioSource.PlayOneShot(soundSettings.deathSound); //Play death sound
 
         //Cleanup:
         velocity = Vector2.zero;         //Zero-out velocity

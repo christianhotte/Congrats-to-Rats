@@ -47,8 +47,8 @@ public class FoodPickup : EffectZone
         Destroy(transform.GetChild(0).gameObject);                                                                         //Destroy visual elements, leaving only this script
         MasterRatController.main.anim.SetTrigger("Proceed");                                                               //Begin spawning animation
         yield return new WaitForSeconds(0.2f);                                                                             //Wait for animation to reach its crescendo
-        float spawnTime = ratNumber * 0.01f;                                                                               //Get total time taken to spawn all rats
-        MasterRatController.main.StartCoroutine(MasterRatController.main.SpawnRatsOverTime(ratNumber, ratNumber * 0.01f)); //Trigger rat spawn routine
+        float spawnTime = ratNumber * 0.02f;                                                                               //Get total time taken to spawn all rats
+        MasterRatController.main.StartCoroutine(MasterRatController.main.SpawnRatsOverTime(ratNumber, ratNumber * 0.02f)); //Trigger rat spawn routine
         yield return new WaitForSeconds(spawnTime + postSpawnWait);                                                        //Wait until rats have finished spawning
 
         //Cleanup:
@@ -83,7 +83,8 @@ public class FoodPickup : EffectZone
         MasterRatController.main.anim.SetBool("HoldingFood", true); //Begin food animation
 
         //Cleanup:
-        Clear();                         //Deactivate all zone functionality
-        StartCoroutine(FoodProcedure()); //Begin food procedure
+        MasterRatController.main.audioSource.PlayOneShot(MasterRatController.main.soundSettings.pickupSound); //Play pickup sound
+        Clear();                                                                                              //Deactivate all zone functionality
+        StartCoroutine(FoodProcedure());                                                                      //Begin food procedure
     }
 }
