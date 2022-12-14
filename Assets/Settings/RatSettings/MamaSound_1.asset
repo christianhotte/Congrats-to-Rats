@@ -24,8 +24,10 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 377313a028422eb47807064b8a325b35, type: 3}
   - {fileID: 8300000, guid: df7451ec70cc7224baf9a0d54a5bda46, type: 3}
   landings:
-  - {fileID: 8300000, guid: a8141b2eaf5635b469ed88221bc83b70, type: 3}
-  - {fileID: 8300000, guid: f3df959362c83394bb5ae3bb0ef4df6b, type: 3}
+  - {fileID: 8300000, guid: d1d8072ce5ca1e648929b29f3efe3a87, type: 3}
+  - {fileID: 8300000, guid: 0d46d0cfe6454574c8eed31a33e607a4, type: 3}
+  - {fileID: 8300000, guid: 359ed891eff50f0428e4d652220482d0, type: 3}
+  - {fileID: 8300000, guid: 9dbb114d8bf4da049ada58a1bc217363, type: 3}
   throwWindups:
   - {fileID: 8300000, guid: 098bf7753a9536c4995868cf88bcff6c, type: 3}
   throwReleases:
@@ -33,3 +35,22 @@ MonoBehaviour:
   - {fileID: 8300000, guid: b71d6b623cacf6b4ebac146dd5307553, type: 3}
   - {fileID: 8300000, guid: 1fc72911b81445e4fbbd46f976732bcf, type: 3}
   - {fileID: 8300000, guid: 6312db69dd2966443a73d13de1f46094, type: 3}
+  fallSounds:
+  - {fileID: 8300000, guid: 462d541b5cc81ad4b9ee4c326f0305d4, type: 3}
+  - {fileID: 8300000, guid: d4a5931ba2e2ac54da19e9e2352bc537, type: 3}
+  - {fileID: 8300000, guid: 8e8cd54a529942348a12da6b5c3c7dad, type: 3}
+  jumpSounds:
+  - {fileID: 8300000, guid: 074bb22b1370e524b9712c36798c1bf1, type: 3}
+  - {fileID: 8300000, guid: d2abef08ac9a4e54d9ee7593e3ff2dec, type: 3}
+  - {fileID: 8300000, guid: 96316302cfc7e4545a0be3f5384e12e2, type: 3}
+  - {fileID: 8300000, guid: d05976f54e92ba14ebb6c334cc07eaf2, type: 3}
+  - {fileID: 8300000, guid: d2f21cefefb35e34d90541b04149d1f2, type: 3}
+  spawnSounds:
+  - {fileID: 8300000, guid: 0851cd88c0e2c464e92e65504f04b039, type: 3}
+  bounceSounds:
+  - {fileID: 8300000, guid: 8e8cd54a529942348a12da6b5c3c7dad, type: 3}
+  - {fileID: 8300000, guid: 462d541b5cc81ad4b9ee4c326f0305d4, type: 3}
+  - {fileID: 8300000, guid: d4a5931ba2e2ac54da19e9e2352bc537, type: 3}
+  deathSound: {fileID: 8300000, guid: c69d7d4933f74b0438c15660ab2b4f48, type: 3}
+  deploySound: {fileID: 8300000, guid: 20d2b911faff54f4ebb96c6f2ad98239, type: 3}
+  pickupSound: {fileID: 8300000, guid: 462d541b5cc81ad4b9ee4c326f0305d4, type: 3}

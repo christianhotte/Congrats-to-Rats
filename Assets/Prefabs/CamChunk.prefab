@@ -86,7 +86,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2451071208433693293}
   - component: {fileID: 420835010901627473}
-  m_Layer: 7
+  m_Layer: 16
   m_Name: Boundrary Box
   m_TagString: Untagged
   m_Icon: {fileID: 0}

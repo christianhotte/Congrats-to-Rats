@@ -28,7 +28,7 @@ MonoBehaviour:
   jumpValidationOffset: {x: 0.2, y: -0.07}
   blockingLayers:
     serializedVersion: 2
-    m_Bits: 640
+    m_Bits: 66176
   collisionRadius: 0.135
   maxWalkAngle: 45
   maxObstacleCollisions: 3
@@ -38,9 +38,13 @@ MonoBehaviour:
   spawnArea: {x: 0.16, y: 0.05}
   spawnAngle: {x: 15, y: 42}
   spawnForce: {x: 1.5, y: 2}
+  heldFoodOffset: {x: 0.055, y: 0.3}
+  deadTime: 1
+  respawnTransTime: 0.6
+  respawnLaunchPower: {x: 2.5, y: 1.6}
   throwTargetLayers:
     serializedVersion: 2
-    m_Bits: 961
+    m_Bits: 960
   throwForce: 9
   maxRandomSpread: 0.23
   throwChargeWait: 0.35

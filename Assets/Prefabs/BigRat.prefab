@@ -262,6 +262,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 446d38860912a9a4e8194ea0d34c46ab, type: 2}
   - {fileID: 11400000, guid: ae663544867f8b84f9c66124b9756980, type: 2}
   - {fileID: 11400000, guid: 2f8b5e85a39eb03428a90992a4303e0c, type: 2}
+  debugKill: 0
 --- !u!114 &2956998417977185440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -427,13 +428,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mainLoops:
   - {fileID: 8300000, guid: 19d4706a69b35764994edb3b89108e10, type: 3}
-  - {fileID: 8300000, guid: cf568febfc333e34aab366faaa4adb18, type: 3}
+  - {fileID: 8300000, guid: 09808f90dec5cd64a92293896ca9996b, type: 3}
+  - {fileID: 8300000, guid: ad59fef8cc6d1e44388850f7eba2c4a7, type: 3}
+  - {fileID: 8300000, guid: 4728f9f41dfb0264aaa91d10e8331ce9, type: 3}
   introMusicVolume: {fileID: 0}
   baseVolume: 0.3
   fadeTime: 2.1
   fadeInterval: 0.02
   baseNarrationVolume: 0.5
-  narrationMusicVolume: 0.085
+  narrationMusicVolume: 0.1
   narrationMusicFadeTime: 1.5
   narrationPlayDelay: 1.6
 --- !u!135 &1216433272091941898
@@ -503,7 +506,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: ec32ced6a7d9a4647a7f0b67c5ff8e0b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

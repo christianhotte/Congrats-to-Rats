@@ -171,38 +171,45 @@ public class MasterRatController : MonoBehaviour
     public static MasterRatController main;
 
     //Objects & Components:
-    private SpriteRenderer sprite;   //Sprite renderer component for big rat
-    private Animator anim;           //Animator controller for big rat
-    private Billboarder billboarder; //Component used to manage sprite orientation
-    private AudioSource audioSource; //Audiosource component for mama rat sfx
+    internal SpriteRenderer sprite;   //Sprite renderer component for big rat
+    internal Animator anim;           //Animator controller for big rat
+    internal Billboarder billboarder; //Component used to manage sprite orientation
+    internal AudioSource audioSource; //Audiosource component for mama rat sfx
 
     [Header("Settings Objects:")]
     [Tooltip("Interchangeable data object describing settings of the main rat")]                                                    public BigRatSettings settings;
     [Tooltip("Interchangeable data object describing sound settings for this rat")]                                                 public MamaSoundSettings soundSettings;
     [SerializeField, Tooltip("Place any number of swarm settings objects here (make sure they have different Target Rat Numbers)")] private List<SwarmSettings> swarmSettings = new List<SwarmSettings>();
+    [Header("Debug Options:")]
+    [SerializeField, Tooltip("Kills big rat")]        private bool debugKill;
+    [SerializeField, Tooltip("Advances music phase")] private bool debugAdvanceMusic;
 
     //Runtime Vars:
-    private SwarmSettings currentSwarmSettings;                    //Instance of swarmSettings object used to interpolate between rat behaviors
-    internal List<RatBoid> followerRats = new List<RatBoid>();     //List of all rats currently following this controller
-    internal List<RatBoid> jumpingFollowers = new List<RatBoid>(); //List of follower rats which are currently jumping (and therefore still counted toward total)
-    internal List<RatBoid> deployedRats = new List<RatBoid>();     //List of all rats currently deployed by player
-    internal List<TrailPoint> trail = new List<TrailPoint>();      //List of points in current trail (used to assemble ratswarm behind main rat)
-    internal float totalTrailLength = 0;                           //Current length of trail (in units)
-    internal int currentJumpMarkers = 0;                           //Current number of jump markers in trail
-    private int prevFollowerCount = 0;                             //Total follower count last time follower count-contingent settings were updated
+    private SwarmSettings currentSwarmSettings;                      //Instance of swarmSettings object used to interpolate between rat behaviors
+    internal List<RatBoid> followerRats = new List<RatBoid>();       //List of all rats currently following this controller
+    internal List<RatBoid> jumpingFollowers = new List<RatBoid>();   //List of follower rats which are currently jumping (and therefore still counted toward total)
+    internal List<RatBoid> deployedRats = new List<RatBoid>();       //List of all rats currently deployed by player
+    internal List<TrailPoint> trail = new List<TrailPoint>();        //List of points in current trail (used to assemble ratswarm behind main rat)
+    internal List<EffectZone> currentZones = new List<EffectZone>(); //List of zones rat is currently in
+    internal float totalTrailLength = 0;                             //Current length of trail (in units)
+    internal int currentJumpMarkers = 0;                             //Current number of jump markers in trail
+    private int prevFollowerCount = 0;                               //Total follower count last time follower count-contingent settings were updated
+    private SlowZone currentGlue = null;                             //Glue zone rat is currently in (if any)
 
     internal Vector2 velocity;         //Current speed and direction of movement
     internal Vector3 airVelocity;      //3D velocity used when rat is falling
     internal Vector2 forward;          //Normalized vector representing which direction big rat was most recently moving
     internal float currentSpeed;       //Current speed at which rat is moving
     private Vector2 rawMoveInput;      //Current input direction for movement (without modifiers)
-    private bool falling;              //Whether or not rat is currently falling
+    internal bool falling;             //Whether or not rat is currently falling
     internal bool commanding;          //Whether or not rat is currently deploying rats to a location
     private float aimTime = -1;        //The number of seconds rat has been aiming a throw for. Negative if rat is not aiming a throw
     private RaycastHit latestMouseHit; //Data from last point hit by mouse raycast
+    private bool jumpButtonPressed;    //Indicates whether or not jump button is currently pressed
 
-    internal bool stasis;    //When true, this rat will not update or move
-    internal bool noControl; //When true, inputs for this rat will not read as motion and will activate nothing
+    internal bool stasis;           //When true, this rat will not update or move
+    internal bool noControl;        //When true, inputs for this rat will not read as motion and will activate nothing
+    internal bool unControlledFall; //When true, inputs for this rat will be ignored until rat lands
 
     //Utility Vars:
     /// <summary>
@@ -235,6 +242,36 @@ public class MasterRatController : MonoBehaviour
     /// Event which is triggered after follower count has been changed and other effects have taken place.
     /// </summary>
     public UnityAction followerCountChanged;
+
+    //Coroutines:
+    /// <summary>
+    /// Sequence which follows after main rat is killed.
+    /// </summary>
+    IEnumerator DeathSequence()
+    {
+        //Initial grace period:
+        yield return new WaitForSeconds(settings.deadTime); //Wait a brief period
+
+        //Reposition to spawnpoint:
+        transform.position = Respawner.currentSpawnPoint.spawnPosition.position; //Move rat to position of spawnpoint
+        ResetTrail();                                                            //Reset trail state
+        yield return new WaitForSeconds(settings.respawnTransTime);              //Give camera time to move to new position
+
+        //Pass to respawn system:
+        Respawner.Respawn(); //Trigger respawn sequence in respawner system
+    }
+    /// <summary>
+    /// Spawns given number of rats over given amount of time.
+    /// </summary>
+    public IEnumerator SpawnRatsOverTime(int rats, float time)
+    {
+        float secsPerRat = time / rats; //Get number of seconds to wait between rat spawns
+        for (int i = 0; i < rats; i++) //Iterate for given number of rats
+        {
+            SpawnRat();                                  //Spawn a rat
+            yield return new WaitForSeconds(secsPerRat); //Wait for designated time before spawning next rat
+        }
+    }
 
     //RUNTIME METHODS:
     private void Awake()
@@ -287,6 +324,10 @@ public class MasterRatController : MonoBehaviour
             }
         }
 
+        //Debug functions:
+        if (debugKill) { Kill(); debugKill = false; }                                           //Trigger death on debug kill command
+        if (debugAdvanceMusic) { MusicManager.main.AdvancePhase(); debugAdvanceMusic = false; } //Trigger music phase advancement
+
         //Footstep sounds:
         if (!stasis && !falling && !audioSource.isPlaying && currentSpeed != 0) //Rat is moving (not falling) but audioSource is silent
         {
@@ -311,12 +352,12 @@ public class MasterRatController : MonoBehaviour
         if (falling) //Rat is currently falling through the air
         {
             //Modify velocity:
-            Vector3 addVel = new Vector3();                                    //Initialize vector to store acceleration
-            addVel += settings.accel * settings.airControl * RotatedMoveInput; //Get acceleration due to input
-            addVel += Vector3.down * settings.gravity;                         //Get acceleration due to gravity
-            addVel += -airVelocity.normalized * settings.airDrag;              //Get deceleration due to drag
-            airVelocity += addVel * deltaTime;                                 //Apply change in velocity
-            velocity = RatBoid.FlattenVector(airVelocity);                     //Update flat velocity to match air velocity
+            Vector3 addVel = new Vector3();                                                                   //Initialize vector to store acceleration
+            if (!noControl && !commanding) addVel += settings.accel * settings.airControl * RotatedMoveInput; //Get acceleration due to input
+            addVel += Vector3.down * settings.gravity;                                                        //Get acceleration due to gravity
+            addVel += -airVelocity.normalized * settings.airDrag;                                             //Get deceleration due to drag
+            airVelocity += addVel * deltaTime;                                                                //Apply change in velocity
+            velocity = RatBoid.FlattenVector(airVelocity);                                                    //Update flat velocity to match air velocity
 
             //Get new position:
             newPos += airVelocity * deltaTime; //Get target position based on velocity over time
@@ -330,6 +371,12 @@ public class MasterRatController : MonoBehaviour
                     airVelocity = bouncer.GetBounceVelocity(airVelocity, hit.normal);                                  //Get new velocity from bouncer object
                     if (airVelocity.magnitude < settings.wallRepulse) airVelocity = hit.normal * settings.wallRepulse; //Make sure bounce has at least a little velocity so rat doesn't get stuck
                     newPos = transform.position;                                                                       //Do not allow rat to move into wall
+                    audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.bounceSounds));                     //Play random bounce sound
+                }
+                else if (hit.collider.TryGetComponent(out ToasterController toaster)) //Rat has collided with a toaster
+                {
+                    toaster.LoadRat(); //Load mama rat into toaster
+                    return;            //SKip everything else
                 }
                 else if (surfaceAngle > settings.maxWalkAngle) //Surface is too steep for rat to land on
                 {
@@ -347,8 +394,9 @@ public class MasterRatController : MonoBehaviour
 
                     //Landing cleanup:
                     falling = false;                                                           //Indicate that rat is no longer falling
+                    if (unControlledFall) { unControlledFall = false; noControl = false; }     //End uncontrolled fall if applicable
                     airVelocity = Vector3.zero;                                                //Cancel all air velocity
-                    anim.SetTrigger("Land");                                                   //Play landing animation
+                    if (!noControl) anim.SetTrigger("Land");                                   //Play landing animation
                     audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.landings)); //Play a random landing sound
                 }
             }
@@ -356,7 +404,7 @@ public class MasterRatController : MonoBehaviour
         else //Rat is moving normally along a surface
         {
             //Modify velocity:
-            if (rawMoveInput != Vector2.zero && aimTime < 0) //Player is moving rat in a direction (and not aiming)
+            if (!noControl && !commanding && rawMoveInput != Vector2.zero && aimTime < 0) //Player is moving rat in a direction (and not aiming) (and is in control)
             {
                 //Add velocity:
                 Vector3 input = RotatedMoveInput;                               //Store contextual move input vector
@@ -372,13 +420,15 @@ public class MasterRatController : MonoBehaviour
             }
 
             //Cap velocity:
-            currentSpeed = velocity.magnitude; //Get current speed of main rat
-            if (currentSpeed > settings.speed) //Check if current speed is faster than target speed
+            currentSpeed = velocity.magnitude;                                    //Get current speed of main rat
+            float effectiveMaxSpeed = settings.speed;                             //Initialize value for max speed
+            if (currentGlue != null) effectiveMaxSpeed *= currentGlue.slowFactor; //Apply glue factor if applicable
+            if (currentSpeed > effectiveMaxSpeed) //Check if current speed is faster than target speed
             {
-                velocity = Vector2.ClampMagnitude(velocity, settings.speed); //Clamp velocity to target speed
-                currentSpeed = settings.speed;                               //Update current speed value
+                velocity = Vector2.ClampMagnitude(velocity, effectiveMaxSpeed); //Clamp velocity to target speed
+                currentSpeed = effectiveMaxSpeed;                               //Update current speed value
             }
-            if (anim != null) anim.SetFloat("Speed", currentSpeed / settings.speed); //Send speed value to animator
+            if (anim != null) anim.SetFloat("Speed", currentSpeed / effectiveMaxSpeed); //Send speed value to animator
 
             //Get new position:
             if (velocity != Vector2.zero) //Only update position if player has velocity
@@ -437,25 +487,56 @@ public class MasterRatController : MonoBehaviour
                     }
                     if (!Physics.Raycast(transform.position, Vector3.down, settings.fallHeight + settings.collisionRadius, settings.blockingLayers)) //Check for floor directly below rat
                     {
-                        Launch(new Vector3(velocity.x, settings.cliffHop, velocity.y), false); //Bump rat off cliff
+                        Launch(new Vector3(velocity.x, settings.cliffHop, velocity.y), false);       //Bump rat off cliff
+                        audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.fallSounds)); //Play a random fall sound
                     }
                 }
             }
+        }
+
+        //Check zones:
+        if (newPos != transform.position) //Only do zone check while rat is moving
+        {
+            //Look for new zones:
+            Vector3 moveDir = newPos - transform.position;                                                                                          //Get non-normalized vector representing rat's direction and distance of travel
+            float moveDist = moveDir.magnitude; moveDir = moveDir.normalized;                                                                       //Get distance rat has moved as separate variable, then normalize move direction vector
+            RaycastHit[] zoneHits = Physics.SphereCastAll(transform.position, settings.collisionRadius, moveDir, moveDist, RatBoid.effectZoneMask); //Check to see if rat has entered any zones
+            
+            //Update zone lists:
+            List<EffectZone> newZones = new List<EffectZone>();                  //Create a temporary list to store new effect zones
+            currentGlue = null;                                                  //Reset sticky zone memory
+            foreach (RaycastHit hit in zoneHits) //Iterate through each detected zone
+            {
+                if (hit.collider.TryGetComponent(out EffectZone zone)) //Make sure object has EffectZone component
+                {
+                    //Checks:
+                    if (zone.deactivated) continue; //Skip zone if it is deactivated
+
+                    //Mark zone as current:
+                    newZones.Add(zone); //Add zone to new list of occupied zones
+                    if (!currentZones.Contains(zone)) //Zone did not previously contain mama rat
+                    {
+                        zone.bigRatInZone = true; //Indicate that rat is now in zone
+                        zone.OnBigRatEnter();     //Call big rat entry event
+                    }
+                    else currentZones.Remove(zone); //Use currentZones list to get zones which rat has left
+
+                    //Other checks:
+                    if (hit.collider.TryGetComponent(out SlowZone slowZone)) currentGlue = slowZone; //Get slowZone component if applicable
+                }
+            }
+            foreach (EffectZone zone in currentZones) //Iterate through zones which rat is no longer in
+            {
+                if (zone == null) continue;                  //Skip destroyed zones
+                zone.bigRatInZone = false;                   //Indicate that rat is no longer in zone
+            }
+            currentZones = newZones; //Save new list of zones
         }
 
         //Movement cleanup:
         currentSpeed = Vector2.Distance(FlatPos, RatBoid.FlattenVector(newPos)) / deltaTime; //Get actual current speed (after obstructions)
         transform.position = newPos;                                                         //Apply new position
         forward = velocity.normalized;                                                       //Update forward direction tracker
-
-        //Check zones:
-        Vector3 moveDir = newPos - transform.position;                                                                        //Get non-normalized vector representing rat's direction and distance of travel
-        float moveDist = moveDir.magnitude; moveDir = moveDir.normalized;                                                     //Get distance rat has moved as separate variable, then normalize move direction vector
-        RaycastHit[] zoneHits = Physics.RaycastAll(transform.position, moveDir, moveDist, RatBoid.effectZoneMask);            //Check to see if rat has entered any zones
-        foreach (RaycastHit hit in zoneHits) if (hit.collider.TryGetComponent(out EffectZone zone)) zone.bigRatInZone = true; //Indicate that mama rat is now in each of these zones
-
-        zoneHits = Physics.RaycastAll(newPos, -moveDir, moveDist, RatBoid.effectZoneMask);                                     //Check to see if rat has left any zones
-        foreach (RaycastHit hit in zoneHits) if (hit.collider.TryGetComponent(out EffectZone zone)) zone.bigRatInZone = false; //Indicate that big rat is not in these zones
 
         //Update trail characteristics:
         trail.Insert(0, new TrailPoint(FlatPos));                                //Add new trailPoint for current position
@@ -534,18 +615,19 @@ public class MasterRatController : MonoBehaviour
     }
     public void OnScrollSpawn(InputAction.CallbackContext context)
     {
-        if (context.started) //Scroll wheel has just been moved one tick
+        if (context.started & !noControl) //Scroll wheel has just been moved one tick and player has control over rat
         {
-            if (context.ReadValue<float>() > 0) SpawnRat(settings.basicRatPrefab); //Spawn rats when wheel is scrolled up
+            if (context.ReadValue<float>() > 0) SpawnRat();                        //Spawn rats when wheel is scrolled up
             else if (followerRats.Count > 0) Destroy(followerRats[^1].gameObject); //Despawn rats when wheel is scrolled down
         }
     }
     public void OnCommandInput(InputAction.CallbackContext context)
     {
-        if (context.performed) //Command button has been pressed
+        if (context.performed && !noControl && !falling) //Command button has been pressed and player has control over rat
         {
-            commanding = true;              //Indicate that rat is now in command mode
-            anim.SetBool("Pointing", true); //Execute pointing animation
+            commanding = true;                                  //Indicate that rat is now in command mode
+            anim.SetBool("Pointing", true);                     //Execute pointing animation
+            audioSource.PlayOneShot(soundSettings.deploySound); //Play deploy sound
         }
         else //Command button has been released
         {
@@ -556,6 +638,7 @@ public class MasterRatController : MonoBehaviour
     }
     public void OnThrowInput(InputAction.CallbackContext context)
     {
+        if (noControl || commanding) return;             //Ignore if player has no control over rat
         if (context.performed && followerRats.Count > 0) //Throw button has just been pressed (and there is at least one rat to throw)
         {
             //Cleanup:
@@ -602,51 +685,66 @@ public class MasterRatController : MonoBehaviour
     }
     public void OnJumpInput(InputAction.CallbackContext context)
     {
-        if (context.performed) //Jump button has just been pressed
+        if (context.performed && !noControl && !commanding) //Jump button has just been pressed (and player has control over rat)
         {
-            if (!falling) //Player can only jump while they are not in the air
+            if (stasis && ToasterController.main.bigRatContained) //Use jump to launch from toaster
+            {
+                ToasterController.main.LaunchRats(); //Launch all contained rats from toaster
+            }
+            else if (!falling && currentGlue == null) //Player can only jump while they are not in the air (and not stuck to glue)
             {
                 //Perform jump:
                 Vector3 jumpforce = RotatedMoveInput.normalized * settings.jumpPower.x;             //Get horizontal jump power
                 jumpforce.y = settings.jumpPower.y;                                                 //Get vertical jump power
                 if (rawMoveInput == Vector2.zero) jumpforce.y *= settings.stationaryJumpMultiplier; //Apply multiplier to vertical jump if rat is stationary
+                audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.jumpSounds));        //Play a random jump sound
                 Launch(jumpforce);                                                                  //Launch rat using jump force
             }
+            jumpButtonPressed = true; //Indictate that jump button is now pressed
+        }
+        else if (context.canceled) //Jump button has just been released
+        {
+            jumpButtonPressed = false; //Indicate that jump button is no longer pressed
         }
     }
     public void OnMousePositionMove(InputAction.CallbackContext context)
     {
-        Ray mouseRay = Camera.main.ScreenPointToRay(context.ReadValue<Vector2>());
-        if (Physics.Raycast(mouseRay, out RaycastHit hit, settings.throwTargetLayers)) latestMouseHit = hit;
+        Ray mouseRay = Camera.main.ScreenPointToRay(context.ReadValue<Vector2>());                                      //Create a ray which shoots out of the camera
+        if (Physics.Raycast(mouseRay, out RaycastHit hit, 10000, settings.throwTargetLayers)) { latestMouseHit = hit; } //Use mouseray to check for walls we can throw rats at
     }
 
     //FUNCTIONALITY METHODS:
     /// <summary>
     /// Spawns a new rat and adds it to the swarm.
     /// </summary>
-    public void SpawnRat(GameObject prefab)
+    public RatBoid SpawnRat()
     {
         //Initialize:
-        Transform newRat = Instantiate(prefab).transform;       //Spawn new rat
-        RatBoid ratController = newRat.GetComponent<RatBoid>(); //Get controller from spawned rat
+        Transform newRat = Instantiate(settings.basicRatPrefab).transform; //Spawn new rat
+        RatBoid ratController = newRat.GetComponent<RatBoid>();            //Get controller from spawned rat
+        float rotationOffset = CameraTrigger.GetRotationOffset;            //Get current rotation offset from camera
 
         //Get spawn position:
         Vector3 spawnDirection = new Vector3(Random.Range(-settings.spawnArea.x / 2, settings.spawnArea.x / 2), 0, //Get vector which moves spawnpoint away from center by a random amount
                                              Random.Range(-settings.spawnArea.y / 2, settings.spawnArea.y / 2));   //Add random amount to depth separately
-        Vector3 spawnPoint = transform.position + settings.spawnOffset + spawnDirection;                           //Use position of mama rat plus offset and random bias as basis for spawnpoint
+        Vector3 spawnPoint = settings.spawnOffset + spawnDirection;                                                //Initialize spawnpoint at world zero with offset and random bias as basis
+        spawnPoint = Quaternion.AngleAxis(-rotationOffset, Vector3.up) * spawnPoint;                               //Rotate spawnpoint around center to correct for current camera rotation
+        spawnPoint += transform.position;                                                                          //Add position to get final spawnpoint
 
         //Get launch characteristics:
         Vector3 launchVel = Vector3.up * Random.Range(settings.spawnForce.x, settings.spawnForce.y); //Initialize force vector for launching rat (with random force value)
         float launchAngle = Random.Range(settings.spawnAngle.x, settings.spawnAngle.y);              //Randomize angle at which rat is launched
         float spawnAngle = Vector2.SignedAngle(Vector2.down, RatBoid.FlattenVector(spawnDirection)); //Get angle between spawnpoint and mother rat position
         launchVel = Quaternion.AngleAxis(launchAngle, Vector3.right) * launchVel;                    //Rotate launch vector forward by launch angle
-        launchVel = Quaternion.AngleAxis(spawnAngle, Vector3.up) * launchVel;                        //Rotate launch vector around mother rat by spawn angle
+        launchVel = Quaternion.AngleAxis(spawnAngle - rotationOffset, Vector3.up) * launchVel;       //Rotate launch vector around mother rat by spawn angle (also correct for camera rotation)
         launchVel += RatBoid.UnFlattenVector(velocity);                                              //Add current velocity of mother rat to launch velocity of child
 
         //Cleanup:
-        newRat.position = spawnPoint;                              //Set rat position to spawnpoint
-        ratController.flatPos = RatBoid.FlattenVector(spawnPoint); //Update flat position tracker of spawned rat
-        ratController.Launch(launchVel);                           //Launch spawned rat
+        newRat.position = spawnPoint;                                                 //Set rat position to spawnpoint
+        ratController.flatPos = RatBoid.FlattenVector(spawnPoint);                    //Update flat position tracker of spawned rat
+        ratController.Launch(launchVel);                                              //Launch spawned rat
+        audioSource.PlayOneShot(soundSettings.RandomClip(soundSettings.spawnSounds)); //Play a random spawn sound
+        return ratController;                                                         //Return control script of launched rat
     }
     /// <summary>
     /// Launches rat into the air.
@@ -711,9 +809,8 @@ public class MasterRatController : MonoBehaviour
     public void RemoveRatAsFollower(RatBoid oldFollower)
     {
         //Initialize:
-        if (!followerRats.Contains(oldFollower)) return;     //Ignore if rat is not currently a follower
-        followerRats.Remove(oldFollower);                    //Remove rat from followers list
-        if (TotalFollowerCount == prevFollowerCount) return; //Ignore if this subtraction does not change follower count (likely due to aerial followers)
+        if (followerRats.Contains(oldFollower)) followerRats.Remove(oldFollower); //Remove rat from follower list if applicable
+        if (TotalFollowerCount == prevFollowerCount) return;                      //Ignore if this subtraction does not change follower count (likely due to aerial followers)
 
         //Jump marker maintenance:
         if (currentJumpMarkers > 0) //System has jump markers in place
@@ -727,6 +824,24 @@ public class MasterRatController : MonoBehaviour
 
         //Cleanup:
         followerCountChanged.Invoke(); //Perform updates triggered by change in follower count
+    }
+    /// <summary>
+    /// Causes main rat to die and respawn at current spawnpoint.
+    /// </summary>
+    public void Kill()
+    {
+        //Destroy all rats:
+        RatBoid.DestroyAll(); //Destroy all spawned rats
+
+        //Simulate rat destruction:
+        stasis = true;                //Remove rat from player control
+        billboarder.SetVisibility(0); //Make rat invisible
+        audioSource.PlayOneShot(soundSettings.deathSound); //Play death sound
+
+        //Cleanup:
+        velocity = Vector2.zero;         //Zero-out velocity
+        airVelocity = Vector2.zero;      //Zero-out air velocity
+        StartCoroutine(DeathSequence()); //Begin death sequence
     }
     /// <summary>
     /// Updates general stuff which depends on current number of follower rats. Works with rat addition and removal.
@@ -932,6 +1047,15 @@ public class MasterRatController : MonoBehaviour
         if (aimTime < 0) return -1;                                                                     //Return negative if rat is not aiming
         if (aimTime < settings.throwChargeWait) return 0;                                               //Return minimum aim value if in waiting phase of aim charge
         return Mathf.Clamp01(Mathf.InverseLerp(settings.throwChargeWait, MaxThrowChargeTime, aimTime)); //Return value representing strength of charge
+    }
+    /// <summary>
+    /// Resets trail state and erases existing trail.
+    /// </summary>
+    private void ResetTrail()
+    {
+        trail.Clear();                            //Clear trail list
+        trail.Insert(0, new TrailPoint(FlatPos)); //Add new trailPoint for current position
+        totalTrailLength = 0;                     //Reset trail length tracker
     }
 }
 

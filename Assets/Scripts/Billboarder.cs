@@ -62,6 +62,14 @@ public class Billboarder : MonoBehaviour
 
     //OPERATION METHODS:
     /// <summary>
+    /// Sets visibility of object being billboarded.
+    /// </summary>
+    public void SetVisibility(float opacity)
+    {
+        opacity = Mathf.Clamp01(opacity);                                                 //Clamp opacity value between 0 and 1
+        if (r.material.HasProperty("_Opacity")) r.material.SetFloat("_Opacity", opacity); //Set new opacity for rat billboard material
+    }
+    /// <summary>
     /// Sets Z rotation of billboard, ignoring smooth approach.
     /// </summary>
     public void SetZRot(float rot)

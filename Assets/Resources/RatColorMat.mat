@@ -117,6 +117,7 @@ Material:
     - _Darkness: 0
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
+    - _DoRecolor: 1
     - _DstBlend: 0
     - _EnvironmentReflections: 1
     - _GlossMapScale: 0
@@ -127,6 +128,7 @@ Material:
     - _Metallic: 0
     - _OcclusionIntensity: 0
     - _OcclusionStrength: 1
+    - _Opacity: 1
     - _Parallax: 0.005
     - _Precision: 0.1
     - _QueueOffset: 0
@@ -138,6 +140,7 @@ Material:
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _Surface: 0
+    - _TempValue: 0
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5097689436760178135}
   - component: {fileID: 7015014758110267677}
   - component: {fileID: 3817341468862113351}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: BlueSmolCup
   m_TagString: Untagged
   m_Icon: {fileID: 0}

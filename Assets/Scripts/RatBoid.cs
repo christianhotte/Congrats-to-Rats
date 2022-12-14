@@ -24,6 +24,7 @@ public class RatBoid : MonoBehaviour
     //Objects & Components:
     private SpriteRenderer r;         //Render component for this rat's sprite
     internal Billboarder billboarder; //Component which rotates this rat's sprite
+    internal Animator anim;           //Animator component for this rat's sprite
     public RatSettings settings;      //Settings object determining this rat's properties
 
     //Realtime Vars:
@@ -40,20 +41,23 @@ public class RatBoid : MonoBehaviour
     /// </summary>
     internal RatBehavior behavior = RatBehavior.Free;
 
-    internal List<RatBoid> currentNeighbors = new List<RatBoid>();  //Other rats which are currently close to this rat
-    internal List<RatBoid> currentSeparators = new List<RatBoid>(); //Other rats which are currently too close to this rat
-    private List<EffectZone> currentZones = new List<EffectZone>(); //Effect zones this rat is currently inside
-    internal float lastTrailValue = -1;                             //Latest value of target on trail (should be reset whenever rat loses target)
-    internal float sizeFactor = 1;                                  //Factor used to change certain properties of rat based on scale variance
-    internal Vector3 airVelocity;                                   //3D velocity used when rat is falling
-    internal float temperature = 68;                                //Current temperature of rat (in degrees)
+    internal List<RatBoid> currentNeighbors = new List<RatBoid>();   //Other rats which are currently close to this rat
+    internal List<RatBoid> currentSeparators = new List<RatBoid>();  //Other rats which are currently too close to this rat
+    internal List<EffectZone> currentZones = new List<EffectZone>(); //Effect zones this rat is currently inside
+    internal float lastTrailValue = -1;                              //Latest value of target on trail (should be reset whenever rat loses target)
+    internal float sizeFactor = 1;                                   //Factor used to change certain properties of rat based on scale variance
+    internal Vector3 airVelocity;                                    //3D velocity used when rat is falling
+    internal float temperature = 68;                                 //Current temperature of rat (in degrees)
 
-    private float timeUntilFlip;   //Time before this rat is able to flip its sprite orientation (prevents jiggling)
-    internal float neighborCrush;  //Represents how many neighbors this rat has and how close they are
-    internal float pileHeight = 0; //Additional height added to rat due to piling
-    internal bool stasis;          //If rat is in stasis, it will still exist but it will not move or check for anything in its environment
-    internal bool thrown;          //Indicates whether currently-airborne rat was thrown (resets when rat lands or hits a wall)
-    internal bool dieOnImpact;     //If true, airborne rat will be destroyed next time it touches something
+    private float timeUntilFlip;        //Time before this rat is able to flip its sprite orientation (prevents jiggling)
+    internal float neighborCrush;       //Represents how many neighbors this rat has and how close they are
+    internal float pileHeight = 0;      //Additional height added to rat due to piling
+    internal bool stasis;               //If rat is in stasis, it will still exist but it will not move or check for anything in its environment
+    internal bool thrown;               //Indicates whether currently-airborne rat was thrown (resets when rat lands or hits a wall)
+    internal bool dieOnImpact;          //If true, airborne rat will be destroyed next time it touches something
+    internal bool tempUseLeaderPhys;    //If true, this rat will use leader physics until it hits a surface
+    internal float glueFactor = 0;      //Cumulative slowness factor applied by any glue zones rat is currently in
+    internal bool prevTempComfy = true; //Indicates whether or not rat was at comfortable temperature last time temp was checked
 
     //UTILITY VARS:
     /// <summary>
@@ -68,6 +72,7 @@ public class RatBoid : MonoBehaviour
 
             //Environmental factors:
             if (temperature < settings.coldTempRange.y) value *= settings.coldSpeedCurve.Evaluate(ChillValue); //Evaluate chill percentage to get multiplier for max speed (if rat is too cold)
+            value *= 1 - glueFactor;                                                                           //Apply glue factor to potential speed value
 
             //Cleanup:
             return value; //Return modified max speed value
@@ -77,6 +82,10 @@ public class RatBoid : MonoBehaviour
     /// Percentage value representing how close to freezing rat is.
     /// </summary>
     private float ChillValue { get { return Mathf.Clamp01(Mathf.InverseLerp(settings.coldTempRange.y, settings.coldTempRange.x, temperature)); } }
+    /// <summary>
+    /// True if rat is at a comfortable temperature (not too hot, not too cold).
+    /// </summary>
+    private bool AtComfyTemp { get { if (temperature > settings.coldTempRange.y && temperature < settings.hotTempRange.x) return true; else return false; } }
     /// <summary>
     /// Returns velocity relative to current camera orientation.
     /// </summary>
@@ -95,6 +104,7 @@ public class RatBoid : MonoBehaviour
     {
         //Get objects & components:
         r = GetComponentInChildren<SpriteRenderer>();        //Get renderer from child object
+        anim = GetComponentInChildren<Animator>();           //Get animator from child object
         billboarder = GetComponentInChildren<Billboarder>(); //Get billboarder from child object
 
         //Initialization:
@@ -209,7 +219,8 @@ public class RatBoid : MonoBehaviour
                 if (Physics.Linecast(rat.transform.position, newPos, out RaycastHit hit, rat.settings.obstructionLayers)) //Rat's trajectory is obstructed
                 {
                     //Special cases:
-                    if (rat.dieOnImpact) { Destroy(rat.gameObject); continue; } //Kill rat if it is set to die on impact
+                    if (rat.dieOnImpact) { Destroy(rat.gameObject); continue; }                                          //Kill rat if it is set to die on impact
+                    if (hit.collider.TryGetComponent(out ToasterController toaster)) { toaster.LoadRat(rat); continue; } //Add rat to toaster if applicable
 
                     //Check for landing:
                     float surfaceAngle = Vector3.Angle(hit.normal, Vector3.up); //Get angle of surface relative to flat floor
@@ -217,6 +228,7 @@ public class RatBoid : MonoBehaviour
                     {
                         //Bounce rat (with bouncer settings):
                         rat.airVelocity = bouncer.GetBounceVelocity(rat.airVelocity, hit.normal); //Get new rat velocity from bouncer object
+                        rat.tempUseLeaderPhys = bouncer.IsDirectional;                            //If bouncer is directional, use leader physics so that rat follows same arc as leader.
                         newPos = hit.point + (-rat.airVelocity.normalized * 0.001f);              //Move rat to position close to wall but not inside it
                     }
                     else if (surfaceAngle > MasterRatController.main.settings.maxWalkAngle) //Surface is too steep for rat to land on
@@ -262,11 +274,17 @@ public class RatBoid : MonoBehaviour
             }
 
             //Check zones:
-            Vector3 moveDir = newPos - rat.transform.position;                                                               //Get non-normalized vector representing rat's direction and distance of travel
-            float moveDist = moveDir.magnitude; moveDir = moveDir.normalized;                                                //Get distance rat has moved as separate variable, then normalize move direction vector
-            RaycastHit[] zoneHits = Physics.RaycastAll(rat.transform.position, moveDir, moveDist, effectZoneMask);           //Check to see if rat has entered any zones
-            foreach (RaycastHit hit in zoneHits) if (hit.collider.TryGetComponent(out EffectZone zone)) rat.AddToZone(zone); //Add rat to lists of each zone which it has entered
-
+            Vector3 moveDir = newPos - rat.transform.position;                                                     //Get non-normalized vector representing rat's direction and distance of travel
+            float moveDist = moveDir.magnitude; moveDir = moveDir.normalized;                                      //Get distance rat has moved as separate variable, then normalize move direction vector
+            RaycastHit[] zoneHits = Physics.RaycastAll(rat.transform.position, moveDir, moveDist, effectZoneMask); //Check to see if rat has entered any zones
+            foreach (RaycastHit hit in zoneHits) //Iterate through list of potential zones
+            {
+                if (hit.collider.TryGetComponent(out EffectZone zone)) //Hit object is an effector zone
+                {
+                    if (zone.deactivated) continue; //Skip zone if it is deactivated
+                    rat.AddToZone(zone);            //Add rat to lists of each zone which it has entered
+                }
+            }
             zoneHits = Physics.RaycastAll(newPos, -moveDir, moveDist, effectZoneMask);                                            //Check to see if rat has left any zones
             foreach (RaycastHit hit in zoneHits) if (hit.collider.TryGetComponent(out EffectZone zone)) rat.RemoveFromZone(zone); //Remove rat from any zones it has left
 
@@ -332,12 +350,16 @@ public class RatBoid : MonoBehaviour
             if (rat.behavior == RatBehavior.Projectile) //Rat is currently behaving as a projectile
             {
                 //RULE - Gravity: (rats fall downward)
-                Vector3 gravVel = Vector3.down * rat.settings.gravity; //Get acceleration due to gravity
-                rat.airVelocity += gravVel * deltaTime;                //Apply velocity to rat
+                Vector3 gravVel = Vector3.down;                                                  //Get initial value for gravitational acceleration
+                if (rat.tempUseLeaderPhys) gravVel *= MasterRatController.main.settings.gravity; //Use leader gravity setting in special case
+                else gravVel *= rat.settings.gravity;                                            //Normally, use local gravity setting
+                rat.airVelocity += gravVel * deltaTime;                                          //Apply velocity to rat
 
                 //RULE - Drag: (the air resists motion)
-                Vector3 dragVel = -rat.airVelocity.normalized * rat.settings.drag; //Get deceleration due to drag
-                rat.airVelocity += dragVel * deltaTime;                            //Apply velocity to rat
+                Vector3 dragVel = -rat.airVelocity.normalized;                                   //Get initial value for deceleration due to drag
+                if (rat.tempUseLeaderPhys) dragVel *= MasterRatController.main.settings.airDrag; //Use leader drag setting in special case
+                else dragVel *= rat.settings.drag;                                               //Normally, use local drag setting
+                rat.airVelocity += dragVel * deltaTime;                                          //Apply velocity to rat
 
                 //Cleanup:
                 rat.velocity = FlattenVector(rat.airVelocity); //Update flat velocity to match air velocity
@@ -563,8 +585,26 @@ public class RatBoid : MonoBehaviour
             //Status upkeep:
             if (rat.temperature != 68) //Rat is not at room temperature
             {
+                //Modify temperature:
                 rat.temperature = Mathf.MoveTowards(rat.temperature, 68, rat.settings.tempMaintain * deltaTime); //Have rats attempt to maintain their comfortable temperature
-                rat.billboarder.r.material.SetFloat("_TempValue", -rat.ChillValue);                              //TEMP: update rat sprite color depending on temperature
+                bool newTempComfy = rat.AtComfyTemp;                                                             //Check and store whether or not rat is at comfortable temperature
+
+                //Physical effects:
+                rat.billboarder.r.material.SetFloat("_TempValue", -rat.ChillValue); //Update rat sprite color depending on temperature
+                if (rat.prevTempComfy != newTempComfy) //Rat comfort level has changed since last update
+                {
+                    if (newTempComfy) //Rat has just become comfortable
+                    {
+                        rat.anim.SetBool("Stressed", false); //Indicate that rat is no longer stressed
+                    }
+                    else //Rat has just become uncomfortable
+                    {
+                        rat.anim.SetBool("Stressed", true); //Indicate that rat is now stressed
+                    }
+                }
+
+                //Cleanup:
+                rat.prevTempComfy = newTempComfy; //Record new temperature comfort state
             }
         }
     }
@@ -631,6 +671,9 @@ public class RatBoid : MonoBehaviour
     /// <param name="keepFollower">If true, follower will be kept in a separate list until landing and counted towards follower total.</param>
     public void Launch(Vector3 force, bool keepFollower = false)
     {
+        //Checks:
+        if (glueFactor > 0) return; //Do not launch rat if it is stuck in glue
+
         //Behavior maintenance:
         if (behavior == RatBehavior.TrailFollower && keepFollower) //Rat is going to be kept on a separate list of aerial followers
         {
@@ -646,6 +689,7 @@ public class RatBoid : MonoBehaviour
         //Cleanup:
         r.material.SetFloat("_OcclusionIntensity", 0); //Ensure rat is not darkened
         r.material.SetFloat("_ShadowIntensity", 0);    //Clear rat shadow value
+        anim.SetBool("Flying", true);                  //Begin flying animation
         pileHeight = 0;                                //Reset rat's pile value
     }
     /// <summary>
@@ -667,24 +711,43 @@ public class RatBoid : MonoBehaviour
         }
 
         //Cleanup:
-        thrown = false;             //Reset throw modifier
-        airVelocity = Vector3.zero; //Clear air velocity (but keep momentum by retaining flat velocity)
+        anim.SetBool("Flying", false); //Halt flying animation
+        thrown = false;                //Reset throw modifier
+        tempUseLeaderPhys = false;     //Reset physics modifier
+        airVelocity = Vector3.zero;    //Clear air velocity (but keep momentum by retaining flat velocity)
     }
     /// <summary>
     /// Indicates that this rat is now within given effector zone.
     /// </summary>
     public void AddToZone(EffectZone zone)
     {
+        //Initialization:
         if (!currentZones.Contains(zone)) currentZones.Add(zone); //Add zone to rat's local zone list
         zone.AddRat(this);                                        //Add this rat to zone
+
+        //Immediate zone effects:
+        if (zone.gameObject.TryGetComponent(out SlowZone slowZone)) glueFactor = 1 - slowZone.slowFactor; //Get glue factor from slow zones
     }
     /// <summary>
     /// Indicates that this rat has left given effector zone.
     /// </summary>
     public void RemoveFromZone(EffectZone zone)
     {
+        //Initial checks:
+        if (zone == null) { currentZones.Remove(zone); return; }                    //Skip null zones
+        if (zone.gameObject.TryGetComponent(out SlowZone slowZone)) glueFactor = 0; //Clear glue factor when leaving slowZones
+
+        //Cleanup:
         if (currentZones.Contains(zone)) currentZones.Remove(zone); //Remove zone from rat's local zone list
         zone.RemoveRat(this);                                       //Remove this rat from zone
+    }
+    /// <summary>
+    /// Triggered when this rat freezes to death.
+    /// </summary>
+    public void Freeze()
+    {
+        anim.SetTrigger("Dead");   //Begin death animation
+        Destroy(gameObject, 0.5f); //Destroy rat after death animation ends
     }
 
     //UTILITY METHODS:
@@ -752,5 +815,12 @@ public class RatBoid : MonoBehaviour
         {
             Debug.LogWarning("Failed to reference directional lightmap at index" + mr.lightmapIndex + ", make sure baked lightmaps are manually set to Read/Write"); //Post warning indicating problem
         }*/
+    }
+    /// <summary>
+    /// Destroys all RatBoids in scene.
+    /// </summary>
+    public static void DestroyAll()
+    {
+        for (; spawnedRats.Count > 0;) { DestroyImmediate(spawnedRats[0].gameObject); } //Use DestroyImmediate to prevent any errors while destroying total rat population
     }
 }

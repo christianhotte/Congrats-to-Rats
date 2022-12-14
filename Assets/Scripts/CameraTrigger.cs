@@ -39,11 +39,15 @@ public class CameraTrigger : MonoBehaviour
             }
         }
     }
+    /// <summary>
+    /// Returns a rotation which may be applied to correct for current camera direction.
+    /// </summary>
+    public static float GetRotationOffset { get { return Vector2.SignedAngle(Vector2.up, GetDirectionRef); } }
     private static CinemachineBrain brain; //Single CinemachineBrain object in scene, used to govern blends
 
     //Objects & Components:
     private CinemachineVirtualCamera cam; //Camera object activated by this trigger
-    
+    private Collider activator;           //Activation volume used to trigger this camera
 
     //Settings:
     [Header("Settings:")]
@@ -55,17 +59,25 @@ public class CameraTrigger : MonoBehaviour
         //Get objects & components:
         if (brain == null) brain = Camera.main.GetComponent<CinemachineBrain>();   //Get cinemachine brain component from scene (for all triggers)
         cam = transform.parent.GetComponentInChildren<CinemachineVirtualCamera>(); //Get virtual camera component
+        activator = GetComponent<Collider>();                                      //Get activation volume from this object
+
+        //Setup first camera:
+        if (current == null && cam.enabled) current = this; //Make first enabled camera current
     }
     private void OnTriggerEnter(Collider other)
     {
-        //Activate camera:
+        if (other.transform.parent.TryGetComponent(out MasterRatController mrc)) ActivateCamera(); //Only activate camera if entering object is mama rat
+        
+    }
+
+    //OPERATION METHODS:
+    public void ActivateCamera()
+    {
         cam.enabled = true;                                              //Enable camera
         if (current != null && current != this) current.DisableCamera(); //Disable old camera (if applicable)
         previous = current;                                              //Move current script to previous
         current = this;                                                  //Make this the current camera trigger
     }
-
-    //OPERATION METHODS:
     /// <summary>
     /// Disables this trigger's associated vcam.
     /// </summary>
