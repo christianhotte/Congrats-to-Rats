@@ -19,7 +19,7 @@ MonoBehaviour:
     width: 1920
     height: 1007
   m_ShowMode: 4
-  m_Title: Scene
+  m_Title: Project
   m_RootView: {fileID: 4}
   m_MinSize: {x: 875, y: 300}
   m_MaxSize: {x: 10000, y: 10000}
@@ -74,7 +74,7 @@ MonoBehaviour:
   m_MinSize: {x: 201, y: 442}
   m_MaxSize: {x: 4001, y: 8042}
   vertical: 1
-  controlID: 67
+  controlID: 104
 --- !u!114 &4
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -150,7 +150,7 @@ MonoBehaviour:
   m_MinSize: {x: 709, y: 492}
   m_MaxSize: {x: 18004, y: 14042}
   vertical: 0
-  controlID: 81
+  controlID: 63
 --- !u!114 &7
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -222,7 +222,7 @@ MonoBehaviour:
   m_MinSize: {x: 232, y: 492}
   m_MaxSize: {x: 10002, y: 14042}
   vertical: 1
-  controlID: 82
+  controlID: 64
 --- !u!114 &10
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -382,8 +382,7 @@ MonoBehaviour:
     m_ShowAllHits: 0
     m_SkipHidden: 0
     m_SearchArea: 1
-    m_Folders:
-    - Assets/Models/Prefabs/Props
+    m_Folders: []
     m_Globs: []
     m_OriginalText: 
   m_ViewMode: 0
@@ -397,7 +396,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 663c0000
     m_LastClickedID: 15462
-    m_ExpandedIDs: 00000000fa730000fc730000fe73000000740000027400000474000006740000087400000a7400000c7400000e740000
+    m_ExpandedIDs: 00000000e0760000e2760000e4760000e6760000e8760000ea760000ec760000ee760000f0760000f2760000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -425,21 +424,21 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: ffffffff00000000fa730000fc730000fe73000000740000027400000474000006740000087400000a7400000e740000
+    m_ExpandedIDs: ffffffff00000000e0760000e2760000e4760000e6760000e8760000ea760000ec760000ee760000f0760000f2760000d0780000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
-      m_Name: 
-      m_OriginalName: 
+      m_Name: WallLight_lambert1_MetallicSmoothness
+      m_OriginalName: WallLight_lambert1_MetallicSmoothness
       m_EditFieldRect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 0
         height: 0
-      m_UserData: 0
+      m_UserData: 31670
       m_IsWaitingForDelay: 0
       m_IsRenaming: 0
-      m_OriginalEventType: 11
+      m_OriginalEventType: 0
       m_IsRenamingFilename: 1
       m_ClientGUIView: {fileID: 12}
     m_SearchString: 
@@ -798,9 +797,9 @@ MonoBehaviour:
   m_PlayAudio: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: -3.3688025, y: 8.841351, z: -13.290529}
+    m_Target: {x: -12.79098, y: 6.3250637, z: -22.637983}
     speed: 2
-    m_Value: {x: -3.3688025, y: 8.841351, z: -13.290529}
+    m_Value: {x: -12.79098, y: 6.3250637, z: -22.637983}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -847,11 +846,11 @@ MonoBehaviour:
     m_GridAxis: 1
     m_gridOpacity: 0.5
   m_Rotation:
-    m_Target: {x: 0.022737654, y: -0.97190535, z: 0.13929626, w: 0.1908445}
+    m_Target: {x: -0.07562765, y: -0.9009719, z: 0.16132022, w: -0.3969807}
     speed: 2
-    m_Value: {x: 0.022155622, y: -0.9718611, z: 0.13631551, w: 0.19082187}
+    m_Value: {x: -0.074992396, y: -0.9007232, z: 0.15988117, w: -0.3968777}
   m_Size:
-    m_Target: 1.1384369
+    m_Target: 1.166117
     speed: 2
     m_Value: 1.1384369
   m_Ortho:
@@ -908,8 +907,8 @@ MonoBehaviour:
     m_SaveData: []
   m_SceneHierarchy:
     m_TreeViewState:
-      scrollPos: {x: 0, y: 16}
-      m_SelectedIDs: 
+      scrollPos: {x: 0, y: 32}
+      m_SelectedIDs: 6a830000
       m_LastClickedID: 0
       m_ExpandedIDs: 18fbffff
       m_RenameOverlay:
