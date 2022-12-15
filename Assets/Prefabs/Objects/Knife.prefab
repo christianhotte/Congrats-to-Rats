@@ -268,7 +268,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 565622b88e81fc54c8a57b884127d6db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fallSound: {fileID: 8300000, guid: 2b2ad1181c9ae8f4f80ab776113c0eca, type: 3}
+  fallSound: {fileID: 8300000, guid: 6d62f02b52280e847b864471af25445a, type: 3}
   thunkSound: {fileID: 8300000, guid: 954026454f468da4ead44efe4338ddcd, type: 3}
   fallTime: 0.7
 --- !u!82 &8599726271915761851
