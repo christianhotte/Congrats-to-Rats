@@ -9,11 +9,13 @@ using UnityEngine.Events;
 public class EffectZone : MonoBehaviour
 {
     //Objects & Components:
-    private BoxCollider coll; //Box collider used to define the area of this zone
+    private protected BoxCollider coll; //Box collider used to define the area of this zone
 
     //Settings:
     [Header("General Settings:")]
     [SerializeField, Tooltip("Prevents zone effect from being applied to rats which are not visible by zone object (NOTE: Will check along FORWARD direction of zone)")] private protected bool checkObstruction;
+    [SerializeField, Tooltip("If true, this zone will be destroyed/denatured when big rat enters it")]                                                                   private protected bool destroyOnEntry;
+    [Tooltip("If true, this zone will be destroyed/denatured when big rat enters it")]                                                                                   public bool checkForRatLeave;
 
     //Runtime Variables:
     internal List<RatBoid> zoneRats = new List<RatBoid>(); //List of rats which are currently within this zone
@@ -37,7 +39,8 @@ public class EffectZone : MonoBehaviour
         coll = GetComponent<BoxCollider>(); //Get box collider from local object
 
         //Event subscriptions:
-        OnBigRatEnter += EmptyMethod; //Add event to empty method to prevent errors when not in use
+        OnBigRatEnter += BigRatEnteredZone; //Add event to empty method to prevent errors when not in use
+        OnBigRatLeave += BigRatLeftZone;    //Add event to empty method to prevent errors when not in use
     }
     private void Update()
     {
@@ -47,7 +50,8 @@ public class EffectZone : MonoBehaviour
     private void OnDestroy()
     {
         //Event unsubscriptions:
-        OnBigRatEnter -= EmptyMethod; //Unsubscribe on destruction
+        OnBigRatEnter -= BigRatEnteredZone; //Unsubscribe on destruction
+        OnBigRatLeave -= BigRatLeftZone;    //Unsubscribe on destruction
 
         //Cleanup:
         Clear(); //Clear rats in zone
@@ -95,7 +99,17 @@ public class EffectZone : MonoBehaviour
         bigRatInZone = false; //Clear memory of big rat
         zoneRats.Clear();     //Clear memory of ratboids
     }
-    private void EmptyMethod() { }
+    private void BigRatEnteredZone()
+    {
+        if (destroyOnEntry) //Zone is set to destroy itself upon big rat entry
+        {
+            Clear(); //Prevent this zone from further use
+        }
+    }
+    private void BigRatLeftZone()
+    {
+
+    }
 }
 
 //BONEYARD:

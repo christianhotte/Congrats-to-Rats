@@ -16,7 +16,7 @@ MonoBehaviour:
   speed: 1
   accel: 5
   decel: 4
-  jumpPower: {x: 1.1, y: 1.9}
+  jumpPower: {x: 1.1, y: 2.2}
   stationaryJumpMultiplier: 1.2
   airControl: 0.2
   cliffHop: 1.1

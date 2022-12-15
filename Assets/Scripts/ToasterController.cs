@@ -110,6 +110,7 @@ public class ToasterController : MonoBehaviour
 
         //Cleanup:
         bigRatContained = true;                                //Indicate that mama rat is now contained in toaster
+        MasterRatController.main.anim.SetTrigger("Land");      //Land rat so animations don't get screwed up
         MasterRatController.main.stasis = true;                //Put mama rat in stasis
         MasterRatController.main.transform.position = loadPos; //Move rat inside toaster
     }

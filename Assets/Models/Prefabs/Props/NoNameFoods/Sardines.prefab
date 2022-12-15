@@ -12,12 +12,12 @@ GameObject:
   - component: {fileID: 2816718892060169391}
   - component: {fileID: 68127532724002917}
   - component: {fileID: 7768304750606831700}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Sardines
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &1205035597982325514
 Transform:

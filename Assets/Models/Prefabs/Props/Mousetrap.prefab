@@ -422,7 +422,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   checkObstruction: 0
-  bigRatInZone: 0
+  destroyOnEntry: 0
+  checkForRatLeave: 0
 --- !u!1 &8267051328136628959
 GameObject:
   m_ObjectHideFlags: 0
@@ -565,4 +566,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   checkObstruction: 0
-  bigRatInZone: 0
+  destroyOnEntry: 0
+  checkForRatLeave: 0

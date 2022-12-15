@@ -12,12 +12,12 @@ GameObject:
   - component: {fileID: 6486472011451592852}
   - component: {fileID: 9070360307511395422}
   - component: {fileID: 5189590273176140195}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Knife
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &7902489652426899249
 Transform:
@@ -95,6 +95,6 @@ MeshCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 4
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4898376589914736847, guid: 28fedc90200118949832510841eae8af, type: 3}

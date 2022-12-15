@@ -217,6 +217,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   checkObstruction: 0
+  destroyOnEntry: 0
+  checkForRatLeave: 1
 --- !u!65 &1516175159751740142
 BoxCollider:
   m_ObjectHideFlags: 0

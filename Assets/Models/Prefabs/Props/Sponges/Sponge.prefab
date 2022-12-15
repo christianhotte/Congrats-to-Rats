@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 8127855854368541408}
   - component: {fileID: 6457718963904392591}
   - component: {fileID: 999207190529764703}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Sponge
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -96,7 +96,7 @@ MeshCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 4
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 2386284248760111910, guid: d55d5d805d62c454e95335ce5133c3b6, type: 3}
 --- !u!114 &999207190529764703

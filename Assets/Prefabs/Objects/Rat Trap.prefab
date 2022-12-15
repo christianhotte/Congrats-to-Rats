@@ -39,6 +39,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 2399114098750955537}
     m_Modifications:
+    - target: {fileID: 264298731, guid: e87de10244c8e1b46ba53e30be6d7ba3, type: 3}
+      propertyPath: explosionPower
+      value: 600
+      objectReference: {fileID: 0}
     - target: {fileID: 1796017513966809456, guid: e87de10244c8e1b46ba53e30be6d7ba3, type: 3}
       propertyPath: m_Layer
       value: 7
