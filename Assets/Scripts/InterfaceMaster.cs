@@ -12,6 +12,7 @@ public class InterfaceMaster : MonoBehaviour
     /// </summary>
     public static InterfaceMaster main;
     [SerializeField, Tooltip("Text used to display current quantity of rats.")] internal TextMeshProUGUI ratCounter;
+    public GameObject credits;
 
     //Settings:
 
@@ -40,5 +41,9 @@ public class InterfaceMaster : MonoBehaviour
     public static void Restart()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+    public void ToggleCredits()
+    {
+        credits.SetActive(!credits.activeInHierarchy);
     }
 }
