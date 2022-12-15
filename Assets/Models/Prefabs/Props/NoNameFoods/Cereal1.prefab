@@ -12,12 +12,12 @@ GameObject:
   - component: {fileID: 7855437954354450951}
   - component: {fileID: 5395567968341714637}
   - component: {fileID: 1157341442932875807}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cereal1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &6533531903258271138
 Transform:

@@ -12,12 +12,12 @@ GameObject:
   - component: {fileID: 2248125779117025678}
   - component: {fileID: 4095466639564987716}
   - component: {fileID: 7345093624980529931}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: ToiletPaperRoll
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &2926541415387506219
 Transform:

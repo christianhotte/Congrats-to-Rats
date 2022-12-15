@@ -11,13 +11,12 @@ GameObject:
   - component: {fileID: 6347904719392566966}
   - component: {fileID: 8050063529067438355}
   - component: {fileID: 5211620695568848345}
-  - component: {fileID: 2364670990942225477}
   m_Layer: 0
   m_Name: BlueCornerPiece
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &6347904719392566966
 Transform:
@@ -84,17 +83,3 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &2364670990942225477
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6004311061704684556}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 4
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -1338839569741494250, guid: 4f71cb00b87bc6b47ae3d3cb54d2cabe, type: 3}

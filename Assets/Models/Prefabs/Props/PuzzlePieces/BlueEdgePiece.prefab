@@ -11,13 +11,12 @@ GameObject:
   - component: {fileID: 7432780450853251085}
   - component: {fileID: 5803259642131539880}
   - component: {fileID: 8605717721420436322}
-  - component: {fileID: 4707753890605107364}
   m_Layer: 0
   m_Name: BlueEdgePiece
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &7432780450853251085
 Transform:
@@ -84,17 +83,3 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &4707753890605107364
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7813000829901943479}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 4
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 949697298942846070, guid: e1993d350065a86488013096f0519a06, type: 3}

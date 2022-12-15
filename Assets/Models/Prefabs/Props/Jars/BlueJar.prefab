@@ -12,12 +12,12 @@ GameObject:
   - component: {fileID: 5642775896166398727}
   - component: {fileID: 7614423197159690189}
   - component: {fileID: 5734017333152494174}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: BlueJar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &8782284610549413026
 Transform:

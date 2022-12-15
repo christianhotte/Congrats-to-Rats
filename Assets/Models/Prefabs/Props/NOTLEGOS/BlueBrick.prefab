@@ -12,12 +12,12 @@ GameObject:
   - component: {fileID: 2272008671364977655}
   - component: {fileID: 4063157881166489405}
   - component: {fileID: 4326518626984500986}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: BlueBrick
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &2893580679480482898
 Transform:

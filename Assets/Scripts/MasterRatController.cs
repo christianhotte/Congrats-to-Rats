@@ -527,8 +527,9 @@ public class MasterRatController : MonoBehaviour
             }
             foreach (EffectZone zone in currentZones) //Iterate through zones which rat is no longer in
             {
-                if (zone == null) continue;                  //Skip destroyed zones
-                zone.bigRatInZone = false;                   //Indicate that rat is no longer in zone
+                if (zone == null || stasis || noControl) continue; //Skip destroyed zones
+                zone.bigRatInZone = false;                         //Indicate that rat is no longer in zone
+                if (!zone.deactivated && zone.checkForRatLeave) zone.OnBigRatLeave(); //Indicate that big rat has left zone
             }
             currentZones = newZones; //Save new list of zones
         }

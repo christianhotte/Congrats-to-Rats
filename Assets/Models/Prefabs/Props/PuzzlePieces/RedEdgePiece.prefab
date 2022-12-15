@@ -11,13 +11,12 @@ GameObject:
   - component: {fileID: 824057954424129883}
   - component: {fileID: 4377639311852832510}
   - component: {fileID: 1955838269905629748}
-  - component: {fileID: 4298951728407876225}
   m_Layer: 0
   m_Name: RedEdgePiece
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &824057954424129883
 Transform:
@@ -84,17 +83,3 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &4298951728407876225
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 10261722518082529}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 4
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 949697298942846070, guid: e1993d350065a86488013096f0519a06, type: 3}

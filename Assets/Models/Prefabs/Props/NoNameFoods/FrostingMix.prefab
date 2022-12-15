@@ -12,12 +12,12 @@ GameObject:
   - component: {fileID: 2445672674326101021}
   - component: {fileID: 438029073043081431}
   - component: {fileID: 8462433883082117698}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: FrostingMix
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &1612039917797979064
 Transform:
