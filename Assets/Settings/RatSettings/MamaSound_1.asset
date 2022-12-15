@@ -53,4 +53,4 @@ MonoBehaviour:
   - {fileID: 8300000, guid: d4a5931ba2e2ac54da19e9e2352bc537, type: 3}
   deathSound: {fileID: 8300000, guid: c69d7d4933f74b0438c15660ab2b4f48, type: 3}
   deploySound: {fileID: 8300000, guid: 20d2b911faff54f4ebb96c6f2ad98239, type: 3}
-  pickupSound: {fileID: 8300000, guid: 462d541b5cc81ad4b9ee4c326f0305d4, type: 3}
+  pickupSound: {fileID: 8300000, guid: 9bf1b035e5b2abf4bb26b9460e773002, type: 3}

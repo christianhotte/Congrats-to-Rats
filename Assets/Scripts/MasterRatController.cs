@@ -855,6 +855,7 @@ public class MasterRatController : MonoBehaviour
     {
         //Destroy all rats:
         RatBoid.DestroyAll(); //Destroy all spawned rats
+        followerCountChanged();
 
         //Simulate rat destruction:
         stasis = true;                //Remove rat from player control
