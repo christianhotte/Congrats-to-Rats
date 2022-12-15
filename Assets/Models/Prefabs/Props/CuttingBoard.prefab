@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2900937564659320013}
   - component: {fileID: 2300750952477756264}
   - component: {fileID: 4037793196150161314}
-  - component: {fileID: 8868090710811088164}
+  - component: {fileID: 664477205531878298}
   m_Layer: 0
   m_Name: CuttingBoard
   m_TagString: Untagged
@@ -84,7 +84,7 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &8868090710811088164
+--- !u!64 &664477205531878298
 MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
