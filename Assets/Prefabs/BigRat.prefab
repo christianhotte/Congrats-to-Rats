@@ -237,6 +237,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: ed64964a-80d4-4a3f-a9d0-95c2af3040d5
     m_ActionName: Default/MousePosition[/Mouse/position]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 2760126436428266732}
+        m_TargetAssemblyTypeName: MasterRatController, Assembly-CSharp
+        m_MethodName: OnPauseInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 1d8aeaf7-50ad-4260-a172-7a4f403c39f5
+    m_ActionName: Default/Pause[/Keyboard/escape,/Keyboard/p]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Default
@@ -254,6 +270,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9fc58e81a09d8fd4889f12d274ef0759, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pauseCanvas: {fileID: 0}
   settings: {fileID: 11400000, guid: 05459abdf753c3d4d9822d0a9ff599ed, type: 2}
   soundSettings: {fileID: 11400000, guid: ca45e1a22851463419ded4a0cca80110, type: 2}
   swarmSettings:
@@ -263,6 +280,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ae663544867f8b84f9c66124b9756980, type: 2}
   - {fileID: 11400000, guid: 2f8b5e85a39eb03428a90992a4303e0c, type: 2}
   debugKill: 0
+  debugAdvanceMusic: 0
+  startInStasis: 0
 --- !u!114 &2956998417977185440
 MonoBehaviour:
   m_ObjectHideFlags: 0

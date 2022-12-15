@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class InterfaceMaster : MonoBehaviour
 {
@@ -31,5 +32,13 @@ public class InterfaceMaster : MonoBehaviour
     public static void SetCounter(float amount)
     {
         if (main != null) main.ratCounter.text = amount.ToString(); //Set text to given number
+    }
+    public static void Quit()
+    {
+        Application.Quit();
+    }
+    public static void Restart()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }

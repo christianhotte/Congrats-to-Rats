@@ -175,14 +175,16 @@ public class MasterRatController : MonoBehaviour
     internal Animator anim;           //Animator controller for big rat
     internal Billboarder billboarder; //Component used to manage sprite orientation
     internal AudioSource audioSource; //Audiosource component for mama rat sfx
+    public GameObject pauseCanvas;
 
     [Header("Settings Objects:")]
     [Tooltip("Interchangeable data object describing settings of the main rat")]                                                    public BigRatSettings settings;
     [Tooltip("Interchangeable data object describing sound settings for this rat")]                                                 public MamaSoundSettings soundSettings;
     [SerializeField, Tooltip("Place any number of swarm settings objects here (make sure they have different Target Rat Numbers)")] private List<SwarmSettings> swarmSettings = new List<SwarmSettings>();
     [Header("Debug Options:")]
-    [SerializeField, Tooltip("Kills big rat")]        private bool debugKill;
-    [SerializeField, Tooltip("Advances music phase")] private bool debugAdvanceMusic;
+    [SerializeField, Tooltip("Kills big rat")]          private bool debugKill;
+    [SerializeField, Tooltip("Advances music phase")]   private bool debugAdvanceMusic;
+    [SerializeField, Tooltip("Makes rat start frozen")] private bool startInStasis;
 
     //Runtime Vars:
     private SwarmSettings currentSwarmSettings;                      //Instance of swarmSettings object used to interpolate between rat behaviors
@@ -288,6 +290,7 @@ public class MasterRatController : MonoBehaviour
         trail.Insert(0, new TrailPoint(FlatPos)); //Add starting position as first point in trail
         OnFollowerCountChanged();                 //Set up swarm settings and do initial update
         MoveRat(0);                               //Snap rat to floor
+        stasis = startInStasis;                   //Check whether or not big rat is starting in stasis
 
         //Event subscriptions:
         followerCountChanged += OnFollowerCountChanged; //Add official follower count changed method to event
@@ -616,11 +619,11 @@ public class MasterRatController : MonoBehaviour
     }
     public void OnScrollSpawn(InputAction.CallbackContext context)
     {
-        if (context.started & !noControl) //Scroll wheel has just been moved one tick and player has control over rat
+        /*if (context.started & !noControl) //Scroll wheel has just been moved one tick and player has control over rat
         {
             if (context.ReadValue<float>() > 0) SpawnRat();                        //Spawn rats when wheel is scrolled up
             else if (followerRats.Count > 0) Destroy(followerRats[^1].gameObject); //Despawn rats when wheel is scrolled down
-        }
+        }*/
     }
     public void OnCommandInput(InputAction.CallbackContext context)
     {
@@ -706,6 +709,25 @@ public class MasterRatController : MonoBehaviour
         else if (context.canceled) //Jump button has just been released
         {
             jumpButtonPressed = false; //Indicate that jump button is no longer pressed
+        }
+    }
+    public void OnPauseInput(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            TogglePause();
+        }
+    }
+    public void TogglePause()
+    {
+        pauseCanvas.SetActive(!pauseCanvas.activeInHierarchy); //Toggle pause canvas state
+        if (pauseCanvas.activeInHierarchy)
+        {
+            noControl = true;
+        }
+        else
+        {
+            noControl = false;
         }
     }
     public void OnMousePositionMove(InputAction.CallbackContext context)

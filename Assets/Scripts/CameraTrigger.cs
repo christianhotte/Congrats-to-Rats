@@ -17,6 +17,7 @@ public class CameraTrigger : MonoBehaviour
     /// Previously-active virtual camera.
     /// </summary>
     public static CameraTrigger previous;
+    public static CameraTrigger menuCamera;
     /// <summary>
     /// Returns vector depending on currently-active camera which 
     /// </summary>
@@ -47,22 +48,38 @@ public class CameraTrigger : MonoBehaviour
 
     //Objects & Components:
     private CinemachineVirtualCamera cam; //Camera object activated by this trigger
-    private Collider activator;           //Activation volume used to trigger this camera
+    internal Collider activator;          //Activation volume used to trigger this camera
 
     //Settings:
     [Header("Settings:")]
     [Tooltip("The direction in world space considered as forward when moving rats and rotating billboards while this camera is active")] public Vector2 directionReference;
+    public float rotationSpeed;
+    public bool firstCamera;
+    public bool menuCam;
 
     //RUNTIME METHODS:
     private void Awake()
     {
         //Get objects & components:
         if (brain == null) brain = Camera.main.GetComponent<CinemachineBrain>();   //Get cinemachine brain component from scene (for all triggers)
-        cam = transform.parent.GetComponentInChildren<CinemachineVirtualCamera>(); //Get virtual camera component
-        activator = GetComponent<Collider>();                                      //Get activation volume from this object
+        if (!menuCam) cam = transform.parent.GetComponentInChildren<CinemachineVirtualCamera>(); //Get virtual camera component
+        else
+        {
+            menuCamera = this;
+            cam = GetComponent<CinemachineVirtualCamera>();
+        }
+            
+        activator = GetComponent<Collider>(); //Get activation volume from this object
 
         //Setup first camera:
-        if (current == null && cam.enabled) current = this; //Make first enabled camera current
+        if (current == null && firstCamera) { current = this; activator.enabled = false; } //Make first enabled camera current
+    }
+    private void Update()
+    {
+        if (menuCam && cam.enabled)
+        {
+            transform.parent.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
+        }
     }
     private void OnTriggerEnter(Collider other)
     {
@@ -81,5 +98,15 @@ public class CameraTrigger : MonoBehaviour
     /// <summary>
     /// Disables this trigger's associated vcam.
     /// </summary>
-    public void DisableCamera() { cam.enabled = false; } //Disable camera
+    public void DisableCamera()
+    {
+        if (menuCam)
+        {
+            current.activator.enabled = true;
+            current.ActivateCamera();
+            MasterRatController.main.stasis = false;
+            MasterRatController.main.Launch(Vector3.down);
+        }
+        cam.enabled = false; //Disable camera
+    } 
 }
